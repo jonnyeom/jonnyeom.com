@@ -1,5 +1,9 @@
-### PhpStorm
+### Local Development
 .idea
+jonnyeom.db
+
+### Npm
+node_modules
 
 ###> symfony/framework-bundle ###
 /.env.local
