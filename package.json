@@ -4,6 +4,7 @@
   "main": "webpack.config.js",
   "license": "MIT",
   "scripts": {
+    "dev": "webpack --watch --mode=development --info-verbosity verbose --progress",
     "build": "webpack --mode production"
   },
   "repository": {
