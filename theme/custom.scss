@@ -1,0 +1,29 @@
+.content {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 980px;
+}
+
+//
+hr.github {
+  margin: .5rem 0 1rem 0;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  &.pre-github {
+    margin-bottom: .5rem;
+  }
+}
+
+// Margin/Padding Helpers.
+.pb-0 {
+  padding-bottom: 0;
+}
+
+.pt-0 {
+  padding-top: 0;
+}
+
+.ml-1 {
+  margin-left: 1rem;
+}
