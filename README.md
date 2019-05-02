@@ -6,18 +6,18 @@ My Upgraded Website! (WIP)
 
 ### v0.1
 Features
-* @TODO:
-* @TODO:
+* ~~A live Homepage!~~
+* In Progress Pages!
+* Individual Blog Pages
+* /blog page
 
 ### v0.2
 Features
-* @TODO:
-* @TODO:
+* A working mobile menu
 
 ### v0.3
 Features
-* @TODO:
-* @TODO:
+* Admin Login
 
 ## Built With
 
