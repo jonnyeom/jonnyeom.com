@@ -7,7 +7,7 @@ My Upgraded Website! (WIP)
 ### v0.1
 Features
 * ~~A live Homepage!~~
-* In Progress Pages!
+* ~~In Progress Pages!~~
 * Individual Blog Pages
 * /blog page
 
