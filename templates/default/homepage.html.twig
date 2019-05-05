@@ -5,42 +5,8 @@
 {% block body %}
     <section class="section pt-0">
         <div class="container is-fluid">
-            <div class="content">
-                <h3 class="pre-github">Jonathan Eom</h3>
-                <hr class="github">
-                <p>Hi. I'm <strong>Jonathan Eom</strong>. You will likely find me in most places as
-                    <strong>jonnyeom</strong>.</p>
-
-                <h3 class="pre-github">Quick Summary</h3>
-                <hr class="github">
-                <p>I am a professional <strong>developer</strong>, experienced in developing enterprise level websites
-                    and applications. Professionally I specialize in PHP frameworks including <strong>Drupal</strong>
-                    and <strong>Symfony</strong>, but lately, I've also been tinkering with JavaScript.</p>
-                <p>Also, <strong>Linux</strong> is powerful and <strong>open source</strong> is awesome.</p>
-                <br>
-                <br>
-
-
-                <h3 class="pre-github">Changelog</h3>
-                <hr class="github">
-                <div>
-                    <h4>[Blog Post] - 2019-04-27</h4>
-                    <ul>
-                        <li><a>New Blog Post</a></li>
-                    </ul>
-                    <h4>[Blog Post] - 2019-04-27</h4>
-                    <ul>
-                        <li><a>New Blog Post</a></li>
-                    </ul>
-                </div>
-                <br>
-                <br>
-
-
-                <h3 class="pre-github">About this site</h3>
-                <hr class="github">
-                <p>The site is currently a WIP.<br>
-                    Refer to the <a href="https://github.com/jonnyeom/jonnyeom#development-roadmap">Roadmap</a> for upcoming changes!</p>
+            <div class="content markdown">
+                {{ content|raw }}
             </div>
         </div>
     </section>

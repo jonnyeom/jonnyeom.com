@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use League\CommonMark\CommonMarkConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -13,8 +14,12 @@ class DefaultController extends AbstractController
      */
     public function index()
     {
+        $content = file_get_contents(__DIR__ . '/../Content/Homepage.md');
+        $converter = new CommonMarkConverter();
+
         return $this->render('default/homepage.html.twig', [
             'controller_name' => 'DefaultController',
+            'content' => $converter->convertToHtml($content),
         ]);
     }
 
