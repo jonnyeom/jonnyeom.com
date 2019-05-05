@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use League\CommonMark\CommonMarkConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -12,14 +13,20 @@ class DefaultController extends AbstractController
     /**
      * @Route("/", name="app_homepage")
      */
-    public function index()
+    public function index(AdapterInterface $cache)
     {
-        $content = file_get_contents(__DIR__ . '/../Content/Homepage.md');
-        $converter = new CommonMarkConverter();
+        $item = $cache->getItem('markdown_homepage');
+        if (!$item->isHit()) {
+            $converter = new CommonMarkConverter();
+            $markdown = file_get_contents(__DIR__ . '/../Content/Homepage.md');
+            $item->set($converter->convertToHtml($markdown));
+            $cache->save($item);
+        }
+        $content = $item->get();
 
         return $this->render('default/homepage.html.twig', [
             'controller_name' => 'DefaultController',
-            'content' => $converter->convertToHtml($content),
+            'content' => $content,
         ]);
     }
 
