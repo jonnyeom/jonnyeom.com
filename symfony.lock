@@ -102,6 +102,9 @@
     "jdorn/sql-formatter": {
         "version": "v1.2.17"
     },
+    "league/commonmark": {
+        "version": "0.19.1"
+    },
     "monolog/monolog": {
         "version": "1.24.0"
     },
