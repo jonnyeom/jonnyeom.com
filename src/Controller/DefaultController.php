@@ -23,7 +23,6 @@ class DefaultController extends BaseController
         $content = $item->get();
 
         return $this->render('default/homepage.html.twig', [
-            'controller_name' => 'DefaultController',
             'content' => $content,
         ]);
     }

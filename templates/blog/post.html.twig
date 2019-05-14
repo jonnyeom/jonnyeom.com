@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ short_title }} | jonnyeom{% endblock %}
+
+{% block body %}
+    <section class="section pt-0">
+        <div class="container is-fluid">
+            <div class="content markdown">
+                {{ content|raw }}
+            </div>
+        </div>
+    </section>
+{% endblock %}

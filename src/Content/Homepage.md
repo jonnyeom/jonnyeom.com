@@ -15,10 +15,10 @@ Also, **Linux** is powerful and **open source** is awesome.
 
 ### Changelog
 ___
+#### [Blog Post] - 2019-05-14
+* [Example Post](/blog/post/example)
 #### [Blog Post] - 2019-04-27
-* New Blog Post
-#### [Blog Post] - 2019-04-27</h4>
-* New Blog Post
+* [New Blog Post](/)
 <br>
 <br>
 
