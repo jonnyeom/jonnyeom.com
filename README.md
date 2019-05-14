@@ -4,19 +4,12 @@ My Upgraded Website! (WIP)
 
 ## Development Roadmap
 
-### v0.1
-Features
+### Features
 * ~~A live Homepage!~~
 * ~~In Progress Pages!~~
 * Individual Blog Pages
 * /blog page
-
-### v0.2
-Features
 * A working mobile menu
-
-### v0.3
-Features
 * Admin Login
 
 ## Built With
