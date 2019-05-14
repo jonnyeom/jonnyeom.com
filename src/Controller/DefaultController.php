@@ -3,12 +3,10 @@
 namespace App\Controller;
 
 use League\CommonMark\CommonMarkConverter;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class DefaultController extends AbstractController
+class DefaultController extends BaseController
 {
     /**
      * @Route("/", name="app_homepage")
@@ -31,14 +29,6 @@ class DefaultController extends AbstractController
     }
 
     /**
-     * @Route("/blog", name="app_blog")
-     */
-    public function blog()
-    {
-        return $this->inProgress('Blog');
-    }
-
-    /**
      * @Route("/projects", name="app_projects")
      */
     public function projects()
@@ -54,17 +44,4 @@ class DefaultController extends AbstractController
         return $this->inProgress('About');
     }
 
-    /**
-     * @Route("/in-progress", name="app_in_progress")
-     *
-     * @param string $title
-     * @return Response
-     */
-    private function inProgress($title = 'In Progress'): Response
-    {
-        return $this->render('default/in-progress.html.twig', [
-            'controller_name' => 'DefaultController',
-            'title' => $title,
-        ]);
-    }
 }
