@@ -13,6 +13,7 @@ class DefaultController extends BaseController
      */
     public function index(AdapterInterface $cache)
     {
+        // Get main page content.
         $item = $cache->getItem('markdown_homepage');
         if (!$item->isHit()) {
             $converter = new CommonMarkConverter();
@@ -22,8 +23,19 @@ class DefaultController extends BaseController
         }
         $content = $item->get();
 
+        // Get bottom page content.
+        $item = $cache->getItem('markdown_homepage_bottom');
+        if (!$item->isHit()) {
+            $converter = new CommonMarkConverter();
+            $markdown = file_get_contents(__DIR__ . '/../Content/Homepage-bottom.md');
+            $item->set($converter->convertToHtml($markdown));
+            $cache->save($item);
+        }
+        $content_bottom = $item->get();
+
         return $this->render('default/homepage.html.twig', [
             'content' => $content,
+            'content_bottom' => $content_bottom,
         ]);
     }
 
