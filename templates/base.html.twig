@@ -12,7 +12,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}jonnyeom{% endblock %}</title>
-    <link rel="icon" href="Ahttps://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/60/google/223/maple-leaf_1f341.png">
+    <link rel="icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/60/google/223/maple-leaf_1f341.png">
     <link rel="stylesheet" href="{{ asset('css/jonnyeom.css') }}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
@@ -23,19 +23,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
 <header class="navbar is-transparent" role="navigation" aria-label="main navigation">
-    <div class="container is-fluid">
+    <div class="container">
         <div class="navbar-brand">
             <a class="navbar-item" href="/">
                 <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/223/maple-leaf_1f341.png" alt="maple-leaf">
                 <div class="ml-1 is-size-2 is-size-3-touch">jonnyeom</div>
             </a>
-
-            <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false"
-               data-target="mainNavbar">
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-            </a>
+            <div class="navbar-item is-hidden-desktop" >
+                <a class="navbar-item" href="https://github.com/jonnyeom" target="_blank">
+                    <span class="icon">
+                        <i class="fab fa-lg fa-github-alt"></i>
+                    </span>
+                </a>
+                <a class="navbar-item" href="https://twitter.com/jonnyeom" target="_blank">
+                    <span class="icon">
+                        <i class="fab fa-lg fa-twitter"></i>
+                    </span>
+                </a>
+                <a class="navbar-item" href="https://www.linkedin.com/in/jonnyeom/" target="_blank">
+                    <span class="icon">
+                        <i class="fab fa-lg fa-linkedin"></i>
+                    </span>
+                </a>
+                <a class="navbar-item" href="https://www.drupal.org/u/jonnyeom" target="_blank">
+                    <span class="icon">
+                        <i class="fab fa-lg fa-drupal"></i>
+                    </span>
+                </a>
+            </div>
         </div>
 
         <div id="mainNavbar" class="navbar-menu">
