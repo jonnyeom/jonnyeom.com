@@ -3,11 +3,15 @@
 // Import a Google Font
 //@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
 
-$theme-blue: #DFE6E4;
+$dark-green: #414D41;
+$drupal-blue: #064771;
+$green: #7F8C7F;
 $light-orange: #E3CDB8;
 $orange: #A6664B;
-$dark-green: #414D41;
-$green: #7F8C7F;
+$react-blue: #61dafb;
+$solr-orange: #D9411E;
+$theme-blue: #DFE6E4;
+$vue-green: #42b983;
 
 // Set your brand colors
 //$purple: #8A4D76;
@@ -25,7 +29,11 @@ $link: $orange;
 $footer-background-color: $theme-blue;
 
 $custom-colors: (
-        'theme-blue': $theme-blue
+        'drupal-blue': $drupal-blue,
+        'react-blue': $react-blue,
+        'solr-orange': $solr-orange,
+        'theme-blue': $theme-blue,
+        'vue-green': $vue-green
 );
 
 // Update some of Bulma's component variables
