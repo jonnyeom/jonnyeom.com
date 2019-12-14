@@ -1,4 +1,14 @@
 .navbar-brand {
+  flex-wrap: wrap;
+
+  @include until($desktop) {
+    justify-content: space-between;
+  }
+
+  @include until($tablet) {
+    justify-content: space-around;
+  }
+
   .navbar-item img {
     max-height: 3rem;
     margin-top: .5rem;
