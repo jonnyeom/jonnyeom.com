@@ -5375,6 +5375,10 @@ a.navbar-item,
     .section.is-large {
       padding: 18rem 1.5rem; } }
 
+.navbar-brand .navbar-item img {
+  max-height: 3rem;
+  margin-top: .5rem; }
+
 .content {
   margin-left: auto;
   margin-right: auto;
