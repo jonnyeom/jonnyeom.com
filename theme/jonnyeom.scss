@@ -37,16 +37,19 @@ $custom-colors: (
 // Import only what you need from Bulma
 @import "../node_modules/bulma/sass/utilities/_all";
 @import "../node_modules/bulma/sass/base/_all";
+@import "../node_modules/bulma/sass/elements/box";
 @import "../node_modules/bulma/sass/elements/button";
 @import "../node_modules/bulma/sass/elements/container";
 @import "../node_modules/bulma/sass/elements/content";
 @import "../node_modules/bulma/sass/elements/icon";
 @import "../node_modules/bulma/sass/elements/other";
 @import "../node_modules/bulma/sass/elements/progress";
+@import "../node_modules/bulma/sass/elements/tag";
 @import "../node_modules/bulma/sass/elements/title";
 @import "../node_modules/bulma/sass/components/navbar";
 @import "../node_modules/bulma/sass/components/tabs";
 @import "../node_modules/bulma/sass/grid/columns";
+@import "../node_modules/bulma/sass/grid/tiles";
 @import "../node_modules/bulma/sass/layout/footer";
 @import "../node_modules/bulma/sass/layout/section";
 

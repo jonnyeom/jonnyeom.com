@@ -1,3 +1,6 @@
+<br>
+<br>
+
 ### Other Quick Thoughts
 ___
 I am not a big social media person. I wish to be but I quickly lose interest in most platforms.

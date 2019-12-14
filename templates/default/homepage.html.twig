@@ -5,10 +5,44 @@
 {% block body %}
     <section class="section pt-0">
         <div class="container is-fluid">
-            <div class="content markdown">
-                {{ content|raw }}
+            <div class="content">
+                <div class=markdown">
+                    {{ content|raw }}
+                </div>
 
-                {{ content_bottom|raw }}
+                <h3>Developer Things</h3>
+                <hr>
+                <p>I am unable to give out details of most of my project (due to my fear of unknown client restrictions) but here are some surface level details on things that I am working on!</p>
+                <div class="tile is-ancestor">
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="subtitle">Building.. Solr Search App in Drupal</p>
+                            <div class="content">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="subtitle">Built! | Building.. Commerce Platform in Drupal</p>
+                            <div class="content">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child box">
+                            <p class="subtitle">Built! Reporting application</p>
+                            <div class="content">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin ornare magna eros, eu pellentesque tortor vestibulum ut. Maecenas non massa sem. Etiam finibus odio quis feugiat facilisis.</p>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="markdown">
+                    {{ content_bottom|raw }}
+                </div>
             </div>
         </div>
     </section>
