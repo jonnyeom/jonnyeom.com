@@ -10,7 +10,6 @@ My Upgraded Website! (WIP)
 * Individual Blog Pages
 * /blog page
 * A working mobile menu
-* Admin Login
 
 ## Built With
 
