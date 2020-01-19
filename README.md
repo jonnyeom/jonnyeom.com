@@ -80,6 +80,10 @@ This will recompile the frontend assets and watch for sass file changes.
 
 This will recompile the fronend asssets, optimized for production.
 
+### `This will generate thumbnails for project images`
+
+This will generate thumbnails for project images
+
 ## Running the tests
 
 @Todo
