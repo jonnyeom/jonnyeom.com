@@ -44,7 +44,7 @@ class DefaultController extends BaseController
      */
     public function projects()
     {
-        return $this->inProgress('Projects');
+        return $this->render('default/projects.html.twig');
     }
 
     /**

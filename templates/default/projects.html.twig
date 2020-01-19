@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}jonnyeom | Projects{% endblock %}
+
+{% block body %}
+    <section class="section page-projects">
+        <div class="container">
+            <div class="content">
+                <div class="tile is-ancestor">
+                    <div class="tile is-parent">
+                        <article class="tile is-child">
+                            <figure class="image is-marginless"><img src="{{ asset('images/projects/ssb.png') }}"/></figure>
+                            <div class="box">
+                                <h3>Sandy Spring Bank</h3>
+                                <span class="tag is-drupal-blue">Drupal 8</span>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child">
+                            <figure class="image is-marginless"><img src="{{ asset('images/projects/ispe.png') }}"/></figure>
+                            <div class="box">
+                                <h3>International Society for Pharmaceutical Engineering</h3>
+                                <span class="tag is-drupal-blue">Drupal 8</span>
+                                <span class="tag is-react-blue">React</span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="tile is-ancestor">
+                    <div class="tile is-parent">
+                        <article class="tile is-child">
+                            <figure class="image is-marginless"><img src="{{ asset('images/projects/nafsa.png') }}"/></figure>
+                            <div class="box">
+                                <h3>Association of International Educators</h3>
+                                <span class="tag is-drupal-blue">Drupal 8</span>
+                                <span class="tag is-react-blue">React</span>
+                                <span class="tag is-vue-green">Vue.js</span>
+                            </div>
+                        </article>
+                    </div>
+                    <div class="tile is-parent">
+                        <article class="tile is-child">
+                            <figure class="image is-marginless"><img src="{{ asset('images/projects/usni.png') }}"/></figure>
+                            <div class="box">
+                                <h3>U.S. Naval Institute</h3>
+                                <span class="tag is-drupal-blue">Drupal 8</span>
+                                <span class="tag is-warning">Commerce</span>
+                                <span class="tag is-theme-blue">Salesforce</span>
+                                <span class="tag">Symfony 4</span>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+                <h3>@Todo: Add other sites</h3>
+                <h3>@Todo: Add links</h3>
+            </div>
+        </div>
+    </section>
+{% endblock %}
