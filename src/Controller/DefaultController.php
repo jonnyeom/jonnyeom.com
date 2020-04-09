@@ -55,12 +55,4 @@ class DefaultController extends BaseController
         return $this->inProgress('About');
     }
 
-    /**
-     * @Route("/oling", name="app_oling")
-     */
-    public function oling()
-    {
-        return $this->render('default/oling.html.twig');
-    }
-
 }
