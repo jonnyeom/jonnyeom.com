@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ short_title }} | jonnyeom{% endblock %}
+
+{% block body %}
+    <section class="section pt-0">
+        <div class="container">
+            <div class="content">
+                {% for id, post in posts %}
+                    <div class="columns mb-1">
+                        <div class="column is-full">
+                            <div class="box p1">
+                                <h2><a href="{{ path('app_blog') }}/{{ id }}">{{ post.title }}</a></h2>
+                                <p>
+                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean efficitur sit
+                                    amet massa fringilla egestas. Nullam condimentum luctus turpis.
+                                </p>
+                                <strong>{{ post.date }}</strong>
+                            </div>
+
+                            {#                        {{ post.tags }}#}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+{% endblock %}

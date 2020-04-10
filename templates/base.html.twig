@@ -85,7 +85,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="tabs is-centered">
             <ul>
                 <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}><a href="{{ path('app_homepage') }}">Home</a></li>
-                <li{% if app.request.get('_route') == 'app_blog' %} class="is-active"{% endif %}><a href="{{ path('app_blog') }}">Blog</a></li>
+                <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}><a href="{{ path('app_blog') }}">Blog</a></li>
                 <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}><a href="{{ path('app_projects') }}">Projects</a></li>
                 <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}><a href="{{ path('app_about') }}">About</a></li>
             </ul>
