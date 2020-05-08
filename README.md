@@ -7,9 +7,12 @@ My Upgraded Website! (WIP)
 ### Features
 * ~~A live Homepage!~~
 * ~~In Progress Pages!~~
-* Individual Blog Pages
-* /blog page
-* A working mobile menu
+* ~~Individual Blog Pages~~
+* ~~/blog page~~
+* ~~A working mobile menu~~
+* About Page
+* Cleanup
+* Real Post
 
 ## Built With
 
@@ -83,23 +86,3 @@ This will recompile the fronend asssets, optimized for production.
 ### `This will generate thumbnails for project images`
 
 This will generate thumbnails for project images
-
-## Running the tests
-
-@Todo
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
