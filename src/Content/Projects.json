@@ -1,4 +1,10 @@
 {
+  "jonnyeom": {
+    "image": "images/projects/jonnyeom.png",
+    "tags": [
+      "Symfony"
+    ]
+  },
   "Sandy Spring Bank": {
     "image": "images/projects/ssb.png",
     "description": "",
