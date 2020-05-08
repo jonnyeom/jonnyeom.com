@@ -44,7 +44,31 @@ class DefaultController extends BaseController
      */
     public function projects()
     {
-        return $this->render('default/projects.html.twig');
+        // Get projects.
+        $json = file_get_contents(__DIR__ . '/../Content/Projects.json');
+        $projects = json_decode($json, true);
+        $tag_mappings = [
+            'Drupal 8' => 'is-drupal-blue',
+            'React' => 'is-react-blue',
+            'Vue.js' => 'is-vue-green',
+            'Commerce' => 'is-warning',
+            'default' => 'is-theme-blue',
+        ];
+
+        // Map the proper classes to tags.
+        foreach ($projects as &$project) {
+            foreach ($project['tags'] as &$tag) {
+                $tag_class = $tag_mappings[$tag] ?? $tag_mappings['default'];
+                $tag = [
+                    'label' => $tag,
+                    'class' => $tag_class,
+                ];
+            }
+        }
+
+        return $this->render('default/projects.html.twig', [
+            'projects' => $projects,
+        ]);
     }
 
     /**
