@@ -1,6 +1,4 @@
-### Jonathan Eom
-___
-Hi. I'm **Jonathan Eom**. You will likely find me in most places as **jonnyeom**.
+Hi. I'm **Jonny Eom**. You will likely find me in most places as **Jonathan Eom** or **jonnyeom**.
 
 ### Quick Summary
 ___
