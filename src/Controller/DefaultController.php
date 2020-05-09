@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use League\CommonMark\CommonMarkConverter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class DefaultController extends BaseController
@@ -11,7 +12,7 @@ class DefaultController extends BaseController
     /**
      * @Route("/", name="app_homepage")
      */
-    public function index(AdapterInterface $cache)
+    public function index(AdapterInterface $cache): Response
     {
         // Get main page content.
         $item = $cache->getItem('markdown_homepage');
@@ -42,7 +43,7 @@ class DefaultController extends BaseController
     /**
      * @Route("/projects", name="app_projects")
      */
-    public function projects()
+    public function projects(): Response
     {
         // Get projects.
         $json = file_get_contents(__DIR__ . '/../Content/Projects.json');
@@ -72,9 +73,17 @@ class DefaultController extends BaseController
     }
 
     /**
+     * @Route("/cheatsheets", name="app_cheatsheets")
+     */
+    public function cheatsheets(): Response
+    {
+        return $this->inProgress('About');
+    }
+
+    /**
      * @Route("/about", name="app_about")
      */
-    public function about()
+    public function about(): Response
     {
         return $this->inProgress('About');
     }

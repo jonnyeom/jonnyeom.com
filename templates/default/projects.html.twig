@@ -10,9 +10,9 @@
                     <div class="tile is-ancestor">
                         {% for title, project in batch %}
                             <div class="tile is-parent">
-                                <article class="tile is-child">
+                                <article class="tile is-child box is-paddingless">
                                     <figure class="image is-marginless"><img src="{{ asset(project.image) }}"/></figure>
-                                    <div class="box">
+                                    <div class="tile-bottom">
                                         <h3>{{ title }}</h3>
                                         {% for tag in project.tags %}
                                             <span class="tag {% if tag.class %}{{ tag.class }}{% endif %}">{{ tag.label }}</span>
