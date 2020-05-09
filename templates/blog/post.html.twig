@@ -1,13 +1,1 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}{{ short_title }} | jonnyeom{% endblock %}
-
-{% block body %}
-    <section class="section pt-0">
-        <div class="container">
-            <div class="content markdown">
-                {{ content|raw }}
-            </div>
-        </div>
-    </section>
-{% endblock %}
+{% extends 'default/markdown-page.html.twig' %}
