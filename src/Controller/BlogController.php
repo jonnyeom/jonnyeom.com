@@ -28,7 +28,7 @@ class BlogController extends BaseController
     public function index()
     {
         return $this->render('blog/index.html.twig', [
-            'short_title' => 'Example',
+            'short_title' => 'Blog',
             'posts' => $this->posts,
         ]);
     }
