@@ -17,7 +17,7 @@ class BaseController extends AbstractController
      */
     public function inProgress($title = 'In Progress', $content = NULL): Response
     {
-        return $this->render('default/in-progress.html.twig', [
+        return $this->render('page/in-progress.html.twig', [
             'title' => $title,
             'content' => $content,
         ]);

@@ -34,7 +34,7 @@ class DefaultController extends BaseController
         }
         $content_bottom = $item->get();
 
-        return $this->render('default/homepage.html.twig', [
+        return $this->render('page/homepage.html.twig', [
             'content' => $content,
             'content_bottom' => $content_bottom,
         ]);
@@ -67,7 +67,7 @@ class DefaultController extends BaseController
             }
         }
 
-        return $this->render('default/projects.html.twig', [
+        return $this->render('page/projects.html.twig', [
             'projects' => $projects,
         ]);
     }

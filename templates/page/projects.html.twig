@@ -5,7 +5,7 @@
 {% block body %}
     <section class="section page-projects">
         <div class="container">
-            <div class="content">
+            <div class="content custom-width">
                 {% for batch in projects|batch(2) %}
                     <div class="tile is-ancestor">
                         {% for title, project in batch %}
