@@ -81,8 +81,8 @@ This will recompile the frontend assets and watch for sass file changes.
 
 ### `npm run build`
 
-This will recompile the fronend asssets, optimized for production.
+This will recompile the frontend assets, optimized for production.
 
-### `This will generate thumbnails for project images`
+### `./node_modules/imagemin-cli/cli.js --plugin.pngquant.quality={0.6,0.8} src/images/projects/* --out-dir=public/images/projects`
 
-This will generate thumbnails for project images
+This will optimize images for project images
