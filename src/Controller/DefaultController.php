@@ -77,7 +77,7 @@ class DefaultController extends BaseController
      */
     public function cheatsheets(): Response
     {
-        return $this->inProgress('Cheatsheets', 'https://github.com/jonnyeom/cheatsheet-md/blob/master/All.md');
+        return $this->inProgress('Cheatsheets', '<a href="https://github.com/jonnyeom/cheatsheet-md/blob/master/All.md" target="_blank">https://github.com/jonnyeom/cheatsheet-md/blob/master/All.md</a>');
     }
 
     /**

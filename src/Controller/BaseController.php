@@ -15,11 +15,11 @@ class BaseController extends AbstractController
      * @param string $title
      * @return Response
      */
-    public function inProgress($title = 'In Progress', $description = NULL): Response
+    public function inProgress($title = 'In Progress', $content = NULL): Response
     {
         return $this->render('default/in-progress.html.twig', [
             'title' => $title,
-            'description' => $description,
+            'content' => $content,
         ]);
     }
 
