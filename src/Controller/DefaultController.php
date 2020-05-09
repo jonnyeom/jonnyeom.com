@@ -73,19 +73,24 @@ class DefaultController extends BaseController
     }
 
     /**
-     * @Route("/cheatsheets", name="app_cheatsheets")
-     */
-    public function cheatsheets(): Response
-    {
-        return $this->inProgress('Cheatsheets', '<a href="https://github.com/jonnyeom/cheatsheet-md/blob/master/All.md" target="_blank">https://github.com/jonnyeom/cheatsheet-md/blob/master/All.md</a>');
-    }
-
-    /**
      * @Route("/about", name="app_about")
      */
-    public function about(): Response
+    public function about(AdapterInterface $cache): Response
     {
-        return $this->inProgress('About');
+        // Get main page content.
+        $item = $cache->getItem('markdown_about');
+        if (!$item->isHit()) {
+            $converter = new CommonMarkConverter();
+            $markdown = file_get_contents(__DIR__ . '/../Content/About.md');
+            $item->set($converter->convertToHtml($markdown));
+//            $cache->save($item);
+        }
+        $content = $item->get();
+
+        return $this->render('page/about.html.twig', [
+            'content' => $content,
+            'short_title' => 'About',
+        ]);
     }
 
 }
