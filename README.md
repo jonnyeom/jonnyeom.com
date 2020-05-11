@@ -1,8 +1,10 @@
+[Check it out](https://www.jonnyeom.com/)!
+
 # jonnyeom
 
 My Upgraded Website! (WIP)
 
-## Development Roadmap
+## Development Todos
 
 ### Features
 * ~~A live Homepage!~~
@@ -10,9 +12,10 @@ My Upgraded Website! (WIP)
 * ~~Individual Blog Pages~~
 * ~~/blog page~~
 * ~~A working mobile menu~~
-* About Page
-* Cleanup
-* Real Post
+* ~~About Page~~
+* Add sidebar to post page.
+  * Outline section
+  * Why you can trust me
 
 ## Built With
 
@@ -27,10 +30,7 @@ My Upgraded Website! (WIP)
 <br>
 <br>
 
-## Local Development Notes
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.  
-See the Development Roadmap for notes on features to come.
+## Local Development
 
 ### Prerequisites
 
