@@ -17,90 +17,57 @@
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMMG43J"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMMG43J"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
-<header class="navbar is-transparent" role="navigation" aria-label="main navigation">
-    <div class="container">
-        <div class="navbar-brand">
-            <a class="navbar-item" href="/">
-                <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/google/223/maple-leaf_1f341.png" alt="maple-leaf">
-                <div class="ml-1 is-size-2 is-size-3-touch">jonnyeom</div>
-            </a>
-            <div class="navbar-item is-hidden-desktop" >
-                <a class="navbar-item" href="https://github.com/jonnyeom" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-github-alt"></i>
-                    </span>
-                </a>
-                <a class="navbar-item" href="https://twitter.com/jonnyeom" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-twitter"></i>
-                    </span>
-                </a>
-                <a class="navbar-item" href="https://www.linkedin.com/in/jonnyeom/" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-linkedin"></i>
-                    </span>
-                </a>
-                <a class="navbar-item" href="https://www.drupal.org/u/jonnyeom" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-drupal"></i>
-                    </span>
-                </a>
+    <nav class="px-5 pb-6">
+        <div class="container custom-width">
+            <div class="tabs is-medium">
+                <ul>
+                    <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_homepage') }}">home</a></li>
+                    <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_blog') }}">writing</a></li>
+                    <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_projects') }}">projects</a></li>
+                    <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_about') }}">about</a></li>
+                </ul>
             </div>
         </div>
+    </nav>
 
-        <div id="mainNavbar" class="navbar-menu">
-            <div class="navbar-end">
-                <a class="navbar-item" href="https://github.com/jonnyeom" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-github-alt"></i>
-                    </span>
-                </a>
-                <a class="navbar-item" href="https://twitter.com/jonnyeom" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-twitter"></i>
-                    </span>
-                </a>
-                <a class="navbar-item" href="https://www.linkedin.com/in/jonnyeom/" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-linkedin"></i>
-                    </span>
-                </a>
-                <a class="navbar-item" href="https://www.drupal.org/u/jonnyeom" target="_blank">
-                    <span class="icon">
-                        <i class="fab fa-lg fa-drupal"></i>
-                    </span>
-                </a>
+    {% block body %}{% endblock %}
+
+    <footer class="footer">
+        <div class="columns">
+            <div class="column is-2"></div>
+            <div class="column is-8">
+                <div class="mb-1">
+                    <a class="mr-3" href="https://www.drupal.org/u/jonnyeom" target="_blank">
+                        <span class="icon"><i class="fab fa-lg fa-drupal"></i></span>
+                    </a>
+                    <a class="mr-3" href="https://github.com/jonnyeom" target="_blank">
+                        <span class="icon"><i class="fab fa-lg fa-github-alt"></i></span>
+                    </a>
+                    <a class="mr-3" href="https://twitter.com/jonnyeom" target="_blank">
+                        <span class="icon"><i class="fab fa-lg fa-twitter"></i></span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/jonnyeom/" target="_blank">
+                        <span class="icon"><i class="fab fa-lg fa-linkedin"></i></span>
+                    </a>
+                </div>
+                <p>Copyright © 2020 Jonathan Eom · <strong>jonnyeom</strong> by
+                    <a href="https://github.com/jonnyeom">jonnyeom</a></p>
             </div>
+            <div class="column is-2"></div>
         </div>
-    </div>
-</header>
+    </footer>
 
-<nav class="section">
-    <div class="container">
-        <div class="tabs is-centered">
-            <ul>
-                <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}><a href="{{ path('app_homepage') }}">Home</a></li>
-                <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}><a href="{{ path('app_blog') }}">Blog</a></li>
-                <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}><a href="{{ path('app_projects') }}">Projects</a></li>
-                <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}><a href="{{ path('app_about') }}">About</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-{% block body %}{% endblock %}
-
-<footer class="footer">
-    <div class="content has-text-centered">
-        <p>Copyright © 2020 Jonathan Eom<br><strong>jonnyeom</strong> by <a href="https://github.com/jonnyeom">jonnyeom</a></p>
-    </div>
-</footer>
-
-{% block javascripts %}{% endblock %}
+    {% block javascripts %}{% endblock %}
 </body>
 </html>

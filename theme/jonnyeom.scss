@@ -36,6 +36,8 @@ $custom-colors: (
         'vue-green': $vue-green
 );
 
+$body-font-size: 1.25em;
+
 // Update some of Bulma's component variables
 //$body-background-color: $beige-lighter;
 //$control-border-width: 2px;
@@ -43,6 +45,7 @@ $custom-colors: (
 //$input-shadow: none;
 
 // Import only what you need from Bulma
+//@import "../node_modules/bulma/bulma";
 @import "../node_modules/bulma/sass/utilities/_all";
 @import "../node_modules/bulma/sass/base/_all";
 @import "../node_modules/bulma/sass/elements/box";
@@ -55,10 +58,12 @@ $custom-colors: (
 @import "../node_modules/bulma/sass/elements/progress";
 @import "../node_modules/bulma/sass/elements/tag";
 @import "../node_modules/bulma/sass/elements/title";
+@import "../node_modules/bulma/sass/components/level";
 @import "../node_modules/bulma/sass/components/navbar";
 @import "../node_modules/bulma/sass/components/tabs";
 @import "../node_modules/bulma/sass/grid/columns";
 @import "../node_modules/bulma/sass/grid/tiles";
+@import "../node_modules/bulma/sass/helpers/_all";
 @import "../node_modules/bulma/sass/layout/footer";
 @import "../node_modules/bulma/sass/layout/section";
 
