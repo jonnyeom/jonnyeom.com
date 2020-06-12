@@ -17,7 +17,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "bulma": "^0.8.2",
+    "bulma": "^0.9.0",
     "css-loader": "^2.1.1",
     "imagemin-cli": "^5.1.0",
     "imagemin-pngquant": "^8.0.0",
