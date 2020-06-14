@@ -1,3 +1,18 @@
+body {
+  border-top: 12px solid $light-orange;
+}
+
+// Menu
+nav.menu {
+  .tabs a {
+    // On mobile, make it less wide.
+    padding: .5em;
+    @include tablet {
+      padding: $tabs-link-padding;
+    }
+  }
+}
+
 // Custom width for containers.
 .custom-width {
   margin-left: auto;
