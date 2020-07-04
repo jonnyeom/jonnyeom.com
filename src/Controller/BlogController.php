@@ -12,8 +12,17 @@ class BlogController extends BaseController
      * @var array
      */
     protected $posts = [
+        'upgrade-symfony-from-44-to-51' => [
+            'title' => 'Upgrading my symfony application from 4.4 to 5.1',
+            'description' => 'Just a short overview of what I did to update my symfony applications to 5.1',
+            'date' => 'July 4, 2020',
+            'tags' => [
+                'Symfony',
+            ],
+        ],
         'style_guide' => [
             'title' => 'Style Guide',
+            'description' => 'A simple style guide',
             'date' => 'April 9, 2020',
             'tags' => [
                 'Drupal',
