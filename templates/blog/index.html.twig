@@ -11,10 +11,9 @@
                         <div class="column is-full">
                             <div class="box p1">
                                 <h2><a href="{{ path('app_blog') }}/{{ id }}">{{ post.title }}</a></h2>
-                                <p>
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean efficitur sit
-                                    amet massa fringilla egestas. Nullam condimentum luctus turpis.
-                                </p>
+                                {% if post.description is defined %}
+                                    <p>{{ post.description }}</p>
+                                {% endif %}
                                 <strong>{{ post.date }}</strong>
                             </div>
 
