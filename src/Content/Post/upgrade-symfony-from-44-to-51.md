@@ -59,14 +59,14 @@ To fix this
 
 - Update the `Debug` class
 
-```php
-// public/index.php
-
-...
-// This used to be "use Symfony\Component\Debug\Debug;"
-use Symfony\Component\ErrorHandler\Debug;
-...
-```
+    ```php
+    // public/index.php
+    
+    ...
+    // This used to be "use Symfony\Component\Debug\Debug;"
+    use Symfony\Component\ErrorHandler\Debug;
+    ...
+    ```
 
 ### Replace depreciations
 
