@@ -8,6 +8,7 @@ nav.menu {
     // On mobile, make it less wide.
     padding: .5em;
     @include tablet {
+      font-size: 1.25rem;
       padding: $tabs-link-padding;
     }
   }

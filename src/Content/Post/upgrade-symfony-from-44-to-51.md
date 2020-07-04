@@ -2,7 +2,7 @@
 
 Just a short overview of what I did to update my symfony applications to 5.1
 
-### Updating composer dependencies
+### Update composer dependencies
 
 First, I updated my composer.json according to the instructions [here](https://symfony.com/doc/current/setup/upgrade_major.html#update-to-the-new-major-version-via-composer)
 
