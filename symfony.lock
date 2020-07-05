@@ -23,6 +23,18 @@
     "league/commonmark": {
         "version": "0.19.1"
     },
+    "leogout/seo-bundle": {
+        "version": "1.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "master",
+            "version": "1.0",
+            "ref": "664d3f978cca5b6e4e4314e05e5e89b1cbf36858"
+        },
+        "files": [
+            "config/packages/leogout_seo.yaml"
+        ]
+    },
     "monolog/monolog": {
         "version": "1.24.0"
     },

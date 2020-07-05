@@ -1,0 +1,18 @@
+leogout_seo:
+    # By default, the SEO generators services are not loaded if you don't configure them. The following default configuration
+    # loads the services but they won't render anything.
+    # See https://github.com/leogout/SeoBundle#configuration-reference to configure them.
+    # See https://github.com/leogout/SeoBundle#setting-values-dynamically to use them directly in your controller.
+    general:
+        title: jonnyeom | Jonathan Eom
+        description: A professional developer, experienced in developing enterprise level websites and applications. Experienced in AngularJS, Drupal, GatsbyJS JavaScript, PHP, React, Symfony, Vue.
+        image: https://www.jonnyeom.com/images/jonnyeom.jpg
+    basic:
+        title: jonnyeom
+        keywords: jonnyeom, Jonathan Eom, Drupal, Symfony, Developer
+    og:
+        type: website
+        url: https://www.jonnyeom.com/
+    twitter:
+        card: A professional developer, experienced in developing enterprise level websites and applications. Experienced in AngularJS, Drupal, GatsbyJS JavaScript, PHP, React, Symfony, Vue.
+        site: '@jonnyeom'
