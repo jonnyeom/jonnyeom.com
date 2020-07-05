@@ -24,6 +24,10 @@ class DefaultController extends BaseController
         }
         $content = $item->get();
 
+        $this->seo->get('basic')->setTitle('jonnyeom | Home');
+        $this->seo->get('og')->setTitle('jonnyeom | Home');
+        $this->seo->get('twitter')->setTitle('jonnyeom | Home');
+
         return $this->render('page/homepage.html.twig', [
             'content' => $content,
         ]);
@@ -56,6 +60,10 @@ class DefaultController extends BaseController
             }
         }
 
+        $this->seo->get('basic')->setTitle('jonnyeom | Projects');
+        $this->seo->get('og')->setTitle('jonnyeom | Projects');
+        $this->seo->get('twitter')->setTitle('jonnyeom | Projects');
+
         return $this->render('page/projects.html.twig', [
             'projects' => $projects,
         ]);
@@ -72,13 +80,16 @@ class DefaultController extends BaseController
             $converter = new CommonMarkConverter();
             $markdown = file_get_contents(__DIR__ . '/../Content/About.md');
             $item->set($converter->convertToHtml($markdown));
-//            $cache->save($item);
+            $cache->save($item);
         }
         $content = $item->get();
 
+        $this->seo->get('basic')->setTitle('jonnyeom | About');
+        $this->seo->get('og')->setTitle('jonnyeom | About');
+        $this->seo->get('twitter')->setTitle('jonnyeom | About');
+
         return $this->render('page/about.html.twig', [
             'content' => $content,
-            'short_title' => 'About',
         ]);
     }
 

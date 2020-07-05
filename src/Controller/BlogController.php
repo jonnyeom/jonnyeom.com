@@ -34,18 +34,21 @@ class BlogController extends BaseController
     ];
 
     /**
-     * @Route("/blog", name="app_blog")
+     * @Route("/writing", name="app_blog")
      */
     public function index()
     {
+        $this->seo->get('basic')->setTitle('jonnyeom | Writing');
+        $this->seo->get('og')->setTitle('jonnyeom | Writing');
+        $this->seo->get('twitter')->setTitle('jonnyeom | Writing');
+
         return $this->render('blog/index.html.twig', [
-            'short_title' => 'Blog',
             'posts' => $this->posts,
         ]);
     }
 
     /**
-     * @Route("/blog/{slug}", name="app_blog_post")
+     * @Route("/writing/{slug}", name="app_blog_post")
      */
     public function post($slug, AdapterInterface $cache)
     {
@@ -80,8 +83,20 @@ class BlogController extends BaseController
         }
         $content = $item->get();
 
+        $this->seo->get('basic')
+            ->setTitle('jonnyeom | ' . $this->posts[$slug]['title'])
+            ->setDescription($this->posts[$slug]['description'])
+            ->setKeywords(implode(',', $this->posts[$slug]['tags']));
+
+        $this->seo->get('og')
+            ->setTitle('jonnyeom | ' . $this->posts[$slug]['title'])
+            ->setDescription($this->posts[$slug]['description']);
+
+        $this->seo->get('twitter')
+            ->setTitle('jonnyeom | ' . $this->posts[$slug]['title'])
+            ->setDescription($this->posts[$slug]['description']);
+
         return $this->render('blog/post.html.twig', [
-            'short_title' => $this->posts[$slug]['title'],
             'content' => $content,
         ]);
     }
