@@ -9,6 +9,11 @@ This is an example local playbook for Drupal-VM that accomplishes 2 things.
 ---
 - hosts: all
   become: yes
+
+  vars_files:
+    - ../vendor/geerlingguy/drupal-vm/provisioning/vars/main.yml
+    - config.yml
+
   roles:
     - role: gantsign.antigen
       users:
