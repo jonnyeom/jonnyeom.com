@@ -14,6 +14,15 @@ class BlogController extends BaseController
      * @var array
      */
     protected $posts = [
+        'local-ansible-playbook-example-for-drupal-vm' => [
+          'title' => 'Local ansible playbook example for Drupal-VM',
+          'description' => 'An example of adding your own ansible roles/tasks for Drupal-VM',
+          'date' => 'July 9, 2020',
+          'tags' => [
+            'Drupal',
+            'Ansible',
+          ],
+        ],
         'vagrantfile-local-example-for-drupal-vm' => [
           'title' => 'Example local Vagrantfile for Drupal-VM',
           'description' => 'An example Vagrantfile.local file for Drupal-VM',
