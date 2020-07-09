@@ -38,6 +38,13 @@ This is an example local playbook for Drupal-VM that accomplishes 2 things.
         line: "SSH_HOME={{ ssh_home }} && [ -e $SSH_HOME ] && cd $SSH_HOME"
       become: no
       when: ssh_home is defined
+
+    - name: Create phpunit symlink.
+      file:
+        src: "{{ drupal_composer_install_dir }}/vendor/bin/phpunit"
+        dest: "/usr/local/bin/phpunit"
+        state: link
+        force: true
 ```
 
 ```yaml
