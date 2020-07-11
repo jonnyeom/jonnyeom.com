@@ -80,6 +80,9 @@
             "config/packages/sensio_framework_extra.yaml"
         ]
     },
+    "spatie/yaml-front-matter": {
+        "version": "2.0.5"
+    },
     "swiftmailer/swiftmailer": {
         "version": "v6.2.0"
     },

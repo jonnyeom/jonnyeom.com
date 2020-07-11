@@ -5,6 +5,7 @@ namespace App\Controller;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Environment;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
+use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -15,21 +16,21 @@ class BlogController extends BaseController
      */
     protected $posts = [
         'local-ansible-playbook-example-for-drupal-vm' => [
-          'title' => 'Example local ansible playbook for Drupal-VM',
-          'description' => 'An example of adding your own ansible roles/tasks for Drupal-VM',
-          'date' => 'July 9, 2020',
-          'tags' => [
-            'Drupal',
-            'Ansible',
-          ],
+            'title' => 'Example local ansible playbook for Drupal-VM',
+            'description' => 'An example of adding your own ansible roles/tasks for Drupal-VM',
+            'date' => 'July 9, 2020',
+            'tags' => [
+                'Drupal',
+                'Ansible',
+            ],
         ],
         'vagrantfile-local-example-for-drupal-vm' => [
-          'title' => 'Example local Vagrantfile for Drupal-VM',
-          'description' => 'An example Vagrantfile.local file for Drupal-VM',
-          'date' => 'July 9, 2020',
-          'tags' => [
-            'Drupal',
-          ],
+            'title' => 'Example local Vagrantfile for Drupal-VM',
+            'description' => 'An example Vagrantfile.local file for Drupal-VM',
+            'date' => 'July 9, 2020',
+            'tags' => [
+                'Drupal',
+            ],
         ],
         'upgrade-symfony-from-44-to-51' => [
             'title' => 'Upgrading my symfony application from 4.4 to 5.1',
@@ -93,28 +94,33 @@ class BlogController extends BaseController
                     'noreferrer' => 'external',
                 ],
             ];
+
+            $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$slug}.md"));
             $converter = new CommonMarkConverter($config, $environment);
-            $markdown = file_get_contents(__DIR__ . "/../Content/Post/{$slug}.md");
-            $item->set($converter->convertToHtml($markdown));
+
+            $item->set([
+                'front_matter' => $object->matter(),
+                'body' => $converter->convertToHtml($object->body()),
+            ]);
             $cache->save($item);
         }
         $content = $item->get();
 
         $this->seo->get('basic')
-            ->setTitle('jonnyeom | ' . $this->posts[$slug]['title'])
-            ->setDescription($this->posts[$slug]['description'])
-            ->setKeywords(implode(',', $this->posts[$slug]['tags']));
+            ->setTitle('jonnyeom | ' . $content['front_matter']['title'])
+            ->setDescription($content['front_matter']['description'])
+            ->setKeywords(implode(',', $content['front_matter']['tags']));
 
         $this->seo->get('og')
-            ->setTitle('jonnyeom | ' . $this->posts[$slug]['title'])
-            ->setDescription($this->posts[$slug]['description']);
+            ->setTitle('jonnyeom | ' . $content['front_matter']['title'])
+            ->setDescription($content['front_matter']['description']);
 
         $this->seo->get('twitter')
-            ->setTitle('jonnyeom | ' . $this->posts[$slug]['title'])
-            ->setDescription($this->posts[$slug]['description']);
+            ->setTitle('jonnyeom | ' . $content['front_matter']['title'])
+            ->setDescription($content['front_matter']['description']);
 
         return $this->render('blog/post.html.twig', [
-            'content' => $content,
+            'body' => $content['body'],
         ]);
     }
 

@@ -1,3 +1,11 @@
+---
+title: Example local Vagrantfile for Drupal-VM
+description: An example Vagrantfile.local file for Drupal-VM
+date: July 9, 2020
+tags:
+    - Drupal
+---
+
 When using this, replace `project` with the `vagrant_machine_name` used in your config.yml file for Drupal-VM.
 
 ```

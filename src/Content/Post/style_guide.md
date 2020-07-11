@@ -1,3 +1,10 @@
+---
+title: Upgrading my symfony application from 4.4 to 5.1
+description: Just a short overview of what I did to update my symfony applications to 5.1
+date: July 4, 2020
+tags: []
+---
+
 # h1 Heading 8-)
 ## h2 Heading
 ### h3 Heading

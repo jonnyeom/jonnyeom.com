@@ -1,3 +1,12 @@
+---
+title: Example local ansible playbook for Drupal-VM
+description: An example of adding your own ansible roles/tasks for Drupal-VM
+date: July 9, 2020
+tags:
+    - Drupal
+    - Ansible
+---
+
 This is an example local playbook for Drupal-VM that accomplishes 2 things.
 
 1. Install zsh inside vagrant.
