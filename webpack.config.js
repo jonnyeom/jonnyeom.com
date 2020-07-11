@@ -1,65 +1,74 @@
-const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
+var Encore = require('@symfony/webpack-encore');
 
-module.exports = {
-    entry: './theme/index.js',
-    output: {
-        path: path.resolve(__dirname, 'public'),
-        filename: 'js/bundle.js'
-    },
-    optimization: {
-        // Extract all CSS in a single file.
-        splitChunks: {
-            cacheGroups: {
-                styles: {
-                    name: 'styles',
-                    test: /\.css$/,
-                    chunks: 'all',
-                    enforce: true,
-                },
-            },
-        },
-        // Minimizing CSS and JS.
-        minimizer: [new TerserPlugin({}), new OptimizeCssAssetsPlugin({
-            cssProcessorPluginOptions: {
-                preset: ['default', {discardComments: {removeAll: true}}],
-            },
-            canPrint: true
-        })],
-    },
-    plugins: [
-        new MiniCssExtractPlugin({
-            // Options similar to the same options in webpackOptions.output
-            // both options are optional
-            filename: 'css/jonnyeom.css',
-            chunkFilename: 'css/[id].css',
-        })
-    ],
-    module: {
-        rules: [{
-            test: /\.scss$/,
-            use: [{
-                loader: MiniCssExtractPlugin.loader,
-                options: {
-                    publicPath: (resourcePath, context) => {
-                        // publicPath is the relative path of the resource to the context
-                        // e.g. for ./css/admin/main.css the publicPath will be ../../
-                        // while for ./css/main.css the publicPath will be ../
-                        return path.relative(path.dirname(resourcePath), context) + '/';
-                    },
-                    hmr: process.env.NODE_ENV === 'development',
-                },
-            }, {
-                loader: "css-loader", options: { // translates CSS into CommonJS modules
-                    // sourceMap: true
-                }
-            }, {
-                loader: "sass-loader", options: { // compiles Sass to CSS
-                    // sourceMap: true
-                }
-            }]
-        }]
-    }
-};
+// Manually configure the runtime environment if not already configured yet by the "encore" command.
+// It's useful when you use tools that rely on webpack.config.js file.
+if (!Encore.isRuntimeEnvironmentConfigured()) {
+    Encore.configureRuntimeEnvironment(process.env.NODE_ENV || 'dev');
+}
+
+Encore
+    // directory where compiled assets will be stored
+    .setOutputPath('public/build/')
+    // public path used by the web server to access the output path
+    .setPublicPath('/build')
+    // only needed for CDN's or sub-directory deploy
+    //.setManifestKeyPrefix('build/')
+
+    /*
+     * ENTRY CONFIG
+     *
+     * Add 1 entry for each "page" of your app
+     * (including one that's included on every page - e.g. "app")
+     *
+     * Each entry will result in one JavaScript file (e.g. app.js)
+     * and one CSS file (e.g. app.css) if your JavaScript imports CSS.
+     */
+    .addEntry('app', './assets/js/app.js')
+    //.addEntry('page1', './assets/js/page1.js')
+    //.addEntry('page2', './assets/js/page2.js')
+
+    // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
+    .splitEntryChunks()
+
+    // will require an extra script tag for runtime.js
+    // but, you probably want this, unless you're building a single-page app
+    .enableSingleRuntimeChunk()
+
+    /*
+     * FEATURE CONFIG
+     *
+     * Enable & configure other features below. For a full
+     * list of features, see:
+     * https://symfony.com/doc/current/frontend.html#adding-more-features
+     */
+    .cleanupOutputBeforeBuild()
+    .enableBuildNotifications()
+    .enableSourceMaps(!Encore.isProduction())
+    // enables hashed filenames (e.g. app.abc123.css)
+    .enableVersioning(Encore.isProduction())
+
+    // enables @babel/preset-env polyfills
+    .configureBabelPresetEnv((config) => {
+        config.useBuiltIns = 'usage';
+        config.corejs = 3;
+    })
+
+    // enables Sass/SCSS support
+    .enableSassLoader()
+
+    // uncomment if you use TypeScript
+    //.enableTypeScriptLoader()
+
+    // uncomment to get integrity="..." attributes on your script & link tags
+    // requires WebpackEncoreBundle 1.4 or higher
+    //.enableIntegrityHashes(Encore.isProduction())
+
+    // uncomment if you're having problems with a jQuery plugin
+    //.autoProvidejQuery()
+
+    // uncomment if you use API Platform Admin (composer req api-admin)
+    //.enableReactPreset()
+    //.addEntry('admin', './assets/js/admin.js')
+;
+
+module.exports = Encore.getWebpackConfig();

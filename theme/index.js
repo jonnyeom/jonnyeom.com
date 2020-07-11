@@ -1,1 +1,0 @@
-require('./jonnyeom.scss');

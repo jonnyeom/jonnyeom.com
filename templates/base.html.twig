@@ -2,69 +2,82 @@
 <html lang="en">
 <head>
     <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-KMMG43J');</script>
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src =
+                'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-KMMG43J');</script>
     <!-- End Google Tag Manager -->
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {{ leogout_seo() }}
 
-    <link rel="icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/60/google/223/maple-leaf_1f341.png">
-    <link rel="stylesheet" href="{{ asset('css/jonnyeom.css') }}">
-    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    {% block stylesheets %}
+        <link rel="icon"
+              href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/60/google/223/maple-leaf_1f341.png">
+        {{ encore_entry_link_tags('app') }}
+        <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    {% endblock %}
 </head>
 <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript>
-        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMMG43J"
-                height="0" width="0" style="display:none;visibility:hidden"></iframe>
-    </noscript>
-    <!-- End Google Tag Manager (noscript) -->
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMMG43J"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
 
-    <nav class="px-5 pb-6 menu">
-        <div class="container custom-width">
-            <div class="tabs">
-                <ul>
-                    <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}>
-                        <a href="{{ path('app_homepage') }}">home</a></li>
-                    <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
-                        <a href="{{ path('app_blog') }}">writing</a></li>
-                    <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
-                        <a href="{{ path('app_projects') }}">projects</a></li>
-                    <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
-                        <a href="{{ path('app_about') }}">about</a></li>
-                </ul>
-            </div>
+<nav class="px-5 pb-6 menu">
+    <div class="container custom-width">
+        <div class="tabs">
+            <ul>
+                <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_homepage') }}">home</a></li>
+                <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_blog') }}">writing</a></li>
+                <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_projects') }}">projects</a></li>
+                <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_about') }}">about</a></li>
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    {% block body %}{% endblock %}
+{% block body %}{% endblock %}
 
-    <footer class="footer">
-        <div class="container custom-width">
-            <div class="mb-1">
-                <a class="mr-3" href="https://www.drupal.org/u/jonnyeom" target="_blank" rel="noopener>
-                    <span class="icon"><i class="fab fa-lg fa-drupal"></i></span>
-                </a>
-                <a class="mr-3" href="https://github.com/jonnyeom" target="_blank" rel="noopener>
-                    <span class="icon"><i class="fab fa-lg fa-github-alt"></i></span>
-                </a>
-                <a class="mr-3" href="https://twitter.com/jonnyeom" target="_blank" rel="noopener>
-                    <span class="icon"><i class="fab fa-lg fa-twitter"></i></span>
-                </a>
-                <a href="https://www.linkedin.com/in/jonnyeom/" target="_blank" rel="noopener>
-                    <span class="icon"><i class="fab fa-lg fa-linkedin"></i></span>
-                </a>
-            </div>
-            <p>Copyright © 2020 Jonathan Eom · <strong>jonnyeom</strong> by
-                <a href="https://github.com/jonnyeom">jonnyeom</a></p>
+<footer class="footer">
+    <div class="container custom-width">
+        <div class="mb-1">
+            <a class="mr-3" href="https://www.drupal.org/u/jonnyeom" target="_blank" rel="noopener>
+                    <span class=" icon"><i class="fab fa-lg fa-drupal"></i></span>
+            </a>
+            <a class="mr-3" href="https://github.com/jonnyeom" target="_blank" rel="noopener>
+                    <span class=" icon"><i class="fab fa-lg fa-github-alt"></i></span>
+            </a>
+            <a class="mr-3" href="https://twitter.com/jonnyeom" target="_blank" rel="noopener>
+                    <span class=" icon"><i class="fab fa-lg fa-twitter"></i></span>
+            </a>
+            <a href="https://www.linkedin.com/in/jonnyeom/" target="_blank" rel="noopener>
+                    <span class=" icon"><i class="fab fa-lg fa-linkedin"></i></span>
+            </a>
         </div>
-    </footer>
+        <p>Copyright © 2020 Jonathan Eom · <strong>jonnyeom</strong> by
+            <a href="https://github.com/jonnyeom">jonnyeom</a></p>
+    </div>
+</footer>
 
-    {% block javascripts %}{% endblock %}
+{% block javascripts %}
+    {{ encore_entry_script_tags('app') }}
+{% endblock %}
 </body>
 </html>
