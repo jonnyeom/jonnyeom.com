@@ -8,4 +8,3 @@ I am a professional **developer**, experienced in developing enterprise level we
  I stay involved in **open source** projects, primary Drupal.
 
 <br>
-<br>
