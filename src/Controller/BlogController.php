@@ -15,6 +15,14 @@ class BlogController extends BaseController
      * @var array
      */
     protected $posts = [
+        'collection-of-drupal-errors' => [
+            'title' => 'Collection of drupal errors',
+            'description' => 'A collection of drupal errors I\'ve run into',
+            'date' => 'July 30, 2020',
+            'tags' => [
+                'Drupal',
+            ],
+        ],
         'local-ansible-playbook-example-for-drupal-vm' => [
             'title' => 'Example local ansible playbook for Drupal-VM',
             'description' => 'An example of adding your own ansible roles/tasks for Drupal-VM',
