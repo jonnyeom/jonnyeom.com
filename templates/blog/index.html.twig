@@ -4,20 +4,23 @@
     <section class="section pt-0">
         <div class="container custom-width">
             <div class="content">
+                {{ dump(debug) }}
                 {% for id, post in posts %}
+                    {% if post.isPublished() %}
                     <div class="columns mb-1">
                         <div class="column is-full">
                             <div class="box p1">
-                                <h2><a href="{{ path('app_blog') }}/{{ id }}">{{ post.title }}</a></h2>
-                                {% if post.description is defined %}
-                                    <p>{{ post.description }}</p>
+                                <h2><a href="{{ path('app_blog') }}/{{ id }}">{{ post.getTitle }}</a></h2>
+                                {% if post.getDescription is defined %}
+                                    <p>{{ post.getDescription }}</p>
                                 {% endif %}
-                                <strong>{{ post.date }}</strong>
+                                <strong>{{ post.getDate }}</strong>
                             </div>
 
                             {#                        {{ post.tags }}#}
                         </div>
                     </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

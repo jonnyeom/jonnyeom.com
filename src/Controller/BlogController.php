@@ -2,9 +2,8 @@
 
 namespace App\Controller;
 
-use League\CommonMark\CommonMarkConverter;
-use League\CommonMark\Environment;
-use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
+use App\Model\Post;
+use App\Service\BlogContent;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -62,14 +61,16 @@ class BlogController extends BaseController
     /**
      * @Route("/writing", name="app_blog")
      */
-    public function index()
+    public function index(BlogContent $blogContent)
     {
         $this->seo->get('basic')->setTitle('jonnyeom | Writing');
         $this->seo->get('og')->setTitle('jonnyeom | Writing');
         $this->seo->get('twitter')->setTitle('jonnyeom | Writing');
 
+        $posts = $blogContent->getPosts();
+
         return $this->render('blog/index.html.twig', [
-            'posts' => $this->posts,
+            'posts' => $posts,
         ]);
     }
 
@@ -86,49 +87,30 @@ class BlogController extends BaseController
         $cid = 'post_' . $slug;
         $item = $cache->getItem($cid);
         if (!$item->isHit()) {
-            // @Todo: Move to a wrapper service.
-            // Obtain a pre-configured Environment with all the CommonMark parsers/renderers ready-to-go
-            $environment = Environment::createCommonMarkEnvironment();
-            // Add this extension
-            $environment->addExtension(new ExternalLinkExtension());
-            // Set your configuration
-            $config = [
-                'external_link' => [
-                    'internal_hosts' => 'www.jonnyeom.com', // TODO: Don't forget to set this!
-                    'open_in_new_window' => true,
-                    'html_class' => 'external-link',
-                    'nofollow' => '',
-                    'noopener' => 'external',
-                    'noreferrer' => 'external',
-                ],
-            ];
-
             $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$slug}.md"));
-            $converter = new CommonMarkConverter($config, $environment);
+            $post = Post::createFromYamlParse($object);
 
-            $item->set([
-                'front_matter' => $object->matter(),
-                'body' => $converter->convertToHtml($object->body()),
-            ]);
-            $cache->save($item);
+            $cache->save($post);
         }
-        $content = $item->get();
+
+        /** @var Post $post */
+        $post = $item->get();
 
         $this->seo->get('basic')
-            ->setTitle('jonnyeom | ' . $content['front_matter']['title'])
-            ->setDescription($content['front_matter']['description'])
-            ->setKeywords(implode(',', $content['front_matter']['tags']));
+            ->setTitle('jonnyeom | ' . $post->getTitle())
+            ->setDescription($post->getDescription())
+            ->setKeywords($post->getTags());
 
         $this->seo->get('og')
-            ->setTitle('jonnyeom | ' . $content['front_matter']['title'])
-            ->setDescription($content['front_matter']['description']);
+            ->setTitle('jonnyeom | ' . $post->getTitle())
+            ->setDescription($post->getDescription());
 
         $this->seo->get('twitter')
-            ->setTitle('jonnyeom | ' . $content['front_matter']['title'])
-            ->setDescription($content['front_matter']['description']);
+            ->setTitle('jonnyeom | ' . $post->getTitle())
+            ->setDescription($post->getDescription());
 
         return $this->render('blog/post.html.twig', [
-            'body' => $content['body'],
+            'body' => $post->getBody(),
         ]);
     }
 
