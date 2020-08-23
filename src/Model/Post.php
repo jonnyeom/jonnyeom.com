@@ -45,10 +45,10 @@ class Post
         $post->setTitle($object->title ?? '')
             ->setDescription($object->description ?? '')
             ->setDate($object->date ?? '')
-            ->setTags($object->tags ? implode(',', $object->tags) : [])
+            ->setTags($object->tags ?? [])
             ->setBody($converter->convertToHtml($object->body()));
 
-        if ($object->published === 'false') {
+        if ($object->published === false) {
             $post->unpublish();
         }
 

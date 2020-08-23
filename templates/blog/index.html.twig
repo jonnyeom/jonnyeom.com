@@ -4,7 +4,6 @@
     <section class="section pt-0">
         <div class="container custom-width">
             <div class="content">
-                {{ dump(debug) }}
                 {% for id, post in posts %}
                     {% if post.isPublished() %}
                     <div class="columns mb-1">

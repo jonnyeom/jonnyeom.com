@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Model\Post;
 use DirectoryIterator;
+use Psr\Cache\InvalidArgumentException;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 
@@ -18,7 +19,12 @@ class BlogContent
     {
         $this->cache = $cache;
     }
-    
+
+    /**
+     * @return Post[]
+     *
+     * @throws InvalidArgumentException
+     */
     public function getPosts(): array
     {
         $posts = [];
@@ -53,8 +59,17 @@ class BlogContent
         return $posts;
     }
 
-    public function getPost($slug)
+    /**
+     * @param $slug
+     *
+     * @return Post|null
+     *
+     * @throws InvalidArgumentException
+     */
+    public function getPost($slug): ?Post
     {
+        $posts = $this->getPosts();
 
+        return $posts[$slug] ?? null;
     }
 }
