@@ -40,6 +40,11 @@
                 <source>help.post_content</source>
                 <target>Use Markdown to format the blog post contents. HTML is allowed too.</target>
             </trans-unit>
+
+            <trans-unit id="post.created_successfully">
+                <source>post.created_successfully</source>
+                <target>Post Created!</target>
+            </trans-unit>
         </body>
     </file>
 </xliff>

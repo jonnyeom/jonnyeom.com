@@ -1,19 +1,8 @@
 <?php
 
-/*
- * This file is part of the Symfony package.
- *
- * (c) Fabien Potencier <fabien@symfony.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace App\Form;
 
 use App\Entity\Post;
-use App\Form\Type\DateTimePickerType;
-use App\Form\Type\TagsInputType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -29,7 +18,9 @@ class PostType extends AbstractType
 {
     private $slugger;
 
-    // Form types are services, so you can inject other services in them if needed
+    /**
+     * PostType constructor.
+     */
     public function __construct(SluggerInterface $slugger)
     {
         $this->slugger = $slugger;

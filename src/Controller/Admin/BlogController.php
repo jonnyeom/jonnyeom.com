@@ -1,12 +1,15 @@
 <?php
 
+/*
+ * This file is part of the jonnyeom package.
+ *
+ * (c) Jonathan Eom <jonnyeom@gmail.com>
+ */
+
 namespace App\Controller\Admin;
 
 use App\Entity\Post;
 use App\Form\PostType;
-use App\Repository\PostRepository;
-use App\Security\PostVoter;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +25,10 @@ class BlogController extends AbstractController
      * Creates a new Post.
      *
      * @Route("/new", methods="GET|POST", name="admin_post_new")
+     *
+     * @param Request $request
+     *
+     * @return Response
      */
     public function new(Request $request): Response
     {
@@ -30,7 +37,6 @@ class BlogController extends AbstractController
         $form = $this->createForm(PostType::class, $post)
             ->add('saveAndCreateNew', SubmitType::class);
 
-//        $this->addFlash('success', 'post.created_successfully');
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $em = $this->getDoctrine()->getManager();
@@ -43,7 +49,8 @@ class BlogController extends AbstractController
                 return $this->redirectToRoute('admin_post_new');
             }
 
-            return $this->redirectToRoute('admin_post_index');
+            // @todo Change this to listing page.
+            return $this->redirectToRoute('admin_post_new');
         }
 
         return $this->render('admin/post/new.html.twig', [
