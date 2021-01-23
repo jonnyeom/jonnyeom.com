@@ -53,6 +53,19 @@
                 <target>Edit</target>
             </trans-unit>
 
+            <trans-unit id="link.back_to_site">
+                <source>link.back_to_site</source>
+                <target>Back to site</target>
+            </trans-unit>
+            <trans-unit id="link.posts">
+                <source>link.posts</source>
+                <target>Posts</target>
+            </trans-unit>
+            <trans-unit id="link.login">
+                <source>link.login</source>
+                <target>Log in</target>
+            </trans-unit>
+
             <trans-unit id="help.post_summary">
                 <source>help.post_summary</source>
                 <target>Summaries can't contain Markdown or HTML contents; only plain text.</target>

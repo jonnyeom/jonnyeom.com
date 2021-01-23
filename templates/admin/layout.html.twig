@@ -3,6 +3,8 @@ Base template for the administration section.
 #}
 {% extends 'base.html.twig' %}
 
+{% block body_attributes %}class="has-navbar-fixed-top"{% endblock %}
+
 {% block stylesheets %}
     {{ encore_entry_link_tags('admin') }}
 {% endblock %}
@@ -12,6 +14,32 @@ Base template for the administration section.
 {% endblock %}
 
 {% block body %}
+    <nav class="navbar is-fixed-top is-danger" role="navigation" aria-label="main navigation">
+        <div class="navbar-menu">
+            <div class="navbar-start">
+                <a href="{{ path('app_homepage') }}" class="navbar-item">
+                    <span class="icon is-medium"><i class="fas fa-lg fa-long-arrow-alt-left"></i></span>
+                    <span>{{ 'link.back_to_site'|trans }}</span>
+                </a>
+
+                <a class="navbar-item">
+                    {{ 'link.posts'|trans }}
+                </a>
+            </div>
+
+            <div class="navbar-end">
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button is-light">
+                            <span class="icon is-medium"><i class="fas fa-sign-in-alt"></i></span>
+                            <span>{{ 'link.login'|trans }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
 {#    #}{# read and display several types of flash messages #}
 {#    {% for label, messages in app.flashes(['success', 'warning']) %}#}
 {#        {% for message in messages %}#}
@@ -32,7 +60,7 @@ Base template for the administration section.
         {% endfor %}
     </div>
 
-    <section class="pb-6">
+    <section class="py-6">
         <div class="container">
             {% block main %}{% endblock %}
         </div>
