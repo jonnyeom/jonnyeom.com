@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" datatype="plaintext" original="file.ext">
+        <body>
+            <trans-unit id="title.post_new">
+                <source>title.post_new</source>
+                <target>New Post</target>
+            </trans-unit>
+
+            <trans-unit id="label.title">
+                <source>label.title</source>
+                <target>Title</target>
+            </trans-unit>
+            <trans-unit id="label.summary">
+                <source>label.summary</source>
+                <target>Summary</target>
+            </trans-unit>
+            <trans-unit id="label.content">
+                <source>label.content</source>
+                <target>Content</target>
+            </trans-unit>
+            <trans-unit id="label.create_post">
+                <source>label.create_post</source>
+                <target>Create post</target>
+            </trans-unit>
+            <trans-unit id="label.save_and_create_new">
+                <source>label.save_and_create_new</source>
+                <target>Save and create new</target>
+            </trans-unit>
+            <trans-unit id="action.back_to_list">
+                <source>action.back_to_list</source>
+                <target>Back to the post list</target>
+            </trans-unit>
+
+            <trans-unit id="help.post_summary">
+                <source>help.post_summary</source>
+                <target>Summaries can't contain Markdown or HTML contents; only plain text.</target>
+            </trans-unit>
+            <trans-unit id="help.post_content">
+                <source>help.post_content</source>
+                <target>Use Markdown to format the blog post contents. HTML is allowed too.</target>
+            </trans-unit>
+        </body>
+    </file>
+</xliff>
