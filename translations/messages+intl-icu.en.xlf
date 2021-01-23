@@ -6,6 +6,10 @@
                 <source>title.post_new</source>
                 <target>New Post</target>
             </trans-unit>
+            <trans-unit id="title.post_list">
+                <source>title.post_list</source>
+                <target>Posts</target>
+            </trans-unit>
 
             <trans-unit id="label.title">
                 <source>label.title</source>
@@ -19,6 +23,11 @@
                 <source>label.content</source>
                 <target>Content</target>
             </trans-unit>
+            <trans-unit id="label.published_at">
+                <source>label.published_at</source>
+                <target>Published Date</target>
+            </trans-unit>
+
             <trans-unit id="label.create_post">
                 <source>label.create_post</source>
                 <target>Create post</target>
@@ -27,9 +36,21 @@
                 <source>label.save_and_create_new</source>
                 <target>Save and create new</target>
             </trans-unit>
+            <trans-unit id="label.actions">
+                <source>label.actions</source>
+                <target>Actions</target>
+            </trans-unit>
             <trans-unit id="action.back_to_list">
                 <source>action.back_to_list</source>
                 <target>Back to the post list</target>
+            </trans-unit>
+            <trans-unit id="action.show">
+                <source>action.show</source>
+                <target>See</target>
+            </trans-unit>
+            <trans-unit id="action.edit">
+                <source>action.edit</source>
+                <target>Edit</target>
             </trans-unit>
 
             <trans-unit id="help.post_summary">
@@ -44,6 +65,14 @@
             <trans-unit id="post.created_successfully">
                 <source>post.created_successfully</source>
                 <target>Post Created!</target>
+            </trans-unit>
+            <trans-unit id="post.no_posts_found">
+                <source>post.no_posts_found</source>
+                <target>No posts found</target>
+            </trans-unit>
+            <trans-unit id="post.too_short_content">
+                <source>post.too_short_content</source>
+                <target>The post content is too short</target>
             </trans-unit>
         </body>
     </file>
