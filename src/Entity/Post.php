@@ -115,4 +115,9 @@ class Post
 
         return $this;
     }
+
+    public function getPublishedAt(): \DateTime
+    {
+        return $this->publishedAt;
+    }
 }

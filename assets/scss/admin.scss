@@ -1,4 +1,6 @@
 // Entrypoint for admin styles.
 
 @import "base";
+@import "../../node_modules/bulma/sass/elements/notification";
+@import "../../node_modules/bulma/sass/elements/table";
 @import "../../node_modules/bulma/sass/form/all";

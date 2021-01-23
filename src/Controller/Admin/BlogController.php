@@ -1,15 +1,10 @@
 <?php
 
-/*
- * This file is part of the jonnyeom package.
- *
- * (c) Jonathan Eom <jonnyeom@gmail.com>
- */
-
 namespace App\Controller\Admin;
 
 use App\Entity\Post;
 use App\Form\PostType;
+use App\Repository\PostRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,13 +17,22 @@ use Symfony\Component\Routing\Annotation\Route;
 class BlogController extends AbstractController
 {
     /**
+     * Lists all Posts.
+     *
+     * @Route("/admin", methods="GET", name="admin_index")
+     * @Route("/admin", methods="GET", name="admin_post_list")
+     */
+    public function index(PostRepository $postRepository): Response
+    {
+        $posts = $postRepository->findBy([], ['publishedAt' => 'DESC']);
+
+        return $this->render('admin/post/list.html.twig', ['posts' => $posts]);
+    }
+
+    /**
      * Creates a new Post.
      *
-     * @Route("/new", methods="GET|POST", name="admin_post_new")
-     *
-     * @param Request $request
-     *
-     * @return Response
+     * @Route("/admin/new", methods="GET|POST", name="admin_post_new")
      */
     public function new(Request $request): Response
     {
