@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block gtm_header %}
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || [];
+            w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            });
+            var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+            j.async = true;
+            j.src =
+                'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+            f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-KMMG43J');</script>
+    <!-- End Google Tag Manager -->
+{% endblock %}
+
+{% block seo %}
+    {{ leogout_seo() }}
+{% endblock %}
+
+{% block body %}
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMMG43J"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <nav class="px-5 pb-6 menu">
+        <div class="container custom-width">
+            <div class="tabs">
+                <ul>
+                    <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_homepage') }}">home</a></li>
+                    <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_blog') }}">writing</a></li>
+                    <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_projects') }}">projects</a></li>
+                    <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
+                        <a href="{{ path('app_about') }}">about</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    {% block main %}{% endblock %}
+{% endblock %}
+

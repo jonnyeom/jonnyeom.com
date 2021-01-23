@@ -1,5 +1,9 @@
 // App styles.
 
+body {
+  border-top: 12px solid $light-orange;
+}
+
 // Menu
 nav.menu {
   .tabs a {
