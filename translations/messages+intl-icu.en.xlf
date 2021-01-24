@@ -2,9 +2,13 @@
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
     <file source-language="en" datatype="plaintext" original="file.ext">
         <body>
-            <trans-unit id="title.post_new">
-                <source>title.post_new</source>
+            <trans-unit id="title.new_post">
+                <source>title.new_post</source>
                 <target>New Post</target>
+            </trans-unit>
+            <trans-unit id="title.edit_post">
+                <source>title.edit_post</source>
+                <target>Edit post #{id, number}</target>
             </trans-unit>
             <trans-unit id="title.post_list">
                 <source>title.post_list</source>
@@ -31,6 +35,10 @@
             <trans-unit id="label.create_post">
                 <source>label.create_post</source>
                 <target>Create post</target>
+            </trans-unit>
+            <trans-unit id="label.update_post">
+                <source>label.update_post</source>
+                <target>Update post</target>
             </trans-unit>
             <trans-unit id="label.save_and_create_new">
                 <source>label.save_and_create_new</source>
@@ -78,6 +86,10 @@
             <trans-unit id="post.created_successfully">
                 <source>post.created_successfully</source>
                 <target>Post Created!</target>
+            </trans-unit>
+            <trans-unit id="post.updated_successfully">
+                <source>post.updated_successfully</source>
+                <target>Post Updated!"</target>
             </trans-unit>
             <trans-unit id="post.no_posts_found">
                 <source>post.no_posts_found</source>

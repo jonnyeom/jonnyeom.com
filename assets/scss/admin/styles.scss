@@ -1,5 +1,9 @@
 // Admin Styles.
 
-.navbar {
-  border-top: 12px solid $orange;
+body.has-navbar-fixed-top {
+  padding-top: $navbar-height + .75rem;
+}
+
+.navbar.is-fixed-top {
+  border-top: .75rem solid $orange;
 }

@@ -62,4 +62,30 @@ class BlogController extends AbstractController
             'form' => $form->createView(),
         ]);
     }
+
+    /**
+     * Edit a post.
+     *
+     * @Route("/admin/{id<\d+>}/edit", methods="GET|POST", name="admin_post_edit")
+     *
+     * @todo Add Security Voter.
+     */
+    public function edit(Request $request, Post $post)
+    {
+        $form = $this->createForm(PostType::class, $post);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->getDoctrine()->getManager()->flush();
+
+            $this->addFlash('success', 'post.updated_successfully', []);
+
+            return $this->redirectToRoute('admin_post_edit', ['id' => $post->getId()]);
+        }
+
+        return $this->render('admin/post/edit.html.twig', [
+            'post' => $post,
+            'form' => $form->createView(),
+        ]);
+    }
 }
