@@ -1,15 +1,11 @@
-{
-  "jonnyeom": {
-    "image": "images/projects/jonnyeom.png",
-    "tags": [
-      "Symfony"
-    ]
-  },
-  "Sandy Spring Bank": {
-    "image": "images/projects/ssb.png",
+{ 
+  "U.S. Naval Institute": {
+    "image": "images/projects/usni.png",
     "description": "",
     "tags": [
-      "Drupal 8"
+      "Drupal 8",
+      "Commerce",
+      "Symfony"
     ]
   },
   "International Society for Pharmaceutical Engineering": {
@@ -20,6 +16,13 @@
       "React"
     ]
   },
+  "Sandy Spring Bank": {
+    "image": "images/projects/ssb.png",
+    "description": "",
+    "tags": [
+      "Drupal 8"
+    ]
+  },
   "Association of International Educators": {
     "image": "images/projects/nafsa.png",
     "description": "",
@@ -27,16 +30,6 @@
       "Drupal 8",
       "React",
       "Vue.js"
-    ]
-  },
-  "U.S. Naval Institute": {
-    "image": "images/projects/usni.png",
-    "description": "",
-    "tags": [
-      "Drupal 8",
-      "Commerce",
-      "Salesforce",
-      "Symfony"
     ]
   }
 }
