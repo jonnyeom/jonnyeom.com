@@ -31,5 +31,34 @@
       "React",
       "Vue.js"
     ]
+  },
+  "Lab Tests Online": {
+    "image": "images/projects/lab-tests-online.png",
+    "description": "",
+    "tags": [
+      "Drupal 8"
+    ]
+  },
+  "U.S. Naval Institute News": {
+    "image": "images/projects/usni-news.png",
+    "description": "",
+    "tags": [
+      "Wordpress"
+    ]
+  },
+  "U.S. Naval Institute Blog": {
+    "image": "images/projects/usni-blog.png",
+    "description": "",
+    "tags": [
+      "AngularJS",
+      "Wordpress"
+    ]
+  },
+  "RCM&D": {
+    "image": "images/projects/rcmd.png",
+    "description": "",
+    "tags": [
+      "Drupal 8"
+    ]
   }
 }

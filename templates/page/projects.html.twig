@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <section class="section page-projects">
+    <section class="section page-projects pt-0">
         <div class="container">
             <div class="content custom-width">
                 {% for batch in projects|batch(2) %}
@@ -11,10 +11,12 @@
                                 <article class="tile is-child box is-paddingless">
                                     <figure class="image is-marginless"><img src="{{ asset(project.image) }}"/></figure>
                                     <div class="tile-bottom">
-                                        <h3>{{ title }}</h3>
-                                        {% for tag in project.tags %}
-                                            <span class="tag {% if tag.class %}{{ tag.class }}{% endif %}">{{ tag.label }}</span>
-                                        {% endfor %}
+                                        <h3 class="mb-3">{{ title }}</h3>
+                                        {% if project.tags is not empty %}
+                                            {% for tag in project.tags %}
+                                                <span class="tag is-theme-blue">{{ tag.label }}</span>
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                 </article>
                             </div>
