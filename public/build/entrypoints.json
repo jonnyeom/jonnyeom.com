@@ -8,6 +8,15 @@
       "css": [
         "/build/app.1aa43146.css"
       ]
+    },
+    "admin": {
+      "js": [
+        "/build/runtime.d94b3b43.js",
+        "/build/admin.14f4895f.js"
+      ],
+      "css": [
+        "/build/admin.a8e13fd3.css"
+      ]
     }
   }
 }

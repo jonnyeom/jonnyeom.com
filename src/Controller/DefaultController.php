@@ -5,7 +5,9 @@ namespace App\Controller;
 use League\CommonMark\CommonMarkConverter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Yaml\Yaml;
 
 class DefaultController extends BaseController
 {
@@ -14,6 +16,14 @@ class DefaultController extends BaseController
      */
     public function index(AdapterInterface $cache): Response
     {
+        $accessor = PropertyAccess::createPropertyAccessor();
+
+        $person = array(
+            'first_name' => 'Wouter',
+        );
+
+        $age = $accessor->getValue($person, '[age]');
+        dump($age);
         // Get main page content.
         $item = $cache->getItem('markdown_homepage');
         if (!$item->isHit()) {
