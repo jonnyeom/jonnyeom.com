@@ -12,7 +12,7 @@ I am creative, not in the normal sense. I quickly absorb information, understand
 <br>
 <br>
 
-**Today** I work as a developer at Unleashed Technologies. Here I work with **open-source** technologies and provide web
+**Today** I work as a Lead Developer at Unleashed Technologies. Here I work with **open-source** technologies and provide web
  solutions for clients in many different industries.  
  I specialize in **Drupal** and **Symfony**. I also actively work with React, and have experience with Vue.JS, 
 and AngularJS.
