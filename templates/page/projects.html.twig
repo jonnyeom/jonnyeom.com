@@ -2,8 +2,8 @@
 
 {% block body %}
     <section class="section page-projects pt-0">
-        <div class="container">
-            <div class="content custom-width">
+        <div class="container is-max-desktop">
+            <div class="content">
                 {% for batch in projects|batch(2) %}
                     <div class="tile is-ancestor">
                         {% for title, project in batch %}
