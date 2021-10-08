@@ -18,9 +18,12 @@ I am creative, not in the normal sense. I quickly absorb information, understand
 and AngularJS.
 <br>
 
+
+
+___
 ### Quick Thoughts
-<br>
 I wish to write more.
 
-I use Linux/MacOS/Windows. Linux is my favorite!
+Symfony is fantastic.
 
+GatsbyJS is super powerful, super fast, and under-used.
