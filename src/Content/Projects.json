@@ -8,11 +8,27 @@
       "Symfony"
     ]
   },
+  "American Medical Informatics Association ®": {
+    "image": "images/projects/amia.png",
+    "description": "",
+    "tags": [
+      "Drupal 9"
+    ]
+  },
   "International Society for Pharmaceutical Engineering": {
     "image": "images/projects/ispe.png",
     "description": "",
     "tags": [
       "Drupal 8",
+      "React"
+    ]
+  },
+  "ISPE Foundation": {
+    "image": "images/projects/ispe-foundation.png",
+    "description": "",
+    "tags": [
+      "Drupal 8",
+      "GatsbyJS",
       "React"
     ]
   },

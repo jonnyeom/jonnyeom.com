@@ -42,6 +42,7 @@ class DefaultController extends BaseController
         $json = file_get_contents(__DIR__ . '/../Content/Projects.json');
         $projects = json_decode($json, true);
         $tag_mappings = [
+            'Drupal 9' => 'is-drupal-blue',
             'Drupal 8' => 'is-drupal-blue',
             'React' => 'is-react-blue',
             'Vue.js' => 'is-vue-green',
