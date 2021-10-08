@@ -10,16 +10,16 @@
 Run the built in dev server.
 
 ```
-./bin/console server:run
+symfony serve
 ```
 
 In the project directory, you can run:
 
-#### `npm run dev`
+#### `yarn dev`
 
 This will recompile the frontend assets and watch for sass file changes.
 
-#### `npm run build`
+#### `yarn build`
 
 This will recompile the frontend assets, optimized for production.
 
