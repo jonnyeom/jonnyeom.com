@@ -93,14 +93,4 @@ class DefaultController extends BaseController
         ]);
     }
 
-    /**
-     * @Route("/뽀뽀", name="app_bobo")
-     *
-     * @return Response
-     */
-    public function bobo(): Response
-    {
-        return $this->render('page/bobo.html.twig');
-    }
-
 }
