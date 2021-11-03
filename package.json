@@ -10,17 +10,17 @@
         "url": "https://github.com/jonnyeom/jonnyeom/issues"
     },
     "devDependencies": {
-        "@symfony/webpack-encore": "^1.0.0",
         "@symfony/stimulus-bridge": "^2.0.0",
+        "@symfony/webpack-encore": "^1.0.0",
         "bulma": "^0.9.0",
         "core-js": "^3.0.0",
         "imagemin-cli": "^5.1.0",
         "imagemin-pngquant": "^8.0.0",
         "node-sass": "^4.14.1",
         "regenerator-runtime": "^0.13.2",
-        "stimulus": "^2.0.0",
         "sass": "^1.32.2",
         "sass-loader": "^10.0.0",
+        "stimulus": "^2.0.0",
         "webpack-notifier": "^1.6.0"
     },
     "license": "UNLICENSED",
