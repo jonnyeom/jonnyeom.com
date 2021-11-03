@@ -41,10 +41,10 @@
             <ul>
                 <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}>
                     <a href="{{ path('app_homepage') }}">home</a></li>
-                <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
-                    <a href="{{ path('app_blog') }}">writing</a></li>
                 <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
                     <a href="{{ path('app_projects') }}">projects</a></li>
+                <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_blog') }}">writing</a></li>
                 <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
                     <a href="{{ path('app_about') }}">about</a></li>
             </ul>
@@ -57,17 +57,17 @@
 <footer class="footer">
     <div class="container is-max-desktop">
         <div class="mb-1">
-            <a class="mr-3" href="https://www.drupal.org/u/jonnyeom" target="_blank" rel="noopener">
-                    <span class=" icon"><i class="fab fa-lg fa-drupal"></i></span>
+            <a class="mr-3" href="https://www.linkedin.com/in/jonnyeom/" target="_blank" rel="noopener">
+                <span class="icon"><i class="fab fa-lg fa-linkedin"></i></span>
             </a>
             <a class="mr-3" href="https://github.com/jonnyeom" target="_blank" rel="noopener">
-                    <span class=" icon"><i class="fab fa-lg fa-github-alt"></i></span>
+                <span class="icon"><i class="fab fa-lg fa-github-alt"></i></span>
             </a>
             <a class="mr-3" href="https://twitter.com/jonnyeom" target="_blank" rel="noopener">
-                    <span class=" icon"><i class="fab fa-lg fa-twitter"></i></span>
+                <span class="icon"><i class="fab fa-lg fa-twitter"></i></span>
             </a>
-            <a href="https://www.linkedin.com/in/jonnyeom/" target="_blank" rel="noopener">
-                    <span class=" icon"><i class="fab fa-lg fa-linkedin"></i></span>
+            <a href="https://www.drupal.org/u/jonnyeom" target="_blank" rel="noopener">
+                <span class="icon"><i class="fab fa-lg fa-drupal"></i></span>
             </a>
         </div>
         <p>Copyright © 2021 Jonathan Eom · <strong>jonnyeom</strong> by
