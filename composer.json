@@ -7,11 +7,12 @@
     "replace": {
         "symfony/polyfill-php70": "*",
         "symfony/polyfill-php72": "*",
+        "symfony/polyfill-php73": "*",
         "symfony/polyfill-ctype": "*",
         "symfony/polyfill-iconv": "*"
     },
     "require": {
-        "php": "^7.2.9",
+        "php": "^7.3",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-json": "*",
@@ -57,7 +58,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "7.2.9"
+            "php": "7.3"
         },
         "preferred-install": {
             "*": "dist"
