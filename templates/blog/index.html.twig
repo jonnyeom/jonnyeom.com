@@ -6,19 +6,13 @@
             <div class="content">
                 {% for id, post in posts %}
                     {% if post.isPublished() %}
-                    <div class="columns mb-1">
-                        <div class="column is-full">
-                            <div class="box p1">
-                                <h2><a href="{{ path('app_posts') }}/{{ id }}">{{ post.getTitle }}</a></h2>
-                                {% if post.getDescription is defined %}
-                                    <p>{{ post.getDescription }}</p>
-                                {% endif %}
-                                <strong>{{ post.getDate }}</strong>
-                            </div>
-
-                            {#                        {{ post.tags }}#}
+                        <div>
+                            <div class="is-uppercase has-text-weight-bold {% if not loop.first %}mt-6{% endif %}">{{ post.getDate }}</div>
+                            <h2 class="mt-1 mb-4"><a href="{{ path('app_posts') }}/{{ id }}">{{ post.getTitle }}</a></h2>
+                            {% if post.getDescription is defined %}
+                                <p class="">{{ post.getDescription }}</p>
+                            {% endif %}
                         </div>
-                    </div>
                     {% endif %}
                 {% endfor %}
             </div>
