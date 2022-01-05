@@ -4,12 +4,13 @@
     "type": "project",
     "description": "Jonnyeom Personal Site",
     "minimum-stability": "stable",
+    "prefer-stable": true,
     "replace": {
         "symfony/polyfill-php72": "*",
         "symfony/polyfill-php73": "*"
     },
     "require": {
-        "php": "^7.4 || ^8.0",
+        "php": "^7.3 || ^8.0",
         "doctrine/annotations": "^1.0",
         "league/commonmark": "^1",
         "leogout/seo-bundle": "dev-master",
@@ -48,7 +49,7 @@
     },
     "config": {
         "platform": {
-            "php": "7.4"
+            "php": "7.3"
         },
         "optimize-autoloader": true,
         "preferred-install": {
