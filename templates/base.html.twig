@@ -43,8 +43,8 @@
                     <a href="{{ path('app_homepage') }}">home</a></li>
                 <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
                     <a href="{{ path('app_projects') }}">projects</a></li>
-                <li{% if app.request.get('_route') == 'app_blog' or app.request.get('_route') == 'app_blog_post' %} class="is-active"{% endif %}>
-                    <a href="{{ path('app_blog') }}">writing</a></li>
+                <li{% if app.request.get('_route') == 'app_posts' or app.request.get('_route') == 'app_post' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_posts') }}">writing</a></li>
                 <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
                     <a href="{{ path('app_about') }}">about</a></li>
             </ul>

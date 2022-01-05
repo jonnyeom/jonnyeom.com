@@ -6,7 +6,6 @@ tags:
     - Symfony
 ---
 
-# Upgrading my symfony application from 4.4 to 5.1
 
 Just a short overview of what I did to update my symfony applications to 5.1
 

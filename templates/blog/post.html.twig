@@ -4,7 +4,21 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content markdown">
-                {{ body|raw }}
+
+                <div class="mb-5 is-size-5"><a href="{{ path('app_posts') }}">
+                    <span class="icon-text">
+                        <span class="icon">
+                            <i class="fas fa-arrow-left"></i>
+                        </span>
+                        <span>Back to posts</span>
+                    </span>
+                </a></div>
+
+                <h1 class="mb-3">{{ post.title }}</h1>
+                <div class="subtitle mb-6">{{ post.getDate }}</div>
+
+
+                {{ post.body|raw }}
             </div>
         </div>
     </section>

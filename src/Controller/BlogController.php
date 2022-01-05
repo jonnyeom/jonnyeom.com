@@ -27,7 +27,7 @@ class BlogController extends BaseController
     }
 
     /**
-     * @Route("/writing", name="app_blog")
+     * @Route("/writing", name="app_posts")
      */
     public function index()
     {
@@ -43,31 +43,31 @@ class BlogController extends BaseController
     }
 
     /**
-     * @Route("/writing/{slug}", name="app_blog_post")
+     * @Route("/writing/{slug}", name="app_post")
      */
     public function post($slug)
     {
         $post = $this->blogContent->getPost($slug);
 
         if (!$post) {
-            return $this->redirectToRoute('app_blog');
+            return $this->redirectToRoute('app_posts');
         }
 
         $this->seo->get('basic')
-            ->setTitle('jonnyeom | ' . $post->getTitle())
+            ->setTitle($post->getTitle() . '| jonnyeom')
             ->setDescription($post->getDescription())
             ->setKeywords(implode(',', $post->getTags()));
 
         $this->seo->get('og')
-            ->setTitle('jonnyeom | ' . $post->getTitle())
+            ->setTitle($post->getTitle() . '| jonnyeom')
             ->setDescription($post->getDescription());
 
         $this->seo->get('twitter')
-            ->setTitle('jonnyeom | ' . $post->getTitle())
+            ->setTitle($post->getTitle() . '| jonnyeom')
             ->setDescription($post->getDescription());
 
         return $this->render('blog/post.html.twig', [
-            'body' => $post->getBody(),
+            'post' => $post,
         ]);
     }
 

@@ -15,8 +15,7 @@ When returning a Redirect Response, return the response object.
 // BAD example.
 $response = new RedirectResponse('https://url/path');
 $response->send();
-```
-```php
+
 // GOOD example.
 return new RedirectResponse('https://url/path');
 ```
