@@ -1,0 +1,13 @@
+
+{% for form in forms %}
+    {% form_theme form 'form/custom_form_theme.html.twig' %}
+
+    {% if form.time is defined %}
+    {{ dump(form.time.vars.value) }}
+    {% endif %}
+    {{ form(form) }}
+
+    {% if not loop.last %}
+        <hr>
+    {% endif %}
+{% endfor %}

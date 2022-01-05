@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <section class="section">
+        <div class="container">
+
+            {{ dump(data) }}
+            {{ data.first-page }}
+
+
+{#            {{ dump(app.request) }}#}
+{#            {{ dump(app.token) }}#}
+
+{#            {{ render(controller('App\\Controller\\TestController::forms')) }}#}
+
+{#            {% include 'test/include.html.twig' with {'test': 'var'} %}#}
+
+{#            {{ '0' is not empty ? 'foo' : 'bar' }}#}
+
+{#            {{ [] is not empty ? 'foo' : 'bar' }}#}
+
+{#            {{ '' is not empty ? 'foo' : 'bar' }}#}
+
+{#            {{ 0 is not empty ? 'foo' : 'bar' }}#}
+
+        </div>
+    </section>
+{% endblock %}
