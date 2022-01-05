@@ -347,6 +347,12 @@
             "tests/bootstrap.php"
         ]
     },
+    "symfony/polyfill-ctype": {
+        "version": "v1.24.0"
+    },
+    "symfony/polyfill-iconv": {
+        "version": "v1.24.0"
+    },
     "symfony/polyfill-intl-icu": {
         "version": "v1.23.0"
     },
