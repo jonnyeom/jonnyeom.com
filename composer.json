@@ -13,6 +13,9 @@
     },
     "require": {
         "php": "^7.3 || ^8.0",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "ext-json": "*",
         "doctrine/annotations": "^1.0",
         "league/commonmark": "^1",
         "leogout/seo-bundle": "dev-master",
