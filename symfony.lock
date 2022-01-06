@@ -249,9 +249,6 @@
             "tests/bootstrap.php"
         ]
     },
-    "symfony/polyfill-ctype": {
-        "version": "v1.24.0"
-    },
     "symfony/polyfill-intl-grapheme": {
         "version": "v1.24.0"
     },

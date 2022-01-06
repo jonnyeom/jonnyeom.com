@@ -7,7 +7,9 @@
     "prefer-stable": true,
     "replace": {
         "symfony/polyfill-php72": "*",
-        "symfony/polyfill-php73": "*"
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-iconv": "*"
     },
     "require": {
         "php": "^7.3 || ^8.0",
