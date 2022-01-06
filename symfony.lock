@@ -258,9 +258,6 @@
     "symfony/polyfill-intl-normalizer": {
         "version": "v1.23.0"
     },
-    "symfony/polyfill-mbstring": {
-        "version": "v1.23.1"
-    },
     "symfony/polyfill-php80": {
         "version": "v1.23.1"
     },
