@@ -3,6 +3,9 @@
 .DS_Store
 jonnyeom.db
 
+###> symfony/encore ###
+/public/build
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
