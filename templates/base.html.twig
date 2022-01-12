@@ -37,16 +37,16 @@
 
 <nav class="px-5 pb-6 menu">
     <div class="container is-max-desktop">
-        <div class="tabs">
+        <div class="tabs has-text-weight-medium">
             <ul>
                 <li{% if app.request.get('_route') == 'app_homepage' %} class="is-active"{% endif %}>
-                    <a href="{{ path('app_homepage') }}">home</a></li>
+                    <a href="{{ path('app_homepage') }}">Home</a></li>
                 <li{% if app.request.get('_route') == 'app_projects' %} class="is-active"{% endif %}>
-                    <a href="{{ path('app_projects') }}">projects</a></li>
+                    <a href="{{ path('app_projects') }}">Projects</a></li>
                 <li{% if app.request.get('_route') == 'app_posts' or app.request.get('_route') == 'app_post' %} class="is-active"{% endif %}>
-                    <a href="{{ path('app_posts') }}">writing</a></li>
+                    <a href="{{ path('app_posts') }}">Writing</a></li>
                 <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
-                    <a href="{{ path('app_about') }}">about</a></li>
+                    <a href="{{ path('app_about') }}">About</a></li>
             </ul>
         </div>
     </div>
