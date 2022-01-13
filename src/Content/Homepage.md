@@ -1,11 +1,8 @@
 Hi. Im **Jonny Eom**. You will likely find me in most places as **Jonathan Eom** or **jonnyeom**.
+<br>I am a professional **developer**, experienced in developing enterprise level websites and applications.  
+Im good at
+PHP and JavaScript, specializing in **Symfony** and **Drupal**.
 ___
-
-## Quick Summary
-I am a professional **developer**, experienced in developing enterprise level websites and applications. I develop in
- PHP and JavaScript, specializing in  **Drupal** and **Symfony**. I also have experience in React, Vue, and
-  AngularJS.  
- I stay involved in **open source** projects, primary Drupal.
 
 <br>
 
