@@ -1,7 +1,7 @@
-Hi. Im **Jonny Eom**. You will likely find me in most places as **Jonathan Eom** or **jonnyeom**.
-<br>I am a professional **developer**, experienced in developing enterprise level websites and applications.  
-Im good at
-PHP and JavaScript, specializing in **Symfony** and **Drupal**.
+Hi, Im Jonny Eom or **jonnyeom**.
+
+I am a professional **developer**, experienced in developing enterprise level websites and applications.  
+Im good at PHP and JavaScript, specializing in **Symfony** and **Drupal**.
 ___
 
 <br>
