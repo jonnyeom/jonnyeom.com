@@ -3,7 +3,10 @@
 namespace App\Controller;
 
 use App\FormType\TestFormType;
+use ChildTrait;
+use SampleInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Loader\Configurator\Traits\TagTrait;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
@@ -12,8 +15,27 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Annotation\Route;
 
-class TestController extends AbstractController implements TestControllerInterface
+class TestController extends AbstractController implements SampleInterface, TestControllerInterface
 {
+    use ChildTrait;
+
+    public function interfaceFunction(string $param): int
+    {
+        // TODO: Implement interfaceFunction() method.
+    }
+
+
+    private function childTraitMethod(callable $param, $paramTwo): string
+    {
+        return 'aha';
+    }
+
+    private function abstractPrivateTraitMethod(): string
+    {
+        return '';
+    }
+
+
     /**
      * @Route(
      *     "/test/default",
@@ -122,5 +144,4 @@ class TestController extends AbstractController implements TestControllerInterfa
     {
         // TODO: Implement staticInterfaceFunction() method.
     }
-
 }
