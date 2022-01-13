@@ -11,7 +11,7 @@ Here are some surface level details on some of my more recent projects!
 
 <div class="block">
 
-##### Current: Symfony 5 Certification
+##### Symfony 5 Certified
 This is one of those certifications that actually should mean value for people who have it. It really challenges 
 your understanding in proper PHP application development.<br>
 [Here is a link to the Certification](https://certification.symfony.com/).
