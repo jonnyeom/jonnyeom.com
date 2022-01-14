@@ -3,9 +3,6 @@
 .DS_Store
 jonnyeom.db
 
-###> symfony/encore ###
-/public/build
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -32,8 +29,7 @@ jonnyeom.db
 
 ###> symfony/webpack-encore-bundle ###
 /node_modules/
-# This is until I fix heruku build.
-#/public/build/
+/public/build/
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
