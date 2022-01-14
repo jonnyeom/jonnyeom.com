@@ -1,5 +1,6 @@
 ### What you should know
-Im **Jonny Eom**. You will likely find me in most places as Jonathan Eom or **jonnyeom**.<br>
+Im **Jonny Eom**. You will likely find me in most places as Jonathan Eom or **jonnyeom**.
+
 I am a professional **developer**, experienced in developing enterprise level websites and applications.
 <br>
 
