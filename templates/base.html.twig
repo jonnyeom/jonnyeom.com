@@ -26,6 +26,10 @@
         {{ encore_entry_link_tags('app') }}
         <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     {% endblock %}
+
+    {% block javascripts %}
+        {{ encore_entry_script_tags('app') }}
+    {% endblock %}
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -75,8 +79,5 @@
     </div>
 </footer>
 
-{% block javascripts %}
-    {{ encore_entry_script_tags('app') }}
-{% endblock %}
 </body>
 </html>
