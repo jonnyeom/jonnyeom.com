@@ -4,13 +4,13 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
-                {% for id, post in posts %}
+                {% for post in posts %}
                     {% if post.isPublished() %}
                         <div class="mb-6">
-                            <div class="is-uppercase has-text-weight-bold">{{ post.getDate|date("F Y") }}</div>
-                            <h2 class="mt-1 mb-4"><a href="{{ path('app_posts') }}/{{ id }}">{{ post.getTitle }}</a></h2>
-                            {% if post.getDescription is defined %}
-                                <p class="">{{ post.getDescription }}</p>
+                            <div class="is-uppercase has-text-weight-bold">{{ post.date|date("F Y") }}</div>
+                            <h2 class="mt-1 mb-4"><a href="{{ path('app_posts') }}/{{ post.getSlug }}">{{ post.title }}</a></h2>
+                            {% if post.description is defined %}
+                                <p class="">{{ post.description }}</p>
                             {% endif %}
                         </div>
                     {% endif %}

@@ -12,7 +12,7 @@ class BlogController extends BaseController
     /**
      * @var BlogContent
      */
-    private $blogContent;
+    private BlogContent $blogContent;
 
     /**
      * BlogController constructor.

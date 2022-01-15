@@ -7,6 +7,7 @@ use DirectoryIterator;
 use Psr\Cache\InvalidArgumentException;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class BlogContent
 {
@@ -14,6 +15,8 @@ class BlogContent
      * @var AdapterInterface
      */
     private $cache;
+
+    private SluggerInterface $slugger;
 
     public function __construct(AdapterInterface $cache)
     {
@@ -41,9 +44,13 @@ class BlogContent
                 $cid = 'posts_' . $fileName;
 
                 $item = $this->cache->getItem($cid);
-                if (!$item->isHit()) {
+                if (!$item->isHit() || TRUE) {
                     $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$fileName}.md"));
                     $post = Post::createFromYamlParse($object);
+
+                    if (!$post->getSlug()) {
+                        $post->setSlug($this->slugger->slug($post->getTitle()));
+                    }
 
                     $item->set($post);
                     $this->cache->save($item);
@@ -52,7 +59,7 @@ class BlogContent
                 /** @var Post $post */
                 $post = $item->get();
 
-                $posts[$fileName] = $post;
+                $posts[$post->getSlug()] = $post;
             }
         }
 
@@ -71,5 +78,13 @@ class BlogContent
         $posts = $this->getPosts();
 
         return $posts[$slug] ?? null;
+    }
+
+    /**
+     * @required
+     */
+    public function setSlugger(SluggerInterface $slugger): void
+    {
+        $this->slugger = $slugger;
     }
 }

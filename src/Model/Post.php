@@ -14,7 +14,7 @@ class Post
 
     private string $title;
 
-    private string $description;
+    private ?string $description;
 
     private DateTime $date;
 
@@ -22,7 +22,7 @@ class Post
 
     private bool $published = TRUE;
 
-    private string $slug;
+    private ?string $slug = NULL;
 
     public static function createFromYamlParse(Document $object): Post
     {
@@ -85,9 +85,9 @@ class Post
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
@@ -165,15 +165,10 @@ class Post
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getSlug(): string
+    public function getSlug(): ?string
     {
-        if (!$this->slug) {
-            // Todo: Slugger service.
-            $this->slug = '';
-        }
-
         return $this->slug;
     }
 
