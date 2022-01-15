@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Model\Post;
 use App\Service\BlogContent;
 use Leogout\Bundle\SeoBundle\Provider\SeoGeneratorProvider;
 use Symfony\Component\Routing\Annotation\Route;
@@ -36,6 +37,14 @@ class BlogController extends BaseController
         $this->seo->get('twitter')->setTitle('jonnyeom | Writing');
 
         $posts = $this->blogContent->getPosts();
+
+        uasort($posts, function (Post $postA, Post $postB)
+        {
+            if ($postA->getDate() === $postB->getDate()) {
+                return 0;
+            }
+            return ($postA->getDate() > $postB->getDate() ? -1 : 1);
+        });
 
         return $this->render('blog/index.html.twig', [
             'posts' => $posts,

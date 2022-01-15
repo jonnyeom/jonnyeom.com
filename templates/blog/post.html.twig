@@ -15,7 +15,7 @@
                 </a></div>
 
                 <h1 class="mb-3">{{ post.title }}</h1>
-                <div class="subtitle mb-6">{{ post.getDate }}</div>
+                <div class="subtitle mb-6">{{ post.getDate|date("F jS, Y") }}</div>
 
 
                 {{ post.body|raw }}

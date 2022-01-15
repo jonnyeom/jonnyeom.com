@@ -6,8 +6,8 @@
             <div class="content">
                 {% for id, post in posts %}
                     {% if post.isPublished() %}
-                        <div>
-                            <div class="is-uppercase has-text-weight-bold {% if not loop.first %}mt-6{% endif %}">{{ post.getDate }}</div>
+                        <div class="mb-6">
+                            <div class="is-uppercase has-text-weight-bold">{{ post.getDate|date("F Y") }}</div>
                             <h2 class="mt-1 mb-4"><a href="{{ path('app_posts') }}/{{ id }}">{{ post.getTitle }}</a></h2>
                             {% if post.getDescription is defined %}
                                 <p class="">{{ post.getDescription }}</p>

@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use DateTime;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Environment;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
@@ -44,14 +45,14 @@ class Post
         $post = new self();
         $post->setTitle($object->title ?? '')
             ->setDescription($object->description ?? '')
-            ->setDate($object->date ?? '')
+            ->setDate(new DateTime($object->date ?? 'now'))
             ->setTags($object->tags ?? [])
             ->setBody($converter->convertToHtml($object->body()));
 
         if ($object->published === false) {
             $post->unpublish();
         }
-
+        // Do not publish if it does not have a title.
         if ($post->isPublished() && !$post->getTitle()) {
             $post->unpublish();
         }
@@ -96,18 +97,18 @@ class Post
     }
 
     /**
-     * @return mixed
+     * @return DateTime
      */
-    public function getDate()
+    public function getDate(): DateTime
     {
         return $this->date;
     }
 
     /**
-     * @param mixed $date
+     * @param DateTime $date
      * @return Post
      */
-    public function setDate($date)
+    public function setDate(DateTime $date)
     {
         $this->date = $date;
         return $this;
