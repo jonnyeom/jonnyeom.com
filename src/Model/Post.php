@@ -10,17 +10,19 @@ use Spatie\YamlFrontMatter\Document;
 
 class Post
 {
-    private $body;
+    private string $body;
 
-    private $title;
+    private string $title;
 
-    private $description;
+    private string $description;
 
-    private $date;
+    private DateTime $date;
 
-    private $tags;
+    private array $tags = [];
 
-    private $published = TRUE;
+    private bool $published = TRUE;
+
+    private string $slug;
 
     public static function createFromYamlParse(Document $object): Post
     {
@@ -49,6 +51,10 @@ class Post
             ->setTags($object->tags ?? [])
             ->setBody($converter->convertToHtml($object->body()));
 
+        if ($object->slug) {
+            $post->setSlug($object->slug);
+        }
+
         if ($object->published === false) {
             $post->unpublish();
         }
@@ -61,25 +67,25 @@ class Post
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
 
     /**
-     * @param mixed $title
+     * @param string $title
      * @return Post
      */
-    public function setTitle($title)
+    public function setTitle(string $title): Post
     {
         $this->title = $title;
         return $this;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDescription()
     {
@@ -87,10 +93,10 @@ class Post
     }
 
     /**
-     * @param mixed $description
+     * @param string $description
      * @return Post
      */
-    public function setDescription($description)
+    public function setDescription(string $description): Post
     {
         $this->description = $description;
         return $this;
@@ -115,47 +121,69 @@ class Post
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    public function getTags()
+    public function getTags(): array
     {
         return $this->tags;
     }
 
     /**
-     * @param mixed $tags
-     *
+     * @param array $tags
      * @return Post
      */
-    public function setTags($tags)
+    public function setTags(array $tags): Post
     {
         $this->tags = $tags;
         return $this;
     }
 
-    public function addTag($tag)
+    public function addTag(string $tag): Post
     {
         $tags = $this->getTags();
         $tags[] = $tag;
 
-        $this->setTags($tags);
+        return $this->setTags($tags);
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getBody()
+    public function getBody(): string
     {
         return $this->body;
     }
 
     /**
-     * @param mixed $body
+     * @param string $body
      * @return Post
      */
-    public function setBody($body)
+    public function setBody(string $body): Post
     {
         $this->body = $body;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSlug(): string
+    {
+        if (!$this->slug) {
+            // Todo: Slugger service.
+            $this->slug = '';
+        }
+
+        return $this->slug;
+    }
+
+    /**
+     * @param string $slug
+     * @return Post
+     */
+    public function setSlug(string $slug): Post
+    {
+        $this->slug = $slug;
         return $this;
     }
 
@@ -170,7 +198,7 @@ class Post
     /**
      * @return Post
      */
-    public function publish()
+    public function publish(): Post
     {
         $this->published = true;
         return $this;
@@ -179,7 +207,7 @@ class Post
     /**
      * @return Post
      */
-    public function unpublish()
+    public function unpublish(): Post
     {
         $this->published = false;
         return $this;
