@@ -2,6 +2,7 @@
 title: Example local ansible playbook for Drupal-VM
 description: An example of adding your own ansible roles/tasks for Drupal-VM
 date: July 9, 2020
+slug: 'local-ansible-playbook-example-for-drupal-vm'
 tags:
     - Drupal
     - Ansible

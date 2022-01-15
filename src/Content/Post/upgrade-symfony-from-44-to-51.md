@@ -2,6 +2,7 @@
 title: Upgrading my symfony application from 4.4 to 5.1
 description: Just a short overview of what I did to update my symfony applications to 5.1
 date: July 4, 2020
+slug: 'upgrade-symfony-from-44-to-51'
 tags:
     - Symfony
 ---
@@ -32,7 +33,7 @@ First, I updated my composer.json according to the instructions [here](https://s
 
 ### Remove symfony/web-server-bundle
 
-- During the update, I ran into a version error with the symfony/web-server-bundle package. 
+- During the update, I ran into a version error with the symfony/web-server-bundle package.
 Doing some research, It looks like we can now use symfony's cli tool to start local servers, so I simply removed this package and re-ran the update command.
 
     ```bash
@@ -68,7 +69,7 @@ To fix this
 
     ```php
     // public/index.php
-    
+
     ...
     // This used to be "use Symfony\Component\Debug\Debug;"
     use Symfony\Component\ErrorHandler\Debug;
@@ -83,14 +84,14 @@ This is not required but It is best to move away from depreciated code.
 
     ```php
     // old src/Kernel.php
-    
+
     use Symfony\Component\Routing\RouteCollectionBuilder;
-    
+
     ...
     protected function configureRoutes(RouteCollectionBuilder $routes): void
     {
         $confDir = $this->getProjectDir().'/config';
-    
+
         $routes->import($confDir.'/{routes}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, '/', 'glob');
         $routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
         $routes->import($confDir.'/{routes}'.self::CONFIG_EXTS, '/', 'glob');
@@ -99,15 +100,15 @@ This is not required but It is best to move away from depreciated code.
 
     ```php
     // new src/Kernel.php
-    
+
     use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
-    
+
     ...
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
         $routes->import('../config/{routes}/'.$this->environment.'/*.yaml');
         $routes->import('../config/{routes}/*.yaml');
-    
+
         if (file_exists(\dirname(__DIR__).'/config/routes.yaml')) {
                 $routes->import('../config/{routes}.yaml');
         } else {

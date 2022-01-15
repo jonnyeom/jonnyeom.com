@@ -2,6 +2,7 @@
 title: Example local Vagrantfile for Drupal-VM
 description: An example Vagrantfile.local file for Drupal-VM
 date: July 9, 2020
+slug: 'vagrantfile-local-example-for-drupal-vm'
 tags:
     - Drupal
 ---
