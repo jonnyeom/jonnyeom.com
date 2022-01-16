@@ -7,20 +7,30 @@ tags:
 - PHP
 ---
 
-You can `use` traits `implement` interfaces and `extend` abstract classes.
+You can `use` traits `implement` interfaces and `extend` abstract classes.<br>
 _Whats the difference?_
 
+<br>
+<br>
+
+> ## TLDR;
+> Use Interfaces as a [Public Contract](#interfaces);<br>
+> Use Abstract Classes as a [Private Contract](#abstract-classes);<br>
+> Use Traits as [Class Extensions](#traits);<br>
+> Trait methods will [override](#traits-vs-abstract-classes) abstract class methods;
+
+<br>
 
 # Thinking in OOP
 Here are some ways to think of traits, interfaces, and abstract classes to write better php.
 
-### Interfaces in OOP
+### Interfaces
 Think of Interfaces as a **type**, a new type of object. An **abstract** type. It is not a contract, but we can **make it a contract** by pre-declaring its **public behavior**.
 
-### Abstract Classes in OOP
+### Abstract Classes
 While Interfaces declare a public contract, **abstract classes can declare a private contract**, using abstract protected methods (abstract classes cannot have `abstract private` methods).
 
-### Traits in OOP
+### Traits
 A `trait` can do anything that a `class` can do **BUT**
 - cannot define a `constant`
 - cannot extend another `trait`
@@ -88,10 +98,4 @@ echo $test->doSomething();
     - e.g. `__CLASS__` will always be the class that is using the Trait.
 
 
-
-> ## TLDR;
-> Use Interfaces as a [Public Contract](#interfaces-in-oop);<br>
-> Use Abstract Classes as a [Private Contract](#abstract-classes-in-oop);<br>
-> Use Traits as [Class Extensions](#traits-in-oop);<br>
-> Trait methods will [override](#traits-vs-abstract-classes) abstract class methods;
 
