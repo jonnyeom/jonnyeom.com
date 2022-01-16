@@ -4,11 +4,8 @@ namespace App\Model;
 
 use App\CommonMark\Block\Parser\CustomHeadingParser;
 use DateTime;
-use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
-use League\CommonMark\Extension\CommonMark\Node\Block\Heading;
-use League\CommonMark\Extension\DefaultAttributes\DefaultAttributesExtension;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkRenderer;
@@ -46,22 +43,13 @@ class Post
             ],
             'heading_permalink' => [
                 'html_class' => 'heading-permalink',
+                'id_prefix' => '',
+                'fragment_prefix' => '',
                 'insert' => 'after',
                 'min_heading_level' => 1,
                 'max_heading_level' => 6,
                 'title' => 'Permalink',
-                'symbol' => HeadingPermalinkRenderer::DEFAULT_SYMBOL,
-            ],
-            'default_attributes' => [
-                Heading::class => [
-                    'class' => static function (Heading $node) {
-                        if ($node->getLevel() === 1) {
-                            return 'title-main';
-                        } else {
-                            return null;
-                        }
-                    },
-                ],
+                'symbol' => '#',
             ],
         ];
 
@@ -69,7 +57,6 @@ class Post
         $environment->addExtension(new CommonMarkCoreExtension());
         $environment->addExtension(new ExternalLinkExtension());
         $environment->addExtension(new HeadingPermalinkExtension());
-        $environment->addExtension(new DefaultAttributesExtension());
         $environment->addBlockStartParser(new CustomHeadingParser(), 61);
         $converter = new MarkdownConverter($environment);
 

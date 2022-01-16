@@ -72,9 +72,8 @@ nav.menu {
 
 .heading-permalink {
   color: transparent;
-  font-size: .8em;
+  margin-left: .25rem;
   text-decoration: none;
-  vertical-align: super;
   visibility: hidden;
 }
 
@@ -85,7 +84,7 @@ h4:hover .heading-permalink,
 h5:hover .heading-permalink,
 h6:hover .heading-permalink,
 .heading-permalink:hover {
-  color: #777;
+  color: $blue-200;
   text-decoration: none;
   visibility: visible;
 }
