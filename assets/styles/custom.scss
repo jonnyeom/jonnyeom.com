@@ -32,8 +32,37 @@ nav.menu {
     margin-bottom: .5rem;
   }
 
-  p, li {
-    font-size: 1.125rem;
+  code {
+    border-bottom: 1px solid $cool-grey-200;
+    border-radius: 4px;
+    word-break: break-word;
+  }
+
+  pre {
+    line-height: 1.8;
+
+    code {
+      border-bottom: 0;
+      border-radius: 0;
+      word-break: unset;
+    }
+  }
+
+  @include tablet {
+    p, li {
+      font-size: 1rem;
+    }
+
+    code,pre {
+      font-size: 14px;
+    }
+  }
+
+  &.markdown {
+    ul {
+      margin-bottom: 2em;
+      margin-top: -.25em;
+    }
   }
 }
 
