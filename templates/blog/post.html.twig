@@ -3,23 +3,24 @@
 {% block body %}
     <section class="section pt-0">
         <div class="container is-max-desktop">
-            <div class="content markdown">
-
-                <div class="mb-5 is-size-5"><a href="{{ path('app_posts') }}">
-                    <span class="icon-text">
-                        <span class="icon">
-                            <i class="fas fa-arrow-left"></i>
-                        </span>
-                        <span>Back to posts</span>
+            <div class="button-back mb-6"><a href="{{ path('app_posts') }}">
+                <span class="icon-text">
+                    <span class="icon mr-2">
+                        <i class="fas fa-arrow-left"></i>
                     </span>
-                </a></div>
+                    <span class="is-size-5 has-text-weight-medium">Back to posts</span>
+                </span>
+            </a></div>
 
-                <h1 class="mb-3">{{ post.title }}</h1>
-                <div class="subtitle mb-6">{{ post.getDate|date("F jS, Y") }}</div>
+            <h2 class="is-size-2 has-text-weight-medium">{{ post.title }}</h2>
+            <div class="post-subtitle has-text-grey has-text-weight-semibold is-size-5">{{ post.getDate|date("F jS, Y") }}</div>
 
+            <div class="content-spacer"></div>
 
+            <div class="content markdown">
                 {{ post.body|raw }}
             </div>
         </div>
     </section>
+    {{ dump(post) }}
 {% endblock %}
