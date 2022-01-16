@@ -44,7 +44,7 @@ class BlogContent
                 $cid = 'posts_' . $fileName;
 
                 $item = $this->cache->getItem($cid);
-                if (!$item->isHit() || TRUE) {
+                if (!$item->isHit()) {
                     $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$fileName}.md"));
                     $post = Post::createFromYamlParse($object);
 
