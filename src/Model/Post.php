@@ -2,10 +2,13 @@
 
 namespace App\Model;
 
+use App\CommonMark\Block\Parser\CustomHeadingParser;
 use DateTime;
 use League\CommonMark\CommonMarkConverter;
 use League\CommonMark\Environment;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
+use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
+use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkRenderer;
 use Spatie\YamlFrontMatter\Document;
 
 class Post
@@ -31,15 +34,25 @@ class Post
         $environment = Environment::createCommonMarkEnvironment();
         // Add this extension
         $environment->addExtension(new ExternalLinkExtension());
+        $environment->addExtension(new HeadingPermalinkExtension());
+        $environment->addBlockParser(new CustomHeadingParser(), 61);
         // Set your configuration
         $config = [
             'external_link' => [
-                'internal_hosts' => 'www.jonnyeom.com', // TODO: Don't forget to set this!
+                'internal_hosts' => 'www.jonnyeom.com',
                 'open_in_new_window' => true,
                 'html_class' => 'external-link',
                 'nofollow' => '',
                 'noopener' => 'external',
                 'noreferrer' => 'external',
+            ],
+            'heading_permalink' => [
+                'html_class' => 'heading-permalink',
+                'insert' => 'after',
+                'min_heading_level' => 1,
+                'max_heading_level' => 6,
+                'title' => 'Permalink',
+                'symbol' => HeadingPermalinkRenderer::DEFAULT_SYMBOL,
             ],
         ];
         $converter = new CommonMarkConverter($config, $environment);
