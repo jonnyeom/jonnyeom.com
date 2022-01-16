@@ -5,10 +5,13 @@ namespace App\Model;
 use App\CommonMark\Block\Parser\CustomHeadingParser;
 use DateTime;
 use League\CommonMark\CommonMarkConverter;
-use League\CommonMark\Environment;
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\DefaultAttributes\DefaultAttributesExtension;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkRenderer;
+use League\CommonMark\MarkdownConverter;
 use Spatie\YamlFrontMatter\Document;
 
 class Post
@@ -30,13 +33,7 @@ class Post
     public static function createFromYamlParse(Document $object): Post
     {
         // @Todo: Move to a wrapper service.
-        // Obtain a pre-configured Environment with all the CommonMark parsers/renderers ready-to-go
-        $environment = Environment::createCommonMarkEnvironment();
-        // Add this extension
-        $environment->addExtension(new ExternalLinkExtension());
-        $environment->addExtension(new HeadingPermalinkExtension());
-        $environment->addBlockParser(new CustomHeadingParser(), 61);
-        // Set your configuration
+        // Set your configuration.
         $config = [
             'external_link' => [
                 'internal_hosts' => 'www.jonnyeom.com',
@@ -54,8 +51,26 @@ class Post
                 'title' => 'Permalink',
                 'symbol' => HeadingPermalinkRenderer::DEFAULT_SYMBOL,
             ],
+            'default_attributes' => [
+                Heading::class => [
+                    'class' => static function (Heading $node) {
+                        if ($node->getLevel() === 1) {
+                            return 'title-main';
+                        } else {
+                            return null;
+                        }
+                    },
+                ],
+            ],
         ];
-        $converter = new CommonMarkConverter($config, $environment);
+
+        $environment = new Environment($config);
+        $environment->addExtension(new CommonMarkCoreExtension());
+        $environment->addExtension(new ExternalLinkExtension());
+        $environment->addExtension(new HeadingPermalinkExtension());
+        $environment->addExtension(new DefaultAttributesExtension());
+        $environment->addBlockStartParser(new CustomHeadingParser(), 61);
+        $converter = new MarkdownConverter($environment);
 
         $post = new self();
         $post->setTitle($object->title ?? '')

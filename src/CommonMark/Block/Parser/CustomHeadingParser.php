@@ -2,49 +2,79 @@
 
 namespace App\CommonMark\Block\Parser;
 
-use League\CommonMark\Block\Element\Heading;
-use League\CommonMark\Block\Parser\BlockParserInterface;
-use League\CommonMark\ContextInterface;
-use League\CommonMark\Cursor;
+use League\CommonMark\Extension\CommonMark\Parser\Block\HeadingParser;
+use League\CommonMark\Parser\Block\BlockStart;
+use League\CommonMark\Parser\Block\BlockStartParserInterface;
+use League\CommonMark\Parser\Cursor;
+use League\CommonMark\Parser\MarkdownParserStateInterface;
 use League\CommonMark\Util\RegexHelper;
 
 /**
- * Custom Heading Parser based on ATXHeadingParser.
+ * Custom Heading Parser based on HeadingStartParser.
  *
- * @see \League\CommonMark\Block\Parser\ATXHeadingParser
+ * @see \League\CommonMark\Extension\CommonMark\Parser\Block\HeadingStartParser
  */
-class CustomHeadingParser implements BlockParserInterface
+class CustomHeadingParser implements BlockStartParserInterface
 {
-    public function parse(ContextInterface $context, Cursor $cursor): bool
+    public function tryStart(Cursor $cursor, MarkdownParserStateInterface $parserState): ?BlockStart
     {
-        if ($cursor->isIndented()) {
-            return false;
-        }
-
-        $match = RegexHelper::matchFirst('/^#{1,6}(?:[ \t]+|$)/', $cursor->getLine(), $cursor->getNextNonSpacePosition());
-        if (!$match) {
-            return false;
+        if ($cursor->isIndented() || ! \in_array($cursor->getNextNonSpaceCharacter(), ['#', '-', '='], true)) {
+            return BlockStart::none();
         }
 
         $cursor->advanceToNextNonSpaceOrTab();
 
+        if ($atxHeading = self::getAtxHeader($cursor)) {
+            return BlockStart::of($atxHeading)->at($cursor);
+        }
+
+        $setextHeadingLevel = self::getSetextHeadingLevel($cursor);
+        if ($setextHeadingLevel > 0) {
+            $content = $parserState->getParagraphContent();
+            if ($content !== null) {
+                $cursor->advanceToEnd();
+
+                return BlockStart::of(new HeadingParser($setextHeadingLevel, $content))
+                    ->at($cursor)
+                    ->replaceActiveBlockParser();
+            }
+        }
+
+        return BlockStart::none();
+    }
+
+    private static function getAtxHeader(Cursor $cursor): ?HeadingParser
+    {
+        $match = RegexHelper::matchFirst('/^#{1,6}(?:[ \t]+|$)/', $cursor->getRemainder());
+        if (! $match) {
+            return null;
+        }
+
+        $cursor->advanceToNextNonSpaceOrTab();
         $cursor->advanceBy(\strlen($match[0]));
 
         $level = \strlen(\trim($match[0]));
-        $str = $cursor->getRemainder();
-        /** @var string $str */
-        $str = \preg_replace('/^[ \t]*#+[ \t]*$/', '', $str);
-        /** @var string $str */
+        $str   = $cursor->getRemainder();
+        $str   = \preg_replace('/^[ \t]*#+[ \t]*$/', '', $str);
+        \assert(\is_string($str));
         $str = \preg_replace('/[ \t]+#+[ \t]*$/', '', $str);
+        \assert(\is_string($str));
 
-        // Push heading levels up so that headings are only h2 >> h6.
         if ($level < 6) {
             $level++;
         }
 
-        $context->addBlock(new Heading($level, $str));
-        $context->setBlocksParsed(true);
-
-        return true;
+        return new HeadingParser($level, $str);
     }
+
+    private static function getSetextHeadingLevel(Cursor $cursor): int
+    {
+        $match = RegexHelper::matchFirst('/^(?:=+|-+)[ \t]*$/', $cursor->getRemainder());
+        if ($match === null) {
+            return 0;
+        }
+
+        return $match[0][0] === '=' ? 1 : 2;
+    }
+
 }
