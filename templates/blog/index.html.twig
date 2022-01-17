@@ -8,7 +8,7 @@
                     {% if post.isPublished() %}
                         <div class="mb-6">
                             <div class="is-uppercase has-text-grey-dark has-text-weight-bold">{{ post.date|date("F Y") }}</div>
-                            <h2 class="mt-1 mb-4"><a href="{{ path('app_posts') }}/{{ post.getSlug }}">{{ post.title }}</a></h2>
+                            <h2 class="mt-1 mb-3 is-size-4"><a href="{{ path('app_posts') }}/{{ post.getSlug }}">{{ post.title }}</a></h2>
                             {% if post.description is defined %}
                                 <p class="">{{ post.description }}</p>
                             {% endif %}
