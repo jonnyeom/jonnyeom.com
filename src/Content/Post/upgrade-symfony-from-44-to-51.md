@@ -4,7 +4,7 @@ description: Just a short overview of what I did to update my symfony applicatio
 date: July 4, 2020
 slug: 'upgrade-symfony-from-44-to-51'
 tags:
-    - Symfony
+- Symfony
 ---
 
 
@@ -16,7 +16,6 @@ First, I updated my composer.json according to the instructions [here](https://s
 
 - Changed all `4.4.*` lines to `5.1.*`
 - Change the extra.symfony.require line
-
     ```json
         "extra": {
             "symfony": {
@@ -26,15 +25,14 @@ First, I updated my composer.json according to the instructions [here](https://s
     ```
 
 - Run the update.
-
-    ```bash
+    ```shell
     composer update "symfony/*" --with-all-dependencies
     ```
 
 ### Remove symfony/web-server-bundle
 
 - During the update, I ran into a version error with the symfony/web-server-bundle package.
-Doing some research, It looks like we can now use symfony's cli tool to start local servers, so I simply removed this package and re-ran the update command.
+  Doing some research, It looks like we can now use symfony's cli tool to start local servers, so I simply removed this package and re-ran the update command.
 
     ```bash
     composer remove symfony/web-server-bundle
@@ -49,7 +47,6 @@ To fix this
 
 - Replace the file name to `framework.yml`
 - Replace _errors.resource with the updated class
-
     ```yaml
     # config/routes/dev/framework.yaml
 
@@ -66,7 +63,6 @@ I then ran into the error
 To fix this
 
 - Update the `Debug` class
-
     ```php
     // public/index.php
 
@@ -81,7 +77,6 @@ To fix this
 This is not required but It is best to move away from depreciated code.
 
 - Update my `configureRoutes()` method in `Kernel.php` to use the new `RoutingConfigurator` class.
-
     ```php
     // old src/Kernel.php
 

@@ -23,3 +23,9 @@
         </div>
     </section>
 {% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+
+    {{ encore_entry_link_tags('submodule.post') }}
+{% endblock %}

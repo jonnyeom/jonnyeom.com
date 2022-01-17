@@ -53,6 +53,11 @@ nav.menu {
       border-bottom: 0;
       border-radius: 0;
       word-break: unset;
+
+      &.hljs {
+        background-color: $code-block-background;
+        padding: unset;
+      }
     }
   }
 

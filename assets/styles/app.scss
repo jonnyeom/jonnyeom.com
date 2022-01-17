@@ -17,6 +17,8 @@ $vue-green: #42b983;
 $php-purple: #8892BF;
 $php-dark-purple: #4F5B93;
 
+$code-block-background: #f6f8fa;
+
 $blue-200: #93c5fd;
 $cool-grey: #1f2937;
 $cool-grey-100: #f3f4f6;
@@ -72,7 +74,7 @@ $code: $cool-grey;
 $code-background: $cool-grey-100;
 
 $pre: $text;
-$pre-background: #f6f8fa;
+$pre-background: $code-block-background;
 
 
 

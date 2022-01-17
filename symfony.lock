@@ -53,6 +53,9 @@
     "psr/log": {
         "version": "1.1.4"
     },
+    "scrivo/highlight.php": {
+        "version": "v9.18.1.9"
+    },
     "sensio/framework-extra-bundle": {
         "version": "5.6",
         "recipe": {
@@ -64,6 +67,9 @@
         "files": [
             "config/packages/sensio_framework_extra.yaml"
         ]
+    },
+    "spatie/commonmark-highlighter": {
+        "version": "3.0.0"
     },
     "spatie/yaml-front-matter": {
         "version": "2.0.6"

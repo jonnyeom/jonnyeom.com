@@ -6,9 +6,13 @@ use App\CommonMark\Block\Parser\CustomHeadingParser;
 use DateTime;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\CommonMark\Node\Block\FencedCode;
+use League\CommonMark\Extension\CommonMark\Node\Block\IndentedCode;
 use League\CommonMark\Extension\ExternalLink\ExternalLinkExtension;
 use League\CommonMark\Extension\HeadingPermalink\HeadingPermalinkExtension;
 use League\CommonMark\MarkdownConverter;
+use Spatie\CommonMarkHighlighter\FencedCodeRenderer;
+use Spatie\CommonMarkHighlighter\IndentedCodeRenderer;
 use Spatie\YamlFrontMatter\Document;
 
 class Post
@@ -57,6 +61,8 @@ class Post
         $environment->addExtension(new ExternalLinkExtension());
         $environment->addExtension(new HeadingPermalinkExtension());
         $environment->addBlockStartParser(new CustomHeadingParser(), 61);
+        $environment->addRenderer(FencedCode::class, new FencedCodeRenderer(['html', 'php', 'js', 'json', 'shell']), 1);
+        $environment->addRenderer(IndentedCode::class, new IndentedCodeRenderer(['html', 'php', 'js', 'json', 'shell']), 1);
         $converter = new MarkdownConverter($environment);
 
         $post = new self();

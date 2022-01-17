@@ -15,7 +15,7 @@ tags:
 
 ## The Steps
 - Install both default php package and older php7.4 package. The [ArchWiki](https://wiki.archlinux.org/index.php/PHP) will always have the latest instructions but this what I did at the time.
-    ```sh
+    ```shell
     # install php package (defaults to version 8)
     pamac install php
 
@@ -23,7 +23,7 @@ tags:
     pamac install php74
     ```
 - Setup symlinks to use the wanted versions from terminal.
-    ```sh
+    ```shell
     # setup php 8 as the version to be used when you run "php8"
     sudo ln -s /usr/bin/php /usr/local/bin/php
 
@@ -33,7 +33,7 @@ tags:
 
 ## The Result
 - **Output of `php -v`**
-    ```sh
+    ```shell
     > php -v
     PHP 8.1.1 (cli) (built: Jan  8 2022 08:25:03) (NTS)
     Copyright (c) The PHP Group
@@ -42,7 +42,7 @@ tags:
     ```
 
 - **Output of `php7 -v`**
-    ```sh
+    ```shell
     > php7 -v
     PHP 7.4.27 (cli) (built: Dec 16 2021 18:14:46) ( NTS )
     Copyright (c) The PHP Group
