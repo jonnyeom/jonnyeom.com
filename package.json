@@ -20,6 +20,7 @@
         "@symfony/webpack-encore": "^1.7.0",
         "bulma": "^0.9.0",
         "core-js": "^3.0.0",
+        "highlight.js": "^11.4.0",
         "imagemin-cli": "^5.1.0",
         "imagemin-pngquant": "^8.0.0",
         "regenerator-runtime": "^0.13.2",
@@ -34,8 +35,5 @@
         "dev": "encore dev",
         "watch": "encore dev --watch",
         "build": "encore production --progress"
-    },
-    "dependencies": {
-        "highlight.js": "^11.4.0"
     }
 }
