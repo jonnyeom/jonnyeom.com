@@ -15,7 +15,7 @@ Just a short overview of what I did to update my symfony applications to 5.1
 First, I updated my composer.json according to the instructions [here](https://symfony.com/doc/current/setup/upgrade_major.html#update-to-the-new-major-version-via-composer)
 
 - Changed all `4.4.*` lines to `5.1.*`
-- Change the extra.symfony.require line
+- Change the extra.symfony.require line in `composer.json`
     ```json
         "extra": {
             "symfony": {
@@ -31,13 +31,14 @@ First, I updated my composer.json according to the instructions [here](https://s
 
 ### Remove symfony/web-server-bundle
 
-- During the update, I ran into a version error with the symfony/web-server-bundle package.
-  Doing some research, It looks like we can now use symfony's cli tool to start local servers, so I simply removed this package and re-ran the update command.
+During the update, I ran into a version error with the symfony/web-server-bundle package.
 
-    ```bash
-    composer remove symfony/web-server-bundle
-    composer update "symfony/*" --with-all-dependencies
-    ```
+Doing some research, It looks like we can now use symfony's cli tool to start local servers, so I simply removed this package and re-ran the update command.
+
+```shell
+composer remove symfony/web-server-bundle
+composer update "symfony/*" --with-all-dependencies
+```
 
 ### Replace twig.yml with framework.yml
 
@@ -67,8 +68,10 @@ To fix this
     // public/index.php
 
     ...
+
     // This used to be "use Symfony\Component\Debug\Debug;"
     use Symfony\Component\ErrorHandler\Debug;
+
     ...
     ```
 
@@ -82,7 +85,8 @@ This is not required but It is best to move away from depreciated code.
 
     use Symfony\Component\Routing\RouteCollectionBuilder;
 
-    ...
+	...
+
     protected function configureRoutes(RouteCollectionBuilder $routes): void
     {
         $confDir = $this->getProjectDir().'/config';
@@ -98,20 +102,22 @@ This is not required but It is best to move away from depreciated code.
 
     use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
-    ...
+	...
+
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
         $routes->import('../config/{routes}/'.$this->environment.'/*.yaml');
         $routes->import('../config/{routes}/*.yaml');
 
         if (file_exists(\dirname(__DIR__).'/config/routes.yaml')) {
-                $routes->import('../config/{routes}.yaml');
+            $routes->import('../config/{routes}.yaml');
         } else {
             $path = \dirname(__DIR__).'/config/routes.php';
             (require $path)($routes->withPath($path), $this);
         }
     }
     ```
+
 — and Voila!
 
 My application was updated to the latest stable version without any depreciations!
