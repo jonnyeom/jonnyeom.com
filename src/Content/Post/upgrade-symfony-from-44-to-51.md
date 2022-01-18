@@ -25,7 +25,7 @@ First, I updated my composer.json according to the instructions [here](https://s
     ```
 
 - Run the update.
-    ```shell
+    ```sh
     composer update "symfony/*" --with-all-dependencies
     ```
 
@@ -35,7 +35,7 @@ During the update, I ran into a version error with the symfony/web-server-bundle
 
 Doing some research, It looks like we can now use symfony's cli tool to start local servers, so I simply removed this package and re-ran the update command.
 
-```shell
+```sh
 composer remove symfony/web-server-bundle
 composer update "symfony/*" --with-all-dependencies
 ```
@@ -111,7 +111,8 @@ This is not required but It is best to move away from depreciated code.
 
         if (file_exists(\dirname(__DIR__).'/config/routes.yaml')) {
             $routes->import('../config/{routes}.yaml');
-        } else {
+        }
+        else {
             $path = \dirname(__DIR__).'/config/routes.php';
             (require $path)($routes->withPath($path), $this);
         }

@@ -61,8 +61,9 @@ class Post
         $environment->addExtension(new ExternalLinkExtension());
         $environment->addExtension(new HeadingPermalinkExtension());
         $environment->addBlockStartParser(new CustomHeadingParser(), 61);
-        $environment->addRenderer(FencedCode::class, new FencedCodeRenderer(['html', 'php', 'js', 'json', 'shell', 'yaml']), 1);
-        $environment->addRenderer(IndentedCode::class, new IndentedCodeRenderer(['html', 'php', 'js', 'json', 'shell', 'yaml']), 1);
+        $highlightLanguages = ['html', 'php', 'js', 'json', 'bash', 'yaml', 'twig'];
+        $environment->addRenderer(FencedCode::class, new FencedCodeRenderer($highlightLanguages), 1);
+        $environment->addRenderer(IndentedCode::class, new IndentedCodeRenderer($highlightLanguages), 1);
         $converter = new MarkdownConverter($environment);
 
         $post = new self();
