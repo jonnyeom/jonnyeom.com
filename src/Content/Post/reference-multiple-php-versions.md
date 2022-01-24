@@ -1,41 +1,39 @@
 ---
 title: 'Reference: Using multiple php versions on macOS / Linux'
 description: Reference on using multiple php versions (php 7 and php 8). macOS and Manjaro / Arch Linux.
-date: February 15, 2021
 last-updated: true
-tags:
-- php
+tags: [php]
 ---
 
 # The end goal
-- Have multiple versions of php installed.
+- Have multiple versions of php installed
 - Use php 7.x when you run `php`
-- Use php 8.x when you run `php8` .
+- Use php 8.x when you run `php8`
 
 
 # The Steps
 ## MacOS
-Most brew solutions with `link` and `unlink` is not preferred solution.
--  Install both default php package and older php7.4 package.
+I prefer this over brew solutions with `link` and `unlink`.
+-  Install both the default php package and the older php7.4 package
    ```sh
-   # install php package (defaults to version 8)
+   # Install php (defaults to version 8).
    brew install php
 
-   # install older php 7.4
+   # Install older php 7.4.
    brew install php@7.4
    ```
-- Link the php7.4 package as the default
+- Make php 7.4 the default
   ```sh
   # Unlink php8.
   brew unlink php
 
-  # Double check php7.4 is linked (this will set php7.4 as the default)
+  # Double check php 7.4 is linked (this will set php7.4 as the default)
   brew link php@7.4
   ```
-- Create a symlink for php 8
+- Create an extra symlink for php 8
   ```sh
-  # Creating a symlink in /usr/local/bin
-  ln -s /usr/local/opt/php/bin/php php8
+  # Create a symlink in /usr/local/bin.
+  ln -s /usr/local/opt/php/bin/php /usr/local/bin/php8
   ```
 - Remove any manual php `$PATH` setups in your `.bashrc` or `.zshrc` (or equivelent). It may look like this.
   ```sh
@@ -49,18 +47,18 @@ Most brew solutions with `link` and `unlink` is not preferred solution.
 ## Linux (using pamac)
 - Install both default php package and older php7.4 package. The [ArchWiki](https://wiki.archlinux.org/index.php/PHP) will always have the latest instructions but this what I did at the time.
     ```sh
-    # install php package (defaults to version 8)
+    # Install php (defaults to version 8).
     pamac install php
 
-    # install older php 7.4
+    # Install older php 7.4.
     pamac install php74
     ```
-- Setup symlinks to use the wanted versions from terminal.
+- Setup symlinks.
     ```sh
-    # setup php 8 as the version to be used when you run "php8"
+    # Setup php 8 as the version to be used when you run "php8".
     sudo ln -s /usr/bin/php /usr/local/bin/php8
 
-    # setup php 7.4 as the default version to be used
+    # Setup php 7.4 as the default version to be used.
     sudo ln -s /usr/bin/php74 /usr/local/bin/php
     ```
 
