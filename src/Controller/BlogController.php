@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Model\Post;
 use App\Service\BlogContent;
 use Leogout\Bundle\SeoBundle\Provider\SeoGeneratorProvider;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 class BlogController extends BaseController
@@ -54,7 +55,7 @@ class BlogController extends BaseController
     /**
      * @Route("/writing/{slug}", name="app_post")
      */
-    public function post($slug)
+    public function post($slug, Request $request)
     {
         $post = $this->blogContent->getPost($slug);
 
@@ -75,9 +76,15 @@ class BlogController extends BaseController
             ->setTitle($post->getTitle() . '| jonnyeom')
             ->setDescription($post->getDescription());
 
-        return $this->render('blog/post.html.twig', [
+        $response = $this->render('blog/post.html.twig', [
             'post' => $post,
         ]);
+
+        $response->setEtag(md5($response->getContent()));
+        $response->setPublic();
+        $response->isNotModified($request);
+
+        return $response;
     }
 
 }
