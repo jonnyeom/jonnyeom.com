@@ -43,7 +43,7 @@ final class DailyScriptureDataProvider implements ItemDataProviderInterface, Res
             throw new ItemNotFoundException(sprintf('Unable to find Daily Scripture for the date %s', $date));
         }
 
-        return new DailyScripture($dateObj, $content['2022'][$date]['body'], $content['2022'][$date]['scripture']);
+        return new DailyScripture($dateObj, $content['2022'][$date]['scripture'], $content['2022'][$date]['body']);
     }
 
     public function supports(string $resourceClass, string $operationName = null, array $context = []): bool
