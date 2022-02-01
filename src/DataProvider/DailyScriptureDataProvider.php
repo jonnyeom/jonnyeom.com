@@ -11,6 +11,14 @@ use App\Service\DailyScriptureLoader;
 
 final class DailyScriptureDataProvider implements ItemDataProviderInterface, RestrictedDataProviderInterface
 {
+    private DailyScriptureLoader $dsLoader;
+
+    /** Setter Injection for our DS Loader. */
+    public function setDsLoader(DailyScriptureLoader $dsLoader): void
+    {
+        $this->dsLoader = $dsLoader;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -34,7 +42,7 @@ final class DailyScriptureDataProvider implements ItemDataProviderInterface, Res
             throw new InvalidIdentifierException('Invalid Date format. Pass a date in the format "m-d-Y" or "n-j-Y".');
         }
 
-        $content = (new DailyScriptureLoader())->getAllScriptures();
+        $content = $this->dsLoader->getAllScriptures();
 
         $date = $dateObj->format('n/j/Y');
         if (!array_key_exists($date, $content['2022'])) {

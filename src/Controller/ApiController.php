@@ -9,12 +9,18 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class ApiController extends AbstractController
 {
+    private DailyScriptureLoader $dsLoader;
+
+    public function __construct(DailyScriptureLoader $dsLoader)
+    {
+        $this->dsLoader = $dsLoader;
+    }
     /**
      * @Route("api/daily_scriptures/today", "api_daily_scripture")
      */
-    public function dailyScriptures(): JsonResponse
+    public function dailyScripture(): JsonResponse
     {
-        $content = (new DailyScriptureLoader())->getAllScriptures();
+        $content = $this->dsLoader->getAllScriptures();
         $date = (new \DateTime())->format('n/j/Y');
 
         return new JsonResponse($content['2022'][$date]);
