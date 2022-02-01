@@ -1,4 +1,4 @@
-{ 
+{
   "U.S. Naval Institute": {
     "image": "images/projects/usni.png",
     "description": "",
@@ -43,7 +43,7 @@
     "image": "images/projects/nafsa.png",
     "description": "",
     "tags": [
-      "Drupal 8",
+      "Drupal 9",
       "React",
       "Vue.js"
     ]
