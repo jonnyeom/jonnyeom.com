@@ -7,6 +7,7 @@ use ApiPlatform\Core\DataProvider\RestrictedDataProviderInterface;
 use ApiPlatform\Core\Exception\InvalidIdentifierException;
 use ApiPlatform\Core\Exception\ItemNotFoundException;
 use App\Entity\DailyScripture;
+use App\Service\DailyScriptureLoader;
 
 final class DailyScriptureDataProvider implements ItemDataProviderInterface, RestrictedDataProviderInterface
 {
@@ -33,12 +34,9 @@ final class DailyScriptureDataProvider implements ItemDataProviderInterface, Res
             throw new InvalidIdentifierException('Invalid Date format. Pass a date in the format "m-d-Y" or "n-j-Y".');
         }
 
+        $content = (new DailyScriptureLoader())->getAllScriptures();
+
         $date = $dateObj->format('n/j/Y');
-
-        // Todo: Add Cache.
-        $content = file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json');
-        $content = json_decode($content, TRUE);
-
         if (!array_key_exists($date, $content['2022'])) {
             throw new ItemNotFoundException(sprintf('Unable to find Daily Scripture for the date %s', $date));
         }
