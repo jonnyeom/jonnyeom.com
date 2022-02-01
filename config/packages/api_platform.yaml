@@ -7,3 +7,23 @@ api_platform:
         versions: [3]
     doctrine:
         enabled: false
+    enable_docs: false
+    http_cache:
+        # To make all responses public by default.
+        public: true
+        invalidation:
+            # To enable the tags-based cache invalidation system.
+            enabled: true
+    defaults:
+        cache_headers:
+            # Default value for the response max age.
+            max_age: 3600
+            # Default value for the response shared (proxy) max age.
+            shared_max_age: 3600
+            # Default values of the "Vary" HTTP header.
+            vary: [ 'Content-Type', 'Authorization', 'Origin' ]
+
+when@dev:
+    api_platform:
+        enable_docs: true
+
