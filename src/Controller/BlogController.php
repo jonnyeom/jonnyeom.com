@@ -64,16 +64,16 @@ class BlogController extends BaseController
         }
 
         $this->seo->get('basic')
-            ->setTitle($post->getTitle() . '| jonnyeom')
+            ->setTitle($post->getTitle() . ' | jonnyeom')
             ->setDescription($post->getDescription())
             ->setKeywords(implode(',', $post->getTags()));
 
         $this->seo->get('og')
-            ->setTitle($post->getTitle() . '| jonnyeom')
+            ->setTitle($post->getTitle() . ' | jonnyeom')
             ->setDescription($post->getDescription());
 
         $this->seo->get('twitter')
-            ->setTitle($post->getTitle() . '| jonnyeom')
+            ->setTitle($post->getTitle() . ' | jonnyeom')
             ->setDescription($post->getDescription());
 
         $response = $this->render('blog/post.html.twig', [
