@@ -16,13 +16,14 @@ class ApiController extends AbstractController
     {
         $this->dsLoader = $dsLoader;
     }
+
     /**
      * @Route("api/daily_scriptures/today", "api_daily_scripture")
      */
     public function dailyScripture(Request $request): JsonResponse
     {
         $content = $this->dsLoader->getAllScriptures();
-        $date = (new \DateTime())->format('n/j/Y');
+        $date = (new \DateTime('now', new \DateTimeZone('America/New_York')))->format('n/j/Y');
 
         $response = new JsonResponse($content['2022'][$date]);
         $response->setEtag(md5($response->getContent()));
