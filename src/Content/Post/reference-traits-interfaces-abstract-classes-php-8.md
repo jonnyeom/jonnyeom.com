@@ -1,6 +1,6 @@
 ---
-title: 'Reference: Traits vs Interfaces vs Abstract Classes'
-description: A Reference for Traits, Interfaces, and Abstract Classes, with the latest features from PHP 8 included.
+title: 'Traits vs Interfaces vs Abstract Classes in PHP'
+description: Difference between Traits, Interfaces, and Abstract Classes, including the latest features from PHP 8.
 date: January 11, 2022
 slug: 'reference-traits-interfaces-abstract-classes-php-8'
 tags:
