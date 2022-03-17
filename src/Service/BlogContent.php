@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Model\Post;
+use DateTime;
 use DirectoryIterator;
 use Psr\Cache\InvalidArgumentException;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
@@ -47,6 +48,13 @@ class BlogContent
                 if (!$item->isHit()) {
                     $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$fileName}.md"));
                     $post = Post::createFromYamlParse($object);
+
+                    // @Todo Move this to the Markdown Converter.
+                    // Set the Last Updated as the Last Modified time.
+                    if ($post->getLastUpdated()) {
+                        $lastUpdated = filemtime(__DIR__ . "/../Content/Post/{$fileName}.md");
+                        $post->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));
+                    }
 
                     if (!$post->getSlug()) {
                         $post->setSlug($this->slugger->slug($post->getTitle()));

@@ -31,6 +31,8 @@ class Post
 
     private ?string $slug = NULL;
 
+    private ?DateTime $lastUpdated = NULL;
+
     public static function createFromYamlParse(Document $object): Post
     {
         // @Todo: Move to a wrapper service.
@@ -83,6 +85,10 @@ class Post
         // Do not publish if it does not have a title.
         if ($post->isPublished() && !$post->getTitle()) {
             $post->unpublish();
+        }
+
+        if ($object->matter('last-updated')) {
+            $post->setLastUpdated(new DateTime('now'));
         }
 
         return $post;
@@ -201,6 +207,24 @@ class Post
     public function setSlug(string $slug): Post
     {
         $this->slug = $slug;
+        return $this;
+    }
+
+    /**
+     * @return DateTime|null
+     */
+    public function getLastUpdated(): ?DateTime
+    {
+        return $this->lastUpdated;
+    }
+
+    /**
+     * @param DateTime $lastUpdated
+     * @return Post
+     */
+    public function setLastUpdated(DateTime $lastUpdated): Post
+    {
+        $this->lastUpdated = $lastUpdated;
         return $this;
     }
 
