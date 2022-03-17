@@ -25,6 +25,8 @@
             <div class="content markdown">
                 {{ post.body|raw }}
             </div>
+
+            <div class="giscus"/>
         </div>
     </section>
 {% endblock %}
@@ -33,4 +35,19 @@
     {{ parent() }}
 
     {{ encore_entry_link_tags('submodule.post') }}
+
+    <script src="https://giscus.app/client.js"
+            data-repo="jonnyeom/jonnyeom.com"
+            data-repo-id="MDEwOlJlcG9zaXRvcnkxODIwMDAzMjI="
+            data-category="General"
+            data-category-id="DIC_kwDOCtkaws4COJec"
+            data-mapping="pathname"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="top"
+            data-theme="light"
+            data-lang="en"
+            crossorigin="anonymous"
+            async>
+    </script>
 {% endblock %}
