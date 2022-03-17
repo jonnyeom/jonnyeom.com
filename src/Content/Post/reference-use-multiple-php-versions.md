@@ -68,7 +68,7 @@ I prefer this over brew solutions with `link` and `unlink`.
 
 # The Result
 - **Output of `php -v`**
-    ```bash
+    ```shell
     $ php -v
     PHP 7.4.27 (cli) (built: Dec 16 2021 18:14:46) ( NTS )
     Copyright (c) The PHP Group
@@ -77,7 +77,7 @@ I prefer this over brew solutions with `link` and `unlink`.
     ```
 
 - **Output of `php8 -v`**
-    ```bash
+    ```shell
     $ php8 -v
     PHP 8.1.1 (cli) (built: Jan  8 2022 08:25:03) (NTS)
     Copyright (c) The PHP Group
