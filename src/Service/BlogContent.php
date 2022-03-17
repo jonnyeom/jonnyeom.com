@@ -46,6 +46,7 @@ class BlogContent
 
                 $item = $this->cache->getItem($cid);
                 if (!$item->isHit()) {
+                    // @Todo Parse Yaml as part of Markdown Converter.
                     $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$fileName}.md"));
                     $post = Post::createFromYamlParse($object);
 
