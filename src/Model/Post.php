@@ -71,7 +71,7 @@ class Post
             ->setDescription($object->description ?? '')
             ->setDate(new DateTime($object->date ?? 'now'))
             ->setTags($object->tags ?? [])
-            ->setBody($converter->convertToHtml($object->body()));
+            ->setBody($converter->convert($object->body()));
 
         if ($object->slug) {
             $post->setSlug($object->slug);
