@@ -49,6 +49,18 @@
     "league/config": {
         "version": "v1.1.1"
     },
+    "leogout/seo-bundle": {
+        "version": "1.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.0",
+            "ref": "664d3f978cca5b6e4e4314e05e5e89b1cbf36858"
+        },
+        "files": [
+            "config/packages/leogout_seo.yaml"
+        ]
+    },
     "monolog/monolog": {
         "version": "2.3.5"
     },
