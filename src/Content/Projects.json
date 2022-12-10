@@ -7,6 +7,29 @@
             "React"
         ]
     },
+    "UL Fire Safety Research Institute": {
+        "image": "images/projects/fsri.png",
+        "description": "",
+        "tags": [
+            "Drupal 9"
+        ]
+    },
+    "UL FSRI Fire Safety Academy": {
+        "image": "images/projects/fsri-lms.png",
+        "description": "",
+        "tags": [
+            "React",
+            "Serverless"
+        ]
+    },
+    "UL FSRI Close Before You Doze": {
+        "image": "images/projects/fsri-cbyd.png",
+        "description": "",
+        "tags": [
+            "GatsbyJS",
+            "Multilingual"
+        ]
+    },
     "U.S. Naval Institute": {
         "image": "images/projects/usni.png",
         "description": "",
@@ -40,6 +63,27 @@
             "React"
         ]
     },
+    "The Massachusetts Society of Certified Public Accountants": {
+        "image": "images/projects/mscpa.png",
+        "description": "",
+        "tags": [
+            "Drupal 9"
+        ]
+    },
+    "Florida Institute of CPAs": {
+        "image": "images/projects/ficpa.png",
+        "description": "",
+        "tags": [
+            "Drupal 9"
+        ]
+    },
+    "Barnard College": {
+        "image": "images/projects/barnard.png",
+        "description": "",
+        "tags": [
+            "Drupal 8"
+        ]
+    },
     "Sandy Spring Bank": {
         "image": "images/projects/ssb.png",
         "description": "",
@@ -60,7 +104,8 @@
         "image": "images/projects/lab-tests-online.png",
         "description": "",
         "tags": [
-            "Drupal 8"
+            "Drupal 8",
+            "Multilingual"
         ]
     },
     "U.S. Naval Institute News": {
