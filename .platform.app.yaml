@@ -7,7 +7,7 @@ runtime:
         - apcu
         - mbstring
         - sodium
-        
+
 
 #variables:
 #    php:
@@ -30,15 +30,15 @@ web:
 
 mounts:
     "/var": { source: local, source_path: var }
-    
+
 
 hooks:
     build: |
         set -x -e
 
         curl -fs https://get.symfony.com/cloud/configurator | bash
-        
-        NODE_VERSION=18 symfony-build
+
+        NODE_VERSION=14 symfony-build
 
     deploy: |
         set -x -e
