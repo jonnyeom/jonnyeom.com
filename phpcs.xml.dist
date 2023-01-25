@@ -8,7 +8,7 @@
     <arg name="colors"/>
     <arg name="extensions" value="php"/>
 
-    <rule ref="SlevomatCodingStandard"/>
+    <rule ref="Doctrine"/>
 
     <file>bin/</file>
     <file>config/</file>
