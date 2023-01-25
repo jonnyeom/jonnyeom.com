@@ -25,8 +25,9 @@ class ApiController extends AbstractController
     {
         $content = $this->dsLoader->getAllScriptures();
         $date    = (new DateTime('now', new DateTimeZone('America/New_York')))->format('n/j/Y');
+        $year    = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y');
 
-        $response = new JsonResponse($content['2022'][$date]);
+        $response = new JsonResponse($content[$year][$date]);
         $response->setEtag(md5($response->getContent()));
         $response->setPublic();
         $response->isNotModified($request);
