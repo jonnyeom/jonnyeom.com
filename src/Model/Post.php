@@ -79,11 +79,11 @@ class Post
             ->setTags($object->tags ?? [])
             ->setBody($converter->convert($object->body()));
 
-        if ($object->slug) {
-            $post->setSlug($object->slug);
+        if ($object->__get('slug')) {
+            $post->setSlug($object->__get('slug'));
         }
 
-        if ($object->published === false) {
+        if ($object->__get('published') === false) {
             $post->unpublish();
         }
 

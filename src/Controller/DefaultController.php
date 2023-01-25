@@ -9,8 +9,12 @@ use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+use function assert;
 use function file_get_contents;
+use function is_string;
 use function json_decode;
+
+use const JSON_THROW_ON_ERROR;
 
 class DefaultController extends BaseController
 {
@@ -22,7 +26,8 @@ class DefaultController extends BaseController
         if (! $item->isHit()) {
             $converter = new CommonMarkConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/Homepage.md');
-            $item->set($converter->convertToHtml($markdown));
+            assert(is_string($markdown));
+            $item->set($converter->convert($markdown));
             $cache->save($item);
         }
 
@@ -39,7 +44,8 @@ class DefaultController extends BaseController
     public function projects(): Response
     {
         // Get projects.
-        $json        = file_get_contents(__DIR__ . '/../Content/Projects.json');
+        $json = file_get_contents(__DIR__ . '/../Content/Projects.json');
+        assert(is_string($json));
         $projects    = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         $tagMappings = [
             'Drupal 9' => 'is-drupal-blue',
@@ -76,7 +82,8 @@ class DefaultController extends BaseController
         if (! $item->isHit()) {
             $converter = new CommonMarkConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/About.md');
-            $item->set($converter->convertToHtml($markdown));
+            assert(is_string($markdown));
+            $item->set($converter->convert($markdown));
             $cache->save($item);
         }
 

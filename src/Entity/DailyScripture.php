@@ -16,7 +16,7 @@ use DateTime;
 class DailyScripture
 {
     public function __construct(#[ApiProperty(identifier: true)]
-    private DateTime $date, private string $scripture, private string $body)
+    private DateTime $date, private string $scripture, private string $body,)
     {
     }
 

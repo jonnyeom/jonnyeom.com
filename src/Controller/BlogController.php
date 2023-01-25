@@ -31,7 +31,7 @@ class BlogController extends BaseController
 
         $posts = $this->blogContent->getPosts();
 
-        uasort($posts, static fn(Post $postA, Post $postB) => $postB->getDate() <=> $postA->getDate());
+        uasort($posts, static fn (Post $postA, Post $postB) => $postB->getDate() <=> $postA->getDate());
 
         return $this->render('blog/index.html.twig', ['posts' => $posts]);
     }
@@ -59,6 +59,10 @@ class BlogController extends BaseController
             ->setDescription($post->getDescription());
 
         $response = $this->render('blog/post.html.twig', ['post' => $post]);
+
+        if (! $response->getContent()) {
+            throw $this->createNotFoundException('Blog Content not found');
+        }
 
         $response->setEtag(md5($response->getContent()));
         $response->setPublic();

@@ -30,10 +30,13 @@ final class DailyScriptureDataProvider implements ItemDataProviderInterface, Res
 
     /**
      * {@inheritdoc}
+     *
+     * @param string       $id
+     * @param array<mixed> $context
      */
     public function getItem(string $resourceClass, $id, string|null $operationName = null, array $context = [])
     {
-        if ($id === null || (is_string($id) && trim($id) === '')) {
+        if (! is_string($id) || trim($id) === '') {
             throw new InvalidIdentifierException('The identifier is either an empty string or null. Pass a date in the format "m-d-Y" or "n-j-Y".');
         }
 
@@ -61,9 +64,7 @@ final class DailyScriptureDataProvider implements ItemDataProviderInterface, Res
         return new DailyScripture($dateObj, $content['2022'][$date]['scripture'], $content['2022'][$date]['body']);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    /** @param array<mixed> $context */
     public function supports(string $resourceClass, string|null $operationName = null, array $context = []): bool
     {
         return $resourceClass === DailyScripture::class;

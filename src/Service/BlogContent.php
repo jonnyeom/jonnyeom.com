@@ -16,6 +16,8 @@ use Symfony\Contracts\Service\Attribute\Required;
 use function assert;
 use function file_get_contents;
 use function filemtime;
+use function is_string;
+use function str_ends_with;
 use function strlen;
 use function substr;
 
@@ -43,7 +45,7 @@ class BlogContent
             }
 
             $fileName = $fileinfo->getFilename();
-            if (!str_ends_with($fileName, '.md')) {
+            if (! str_ends_with($fileName, '.md')) {
                 continue;
             }
 
@@ -53,14 +55,20 @@ class BlogContent
             $item = $this->cache->getItem($cid);
             if (! $item->isHit()) {
                 // @Todo Parse Yaml as part of Markdown Converter.
-                $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . '/../Content/Post/' . $fileName . '.md'));
+                $postContent = file_get_contents(__DIR__ . '/../Content/Post/' . $fileName . '.md');
+                assert(is_string($postContent));
+                $object = YamlFrontMatter::parse($postContent);
                 $post   = Post::createFromYamlParse($object);
 
                 // @Todo Move this to the Markdown Converter.
                 // Set the Last Updated as the Last Modified time.
                 if ($post->getLastUpdated()) {
                     $lastUpdated = filemtime(__DIR__ . '/../Content/Post/' . $fileName . '.md');
-                    $post->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));
+                    if ($lastUpdated) {
+                        $post->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));
+                    } else {
+                        $post->setLastUpdated($post->getDate());
+                    }
                 }
 
                 if (! $post->getSlug()) {

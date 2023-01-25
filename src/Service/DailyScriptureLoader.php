@@ -9,6 +9,8 @@ use Symfony\Component\Cache\Adapter\AdapterInterface;
 use function file_get_contents;
 use function json_decode;
 
+use const JSON_THROW_ON_ERROR;
+
 class DailyScriptureLoader
 {
     public function __construct(private AdapterInterface $cache)
