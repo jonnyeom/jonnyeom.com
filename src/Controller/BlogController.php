@@ -19,7 +19,7 @@ class BlogController extends BaseController
      * BlogController constructor.
      *
      * @param SeoGeneratorProvider $seoGeneratorProvider
-     * @param BlogContent $blogContent
+     * @param BlogContent          $blogContent
      */
     public function __construct(SeoGeneratorProvider $seoGeneratorProvider, BlogContent $blogContent)
     {
@@ -28,9 +28,7 @@ class BlogController extends BaseController
         $this->blogContent = $blogContent;
     }
 
-    /**
-     * @Route("/writing", name="app_posts")
-     */
+    #[Route(path: '/writing', name: 'app_posts')]
     public function index()
     {
         $this->seo->get('basic')->setTitle('jonnyeom | Writing');
@@ -39,12 +37,12 @@ class BlogController extends BaseController
 
         $posts = $this->blogContent->getPosts();
 
-        uasort($posts, function (Post $postA, Post $postB)
-        {
+        uasort($posts, function (Post $postA, Post $postB) {
             if ($postA->getDate() === $postB->getDate()) {
                 return 0;
             }
-            return ($postA->getDate() > $postB->getDate() ? -1 : 1);
+
+                return ($postA->getDate() > $postB->getDate() ? -1 : 1);
         });
 
         return $this->render('blog/index.html.twig', [
@@ -52,9 +50,7 @@ class BlogController extends BaseController
         ]);
     }
 
-    /**
-     * @Route("/writing/{slug}", name="app_post")
-     */
+    #[Route(path: '/writing/{slug}', name: 'app_post')]
     public function post($slug, Request $request)
     {
         $post = $this->blogContent->getPost($slug);
@@ -64,16 +60,16 @@ class BlogController extends BaseController
         }
 
         $this->seo->get('basic')
-            ->setTitle($post->getTitle() . ' | jonnyeom')
+            ->setTitle($post->getTitle().' | jonnyeom')
             ->setDescription($post->getDescription())
             ->setKeywords(implode(',', $post->getTags()));
 
         $this->seo->get('og')
-            ->setTitle($post->getTitle() . ' | jonnyeom')
+            ->setTitle($post->getTitle().' | jonnyeom')
             ->setDescription($post->getDescription());
 
         $this->seo->get('twitter')
-            ->setTitle($post->getTitle() . ' | jonnyeom')
+            ->setTitle($post->getTitle().' | jonnyeom')
             ->setDescription($post->getDescription());
 
         $response = $this->render('blog/post.html.twig', [
@@ -86,5 +82,4 @@ class BlogController extends BaseController
 
         return $response;
     }
-
 }

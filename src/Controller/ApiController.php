@@ -17,9 +17,7 @@ class ApiController extends AbstractController
         $this->dsLoader = $dsLoader;
     }
 
-    /**
-     * @Route("api/daily_scriptures/today", "api_daily_scripture")
-     */
+    #[Route(path: 'api/daily_scriptures/today')]
     public function dailyScripture(Request $request): JsonResponse
     {
         $content = $this->dsLoader->getAllScriptures();
@@ -32,5 +30,4 @@ class ApiController extends AbstractController
 
         return $response;
     }
-
 }

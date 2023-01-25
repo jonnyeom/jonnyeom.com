@@ -21,12 +21,13 @@ class BaseController extends AbstractController
     }
 
     /**
-     * @Route("/in-progress", name="app_in_progress")
      *
      * @param string $title
+     *
      * @return Response
      */
-    public function inProgress($title = 'In Progress', $content = NULL): Response
+    #[Route(path: '/in-progress', name: 'app_in_progress')]
+    public function inProgress($title = 'In Progress', $content = null): Response
     {
         $this->seo->get('basic')->setTitle('jonnyeom | In Progress..');
 
@@ -35,5 +36,4 @@ class BaseController extends AbstractController
             'content' => $content,
         ]);
     }
-
 }

@@ -16,12 +16,13 @@ class DailyScriptureLoader
         $this->cache = $cache;
     }
 
-    public function getAllScriptures() {
+    public function getAllScriptures()
+    {
         $cid = 'daily_scriptures';
 
         $item = $this->cache->getItem($cid);
         if (!$item->isHit()) {
-            $content = file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json');
+            $content = file_get_contents(__DIR__.'/../ApiContent/daily-scriptures.json');
 
             $item->set($content);
             $this->cache->save($item);
@@ -29,6 +30,6 @@ class DailyScriptureLoader
 
         $content = $item->get();
 
-        return json_decode($content, TRUE);
+        return json_decode($content, true);
     }
 }

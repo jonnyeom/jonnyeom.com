@@ -9,16 +9,14 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class DefaultController extends BaseController
 {
-    /**
-     * @Route("/", name="app_homepage")
-     */
+    #[Route(path: '/', name: 'app_homepage')]
     public function index(AdapterInterface $cache): Response
     {
         // Get main page content.
         $item = $cache->getItem('markdown_homepage');
         if (!$item->isHit()) {
             $converter = new CommonMarkConverter();
-            $markdown = file_get_contents(__DIR__ . '/../Content/Homepage.md');
+            $markdown = file_get_contents(__DIR__.'/../Content/Homepage.md');
             $item->set($converter->convertToHtml($markdown));
             $cache->save($item);
         }
@@ -33,13 +31,11 @@ class DefaultController extends BaseController
         ]);
     }
 
-    /**
-     * @Route("/projects", name="app_projects")
-     */
+    #[Route(path: '/projects', name: 'app_projects')]
     public function projects(): Response
     {
         // Get projects.
-        $json = file_get_contents(__DIR__ . '/../Content/Projects.json');
+        $json = file_get_contents(__DIR__.'/../Content/Projects.json');
         $projects = json_decode($json, true);
         $tag_mappings = [
             'Drupal 9' => 'is-drupal-blue',
@@ -70,16 +66,14 @@ class DefaultController extends BaseController
         ]);
     }
 
-    /**
-     * @Route("/about", name="app_about")
-     */
+    #[Route(path: '/about', name: 'app_about')]
     public function about(AdapterInterface $cache): Response
     {
         // Get main page content.
         $item = $cache->getItem('markdown_about');
         if (!$item->isHit()) {
             $converter = new CommonMarkConverter();
-            $markdown = file_get_contents(__DIR__ . '/../Content/About.md');
+            $markdown = file_get_contents(__DIR__.'/../Content/About.md');
             $item->set($converter->convertToHtml($markdown));
             $cache->save($item);
         }
@@ -93,5 +87,4 @@ class DefaultController extends BaseController
             'content' => $content,
         ]);
     }
-
 }

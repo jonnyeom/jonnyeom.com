@@ -27,11 +27,11 @@ class Post
 
     private array $tags = [];
 
-    private bool $published = TRUE;
+    private bool $published = true;
 
-    private ?string $slug = NULL;
+    private ?string $slug = null;
 
-    private ?DateTime $lastUpdated = NULL;
+    private ?DateTime $lastUpdated = null;
 
     public static function createFromYamlParse(Document $object): Post
     {
@@ -104,11 +104,13 @@ class Post
 
     /**
      * @param string $title
+     *
      * @return Post
      */
     public function setTitle(string $title): Post
     {
         $this->title = $title;
+
         return $this;
     }
 
@@ -122,11 +124,13 @@ class Post
 
     /**
      * @param string $description
+     *
      * @return Post
      */
     public function setDescription(string $description): Post
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -140,11 +144,13 @@ class Post
 
     /**
      * @param DateTime $date
+     *
      * @return Post
      */
     public function setDate(DateTime $date)
     {
         $this->date = $date;
+
         return $this;
     }
 
@@ -158,11 +164,13 @@ class Post
 
     /**
      * @param array $tags
+     *
      * @return Post
      */
     public function setTags(array $tags): Post
     {
         $this->tags = $tags;
+
         return $this;
     }
 
@@ -184,11 +192,13 @@ class Post
 
     /**
      * @param string $body
+     *
      * @return Post
      */
     public function setBody(string $body): Post
     {
         $this->body = $body;
+
         return $this;
     }
 
@@ -202,11 +212,13 @@ class Post
 
     /**
      * @param string $slug
+     *
      * @return Post
      */
     public function setSlug(string $slug): Post
     {
         $this->slug = $slug;
+
         return $this;
     }
 
@@ -220,11 +232,13 @@ class Post
 
     /**
      * @param DateTime $lastUpdated
+     *
      * @return Post
      */
     public function setLastUpdated(DateTime $lastUpdated): Post
     {
         $this->lastUpdated = $lastUpdated;
+
         return $this;
     }
 
@@ -242,6 +256,7 @@ class Post
     public function publish(): Post
     {
         $this->published = true;
+
         return $this;
     }
 
@@ -251,7 +266,7 @@ class Post
     public function unpublish(): Post
     {
         $this->published = false;
+
         return $this;
     }
-
 }

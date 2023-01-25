@@ -50,6 +50,4 @@ class DailyScripture
     {
         return $this->scripture;
     }
-
-
 }

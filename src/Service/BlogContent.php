@@ -33,7 +33,7 @@ class BlogContent
     {
         $posts = [];
 
-        $postsDir = new DirectoryIterator(__DIR__ . "/../Content/Post");
+        $postsDir = new DirectoryIterator(__DIR__."/../Content/Post");
         foreach ($postsDir as $fileinfo) {
             if (!$fileinfo->isDot()) {
                 $fileName = $fileinfo->getFilename();
@@ -42,18 +42,18 @@ class BlogContent
                 }
 
                 $fileName = substr($fileName, 0, strlen($fileName)-3);
-                $cid = 'posts_' . $fileName;
+                $cid = 'posts_'.$fileName;
 
                 $item = $this->cache->getItem($cid);
                 if (!$item->isHit()) {
                     // @Todo Parse Yaml as part of Markdown Converter.
-                    $object = YamlFrontMatter::parse(file_get_contents(__DIR__ . "/../Content/Post/{$fileName}.md"));
+                    $object = YamlFrontMatter::parse(file_get_contents(__DIR__."/../Content/Post/{$fileName}.md"));
                     $post = Post::createFromYamlParse($object);
 
                     // @Todo Move this to the Markdown Converter.
                     // Set the Last Updated as the Last Modified time.
                     if ($post->getLastUpdated()) {
-                        $lastUpdated = filemtime(__DIR__ . "/../Content/Post/{$fileName}.md");
+                        $lastUpdated = filemtime(__DIR__."/../Content/Post/{$fileName}.md");
                         $post->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));
                     }
 
@@ -89,9 +89,7 @@ class BlogContent
         return $posts[$slug] ?? null;
     }
 
-    /**
-     * @required
-     */
+    #[\Symfony\Contracts\Service\Attribute\Required]
     public function setSlugger(SluggerInterface $slugger): void
     {
         $this->slugger = $slugger;
