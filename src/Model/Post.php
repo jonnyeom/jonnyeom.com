@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Model;
 
 use App\CommonMark\Block\Parser\CustomHeadingParser;
@@ -14,6 +16,7 @@ use League\CommonMark\MarkdownConverter;
 use Spatie\CommonMarkHighlighter\FencedCodeRenderer;
 use Spatie\CommonMarkHighlighter\IndentedCodeRenderer;
 use Spatie\YamlFrontMatter\Document;
+use Stringable;
 
 class Post
 {
@@ -21,17 +24,18 @@ class Post
 
     private string $title;
 
-    private ?string $description;
+    private string|null $description;
 
     private DateTime $date;
 
+    /** @var string[] $tags */
     private array $tags = [];
 
     private bool $published = true;
 
-    private ?string $slug = null;
+    private string|null $slug = null;
 
-    private ?DateTime $lastUpdated = null;
+    private DateTime|null $lastUpdated = null;
 
     public static function createFromYamlParse(Document $object): Post
     {
@@ -82,8 +86,9 @@ class Post
         if ($object->published === false) {
             $post->unpublish();
         }
+
         // Do not publish if it does not have a title.
-        if ($post->isPublished() && !$post->getTitle()) {
+        if ($post->isPublished() && ! $post->getTitle()) {
             $post->unpublish();
         }
 
@@ -94,19 +99,11 @@ class Post
         return $post;
     }
 
-    /**
-     * @return string
-     */
     public function getTitle(): string
     {
         return $this->title;
     }
 
-    /**
-     * @param string $title
-     *
-     * @return Post
-     */
     public function setTitle(string $title): Post
     {
         $this->title = $title;
@@ -114,19 +111,11 @@ class Post
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getDescription(): ?string
+    public function getDescription(): string|null
     {
         return $this->description;
     }
 
-    /**
-     * @param string $description
-     *
-     * @return Post
-     */
     public function setDescription(string $description): Post
     {
         $this->description = $description;
@@ -134,39 +123,25 @@ class Post
         return $this;
     }
 
-    /**
-     * @return DateTime
-     */
     public function getDate(): DateTime
     {
         return $this->date;
     }
 
-    /**
-     * @param DateTime $date
-     *
-     * @return Post
-     */
-    public function setDate(DateTime $date)
+    public function setDate(DateTime $date): Post
     {
         $this->date = $date;
 
         return $this;
     }
 
-    /**
-     * @return array
-     */
+    /** @return string[] */
     public function getTags(): array
     {
         return $this->tags;
     }
 
-    /**
-     * @param array $tags
-     *
-     * @return Post
-     */
+    /** @param string[] $tags */
     public function setTags(array $tags): Post
     {
         $this->tags = $tags;
@@ -176,65 +151,41 @@ class Post
 
     public function addTag(string $tag): Post
     {
-        $tags = $this->getTags();
+        $tags   = $this->getTags();
         $tags[] = $tag;
 
         return $this->setTags($tags);
     }
 
-    /**
-     * @return string
-     */
     public function getBody(): string
     {
         return $this->body;
     }
 
-    /**
-     * @param string $body
-     *
-     * @return Post
-     */
-    public function setBody(string $body): Post
+    public function setBody(string|Stringable $body): Post
     {
         $this->body = $body;
 
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getSlug(): ?string
+    public function getSlug(): string|null
     {
         return $this->slug;
     }
 
-    /**
-     * @param string $slug
-     *
-     * @return Post
-     */
-    public function setSlug(string $slug): Post
+    public function setSlug(string|Stringable $slug): Post
     {
         $this->slug = $slug;
 
         return $this;
     }
 
-    /**
-     * @return DateTime|null
-     */
-    public function getLastUpdated(): ?DateTime
+    public function getLastUpdated(): DateTime|null
     {
         return $this->lastUpdated;
     }
 
-    /**
-     * @param DateTime $lastUpdated
-     *
-     * @return Post
-     */
     public function setLastUpdated(DateTime $lastUpdated): Post
     {
         $this->lastUpdated = $lastUpdated;
@@ -242,17 +193,11 @@ class Post
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isPublished(): bool
     {
         return $this->published;
     }
 
-    /**
-     * @return Post
-     */
     public function publish(): Post
     {
         $this->published = true;
@@ -260,9 +205,6 @@ class Post
         return $this;
     }
 
-    /**
-     * @return Post
-     */
     public function unpublish(): Post
     {
         $this->published = false;

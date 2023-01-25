@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\CommonMark\Block\Parser;
 
 use League\CommonMark\Extension\CommonMark\Parser\Block\HeadingParser;
@@ -9,6 +11,13 @@ use League\CommonMark\Parser\Cursor;
 use League\CommonMark\Parser\MarkdownParserStateInterface;
 use League\CommonMark\Util\RegexHelper;
 
+use function assert;
+use function in_array;
+use function is_string;
+use function preg_replace;
+use function strlen;
+use function trim;
+
 /**
  * Custom Heading Parser based on HeadingStartParser.
  *
@@ -16,15 +25,16 @@ use League\CommonMark\Util\RegexHelper;
  */
 class CustomHeadingParser implements BlockStartParserInterface
 {
-    public function tryStart(Cursor $cursor, MarkdownParserStateInterface $parserState): ?BlockStart
+    public function tryStart(Cursor $cursor, MarkdownParserStateInterface $parserState): BlockStart|null
     {
-        if ($cursor->isIndented() || !\in_array($cursor->getNextNonSpaceCharacter(), ['#', '-', '='], true)) {
+        if ($cursor->isIndented() || ! in_array($cursor->getNextNonSpaceCharacter(), ['#', '-', '='], true)) {
             return BlockStart::none();
         }
 
         $cursor->advanceToNextNonSpaceOrTab();
 
-        if ($atxHeading = self::getAtxHeader($cursor)) {
+        $atxHeading = self::getAtxHeader($cursor);
+        if ($atxHeading) {
             return BlockStart::of($atxHeading)->at($cursor);
         }
 
@@ -43,22 +53,22 @@ class CustomHeadingParser implements BlockStartParserInterface
         return BlockStart::none();
     }
 
-    private static function getAtxHeader(Cursor $cursor): ?HeadingParser
+    private static function getAtxHeader(Cursor $cursor): HeadingParser|null
     {
         $match = RegexHelper::matchFirst('/^#{1,6}(?:[ \t]+|$)/', $cursor->getRemainder());
-        if (!$match) {
+        if (! $match) {
             return null;
         }
 
         $cursor->advanceToNextNonSpaceOrTab();
-        $cursor->advanceBy(\strlen($match[0]));
+        $cursor->advanceBy(strlen($match[0]));
 
-        $level = \strlen(\trim($match[0]));
+        $level = strlen(trim($match[0]));
         $str   = $cursor->getRemainder();
-        $str   = \preg_replace('/^[ \t]*#+[ \t]*$/', '', $str);
-        \assert(\is_string($str));
-        $str = \preg_replace('/[ \t]+#+[ \t]*$/', '', $str);
-        \assert(\is_string($str));
+        $str   = preg_replace('/^[ \t]*#+[ \t]*$/', '', $str);
+        assert(is_string($str));
+        $str = preg_replace('/[ \t]+#+[ \t]*$/', '', $str);
+        assert(is_string($str));
 
         if ($level < 6) {
             $level++;

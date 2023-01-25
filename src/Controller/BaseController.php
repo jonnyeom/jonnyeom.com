@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use Leogout\Bundle\SeoBundle\Provider\SeoGeneratorProvider;
@@ -9,25 +11,15 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class BaseController extends AbstractController
 {
-
-    /**
-     * @var SeoGeneratorProvider
-     */
-    protected $seo;
+    protected SeoGeneratorProvider $seo;
 
     public function __construct(SeoGeneratorProvider $seoGeneratorProvider)
     {
         $this->seo = $seoGeneratorProvider;
     }
 
-    /**
-     *
-     * @param string $title
-     *
-     * @return Response
-     */
     #[Route(path: '/in-progress', name: 'app_in_progress')]
-    public function inProgress($title = 'In Progress', $content = null): Response
+    public function inProgress(string $title = 'In Progress', mixed $content = null): Response
     {
         $this->seo->get('basic')->setTitle('jonnyeom | In Progress..');
 

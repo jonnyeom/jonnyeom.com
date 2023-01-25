@@ -1,11 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use League\CommonMark\CommonMarkConverter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+
+use function file_get_contents;
+use function json_decode;
 
 class DefaultController extends BaseController
 {
@@ -14,30 +19,29 @@ class DefaultController extends BaseController
     {
         // Get main page content.
         $item = $cache->getItem('markdown_homepage');
-        if (!$item->isHit()) {
+        if (! $item->isHit()) {
             $converter = new CommonMarkConverter();
-            $markdown = file_get_contents(__DIR__.'/../Content/Homepage.md');
+            $markdown  = file_get_contents(__DIR__ . '/../Content/Homepage.md');
             $item->set($converter->convertToHtml($markdown));
             $cache->save($item);
         }
+
         $content = $item->get();
 
         $this->seo->get('basic')->setTitle('jonnyeom | Home');
         $this->seo->get('og')->setTitle('jonnyeom | Home');
         $this->seo->get('twitter')->setTitle('jonnyeom | Home');
 
-        return $this->render('page/homepage.html.twig', [
-            'content' => $content,
-        ]);
+        return $this->render('page/homepage.html.twig', ['content' => $content]);
     }
 
     #[Route(path: '/projects', name: 'app_projects')]
     public function projects(): Response
     {
         // Get projects.
-        $json = file_get_contents(__DIR__.'/../Content/Projects.json');
-        $projects = json_decode($json, true);
-        $tag_mappings = [
+        $json        = file_get_contents(__DIR__ . '/../Content/Projects.json');
+        $projects    = json_decode($json, true);
+        $tagMappings = [
             'Drupal 9' => 'is-drupal-blue',
             'Drupal 8' => 'is-drupal-blue',
             'React' => 'is-react-blue',
@@ -49,10 +53,10 @@ class DefaultController extends BaseController
         // Map the proper classes to tags.
         foreach ($projects as &$project) {
             foreach ($project['tags'] as &$tag) {
-                $tag_class = $tag_mappings[$tag] ?? $tag_mappings['default'];
-                $tag = [
+                $tagClass = $tagMappings[$tag] ?? $tagMappings['default'];
+                $tag      = [
                     'label' => $tag,
-                    'class' => $tag_class,
+                    'class' => $tagClass,
                 ];
             }
         }
@@ -61,9 +65,7 @@ class DefaultController extends BaseController
         $this->seo->get('og')->setTitle('jonnyeom | Projects');
         $this->seo->get('twitter')->setTitle('jonnyeom | Projects');
 
-        return $this->render('page/projects.html.twig', [
-            'projects' => $projects,
-        ]);
+        return $this->render('page/projects.html.twig', ['projects' => $projects]);
     }
 
     #[Route(path: '/about', name: 'app_about')]
@@ -71,20 +73,19 @@ class DefaultController extends BaseController
     {
         // Get main page content.
         $item = $cache->getItem('markdown_about');
-        if (!$item->isHit()) {
+        if (! $item->isHit()) {
             $converter = new CommonMarkConverter();
-            $markdown = file_get_contents(__DIR__.'/../Content/About.md');
+            $markdown  = file_get_contents(__DIR__ . '/../Content/About.md');
             $item->set($converter->convertToHtml($markdown));
             $cache->save($item);
         }
+
         $content = $item->get();
 
         $this->seo->get('basic')->setTitle('jonnyeom | About');
         $this->seo->get('og')->setTitle('jonnyeom | About');
         $this->seo->get('twitter')->setTitle('jonnyeom | About');
 
-        return $this->render('page/about.html.twig', [
-            'content' => $content,
-        ]);
+        return $this->render('page/about.html.twig', ['content' => $content]);
     }
 }

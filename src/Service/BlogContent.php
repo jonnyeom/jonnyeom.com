@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Model\Post;
@@ -9,19 +11,20 @@ use Psr\Cache\InvalidArgumentException;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Contracts\Service\Attribute\Required;
+
+use function assert;
+use function file_get_contents;
+use function filemtime;
+use function strlen;
+use function substr;
 
 class BlogContent
 {
-    /**
-     * @var AdapterInterface
-     */
-    private $cache;
-
     private SluggerInterface $slugger;
 
-    public function __construct(AdapterInterface $cache)
+    public function __construct(private AdapterInterface $cache)
     {
-        $this->cache = $cache;
     }
 
     /**
@@ -33,7 +36,7 @@ class BlogContent
     {
         $posts = [];
 
-        $postsDir = new DirectoryIterator(__DIR__."/../Content/Post");
+        $postsDir = new DirectoryIterator(__DIR__ . '/../Content/Post');
         foreach ($postsDir as $fileinfo) {
             if (!$fileinfo->isDot()) {
                 $fileName = $fileinfo->getFilename();
@@ -75,21 +78,15 @@ class BlogContent
         return $posts;
     }
 
-    /**
-     * @param $slug
-     *
-     * @return Post|null
-     *
-     * @throws InvalidArgumentException
-     */
-    public function getPost($slug): ?Post
+    /** @throws InvalidArgumentException */
+    public function getPost(string $slug): Post|null
     {
         $posts = $this->getPosts();
 
         return $posts[$slug] ?? null;
     }
 
-    #[\Symfony\Contracts\Service\Attribute\Required]
+    #[Required]
     public function setSlugger(SluggerInterface $slugger): void
     {
         $this->slugger = $slugger;
