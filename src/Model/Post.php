@@ -24,7 +24,7 @@ class Post
 
     private string $title;
 
-    private string|null $description;
+    private string|null $description = null;
 
     private DateTime $date;
 

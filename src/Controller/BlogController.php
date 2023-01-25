@@ -31,13 +31,7 @@ class BlogController extends BaseController
 
         $posts = $this->blogContent->getPosts();
 
-        uasort($posts, static function (Post $postA, Post $postB) {
-            if ($postA->getDate() === $postB->getDate()) {
-                return 0;
-            }
-
-                return $postA->getDate() > $postB->getDate() ? -1 : 1;
-        });
+        uasort($posts, static fn(Post $postA, Post $postB) => $postB->getDate() <=> $postA->getDate());
 
         return $this->render('blog/index.html.twig', ['posts' => $posts]);
     }

@@ -40,7 +40,7 @@ class DefaultController extends BaseController
     {
         // Get projects.
         $json        = file_get_contents(__DIR__ . '/../Content/Projects.json');
-        $projects    = json_decode($json, true);
+        $projects    = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         $tagMappings = [
             'Drupal 9' => 'is-drupal-blue',
             'Drupal 8' => 'is-drupal-blue',

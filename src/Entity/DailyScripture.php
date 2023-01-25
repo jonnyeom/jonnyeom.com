@@ -15,12 +15,9 @@ use DateTime;
 )]
 class DailyScripture
 {
-    #[ApiProperty(identifier: true)]
-    private DateTime $date;
-
-    public function __construct(DateTime $date, private string $scripture, private string $body)
+    public function __construct(#[ApiProperty(identifier: true)]
+    private DateTime $date, private string $scripture, private string $body)
     {
-        $this->date = $date;
     }
 
     public function getDate(): string

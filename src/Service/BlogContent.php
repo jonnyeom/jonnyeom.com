@@ -43,7 +43,7 @@ class BlogContent
             }
 
             $fileName = $fileinfo->getFilename();
-            if (substr($fileName, -3) !== '.md') {
+            if (!str_ends_with($fileName, '.md')) {
                 continue;
             }
 

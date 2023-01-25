@@ -30,6 +30,6 @@ class DailyScriptureLoader
 
         $content = $item->get();
 
-        return json_decode($content, true);
+        return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
     }
 }

@@ -11,11 +11,8 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class BaseController extends AbstractController
 {
-    protected SeoGeneratorProvider $seo;
-
-    public function __construct(SeoGeneratorProvider $seoGeneratorProvider)
+    public function __construct(protected SeoGeneratorProvider $seo)
     {
-        $this->seo = $seoGeneratorProvider;
     }
 
     #[Route(path: '/in-progress', name: 'app_in_progress')]
