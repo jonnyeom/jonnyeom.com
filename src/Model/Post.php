@@ -164,7 +164,7 @@ class Post
 
     public function setBody(string|Stringable $body): Post
     {
-        $this->body = $body;
+        $this->body = (string) $body;
 
         return $this;
     }
@@ -176,7 +176,7 @@ class Post
 
     public function setSlug(string|Stringable $slug): Post
     {
-        $this->slug = $slug;
+        $this->slug = (string) $slug;
 
         return $this;
     }
