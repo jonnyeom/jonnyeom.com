@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiProperty;
@@ -16,36 +18,21 @@ class DailyScripture
     #[ApiProperty(identifier: true)]
     private DateTime $date;
 
-    private string $body;
-
-    private string $scripture;
-
-    public function __construct(DateTime $date, string $scripture, string $body)
+    public function __construct(DateTime $date, private string $scripture, private string $body)
     {
         $this->date = $date;
-        $this->scripture = $scripture;
-        $this->body = $body;
     }
 
-    /**
-     * @return string
-     */
     public function getDate(): string
     {
         return $this->date->format('m-d-Y');
     }
 
-    /**
-     * @return string
-     */
     public function getBody(): string
     {
         return $this->body;
     }
 
-    /**
-     * @return string
-     */
     public function getScripture(): string
     {
         return $this->scripture;

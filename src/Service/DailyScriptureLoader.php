@@ -1,28 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 
+use function file_get_contents;
+use function json_decode;
+
 class DailyScriptureLoader
 {
-    /**
-     * @var AdapterInterface
-     */
-    private AdapterInterface $cache;
-
-    public function __construct(AdapterInterface $cache)
+    public function __construct(private AdapterInterface $cache)
     {
-        $this->cache = $cache;
     }
 
-    public function getAllScriptures()
+    /** @return array<mixed> */
+    public function getAllScriptures(): array
     {
         $cid = 'daily_scriptures';
 
         $item = $this->cache->getItem($cid);
-        if (!$item->isHit()) {
-            $content = file_get_contents(__DIR__.'/../ApiContent/daily-scriptures.json');
+        if (! $item->isHit()) {
+            $content = file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json');
 
             $item->set($content);
             $this->cache->save($item);
