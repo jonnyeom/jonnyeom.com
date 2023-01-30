@@ -25,7 +25,7 @@ class BlogContent
 {
     private SluggerInterface $slugger;
 
-    public function __construct(private AdapterInterface $cache)
+    public function __construct(private readonly AdapterInterface $cache)
     {
     }
 

@@ -17,7 +17,7 @@ use function uasort;
 
 class BlogController extends BaseController
 {
-    public function __construct(SeoGeneratorProvider $seoGeneratorProvider, private BlogContent $blogContent)
+    public function __construct(SeoGeneratorProvider $seoGeneratorProvider, private readonly BlogContent $blogContent)
     {
         parent::__construct($seoGeneratorProvider);
     }

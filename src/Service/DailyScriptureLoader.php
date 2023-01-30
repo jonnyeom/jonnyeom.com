@@ -13,7 +13,7 @@ use const JSON_THROW_ON_ERROR;
 
 class DailyScriptureLoader
 {
-    public function __construct(private AdapterInterface $cache)
+    public function __construct(private readonly AdapterInterface $cache)
     {
     }
 
@@ -32,6 +32,6 @@ class DailyScriptureLoader
 
         $content = $item->get();
 
-        return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        return json_decode((string) $content, true, 512, JSON_THROW_ON_ERROR);
     }
 }

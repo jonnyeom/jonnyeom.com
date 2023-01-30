@@ -16,7 +16,7 @@ use function md5;
 
 class ApiController extends AbstractController
 {
-    public function __construct(private DailyScriptureLoader $dsLoader)
+    public function __construct(private readonly DailyScriptureLoader $dsLoader)
     {
     }
 
