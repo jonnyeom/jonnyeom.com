@@ -1,6 +1,6 @@
 ---
 title: 'Use multiple php versions on macOS / Linux'
-description: Reference how to use multiple php versions (php 7, php7.4 and php 8, php 8.0, php 8.1) on macOS and Linux.
+description: Reference how to use multiple php versions (php 7, php7.4 and php 8, php 8.0, php 8.1, php 8.2) on mac / macOS and Linux.
 slug: 'reference-use-multiple-php-versions'
 date: January 10, 2022
 last-updated: true
@@ -8,46 +8,57 @@ tags:
 - php
 ---
 
+> Why follow this guide?
+> I use php everyday and this is the most simple and flexible solution I found.
+
 # The end goal
 - Have multiple versions of php installed
-- Use php 8.0 when you run `php`
-- Use php 7.4 when you run `php7`
+- Use php 8.2 when you run `php`
 - Use php 8.1 when you run `php81`
-- (bonus) Run composer with php 7.4 when you run `composer7`
+- Use php 8.0 when you run `php80`
+- Use php 7.4 when you run `php7`
 - (bonus) Run composer with php 8.1 when you run `composer81`
+- (bonus) Run composer with php 7.4 when you run `composer7`
 
 
 # The Steps
 ## MacOS
-I prefer this over brew solutions with `link` and `unlink`.
+I prefer this solution over brew solutions with `link` and `unlink`.
 
 - Install both the default php package 8.1 and the older php7.4 / php8.0 packages
     ```bash
-    # Install php (defaults to version 8).
+    # Install php (defaults to version 8.2).
     brew install php
 
-    # Install older php 7.4.
-    brew install php@7.4
+    # Install older php 8.0.
+    brew install php@8.1
 
     # Install older php 8.0.
     brew install php@8.0
+
+    # Add brew tap for old php versions.
+    brew tap shivammathur/php
+
+    # Install older php 7.4.
+    brew install shivammathur/php/php@7.4
     ```
-- Make php 8.0 the default
+- Make php 8.2 the default
     ```bash
-    # Unlink php8.1
+    # Lets start clean and unlink all php versions
     brew unlink php
-
-    # Unlink php7.4
     brew unlink php@7.4
+    brew unlink php@8.0
+    brew unlink php@8.1
 
-    # Link php8.0 Double check php 7.4 is linked (this will set php8.0 as the default)
-    brew link php@8.0
+    # Link php 8.2
+    brew link php
     ```
 
-- Create extra symlinks for php 7.4 and 8.1
+- Create extra symlinks for php 7.4, 8.0, and 8.1
     ```bash
     # Create a symlinks in /usr/local/bin. You will likely have to run sudo.
     ln -s /opt/homebrew/opt/php@8.1/bin/php /usr/local/bin/php81
+    ln -s /opt/homebrew/opt/php@8.0/bin/php /usr/local/bin/php80
     ln -s /opt/homebrew/opt/php@7.4/bin/php /usr/local/bin/php7
     ```
 
@@ -88,26 +99,35 @@ I prefer this over brew solutions with `link` and `unlink`.
 - **Output of `php -v`**
     ```bash
     $ php -v
-    PHP 8.0.22 (cli) (built: Aug  4 2022 10:20:33) ( NTS )
+    PHP 8.2.2 (cli) (built: Feb  5 2023 12:38:16) (NTS)
     Copyright (c) The PHP Group
-    Zend Engine v4.0.22, Copyright (c) Zend Technologies
-    with Zend OPcache v8.0.22, Copyright (c), by Zend Technologies
+    Zend Engine v4.2.2, Copyright (c) Zend Technologies
+    with Zend OPcache v8.2.2, Copyright (c), by Zend Technologies
     ```
 
 - **Output of `php7 -v`**
     ```bash
     $ php7 -v
-    PHP 7.4.30 (cli) (built: Jun  9 2022 09:20:03) ( NTS )
+    PHP 7.4.33 (cli) (built: Jan 21 2023 06:43:54) ( NTS )
     Copyright (c) The PHP Group
     Zend Engine v3.4.0, Copyright (c) Zend Technologies
-    with Zend OPcache v7.4.30, Copyright (c), by Zend Technologies
+    with Zend OPcache v7.4.33, Copyright (c), by Zend Technologie
+    ```
+
+- **Output of `php80 -v`**
+    ```bash
+    $ php81 -v
+    PHP 8.0.27 (cli) (built: Jan 12 2023 04:00:24) ( NTS )
+    Copyright (c) The PHP Group
+    Zend Engine v4.0.27, Copyright (c) Zend Technologies
+    with Zend OPcache v8.0.27, Copyright (c), by Zend Technologies
     ```
 
 - **Output of `php81 -v`**
     ```bash
     $ php81 -v
-    PHP 8.1.9 (cli) (built: Aug  4 2022 14:00:20) (NTS)
+    PHP 8.1.15 (cli) (built: Feb  3 2023 12:35:11) (NTS)
     Copyright (c) The PHP Group
-    Zend Engine v4.1.9, Copyright (c) Zend Technologies
-    with Zend OPcache v8.1.9, Copyright (c), by Zend Technologies
+    Zend Engine v4.1.15, Copyright (c) Zend Technologies
+    with Zend OPcache v8.1.15, Copyright (c), by Zend Technologies
     ```
