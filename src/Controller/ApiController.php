@@ -27,7 +27,7 @@ class ApiController extends AbstractController
         $date    = (new DateTime('now', new DateTimeZone('America/New_York')))->format('n/j/Y');
         $year    = (new DateTime('now', new DateTimeZone('America/New_York')))->format('Y');
 
-        if (! $content[$year][$date]) {
+        if (! isset($content[$year]) || ! isset($content[$year][$date])) {
             throw $this->createNotFoundException('Daily Scripture for the given date not found');
         }
 
