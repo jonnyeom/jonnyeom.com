@@ -7,6 +7,7 @@
     <arg name="cache" value=".phpcs-cache"/>
     <arg name="colors"/>
     <arg name="extensions" value="php"/>
+    <arg value="ps"/>
 
     <rule ref="Doctrine"/>
 
@@ -16,5 +17,9 @@
     <file>src/</file>
     <file>tests/</file>
     <exclude-pattern>bin/.phpunit</exclude-pattern>
+
+    <rule ref="SlevomatCodingStandard.ControlStructures.AssignmentInCondition">
+        <severity>0</severity>
+    </rule>
 
 </ruleset>
