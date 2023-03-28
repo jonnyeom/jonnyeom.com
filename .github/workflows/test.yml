@@ -1,0 +1,37 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+name: "Test"
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  phpcs:
+    name: "PHPCS"
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: "actions/checkout@v2"
+      - uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          php-version: 8.1
+          extensions: curl
+          tools: composer:v2, cs2pr
+
+      - run: "composer install --no-progress --prefer-dist --classmap-authoritative --ansi"
+      - run: "vendor/bin/phpcs -q --report=checkstyle | cs2pr"
+
+  phpunit:
+    name: "PHPUnit"
+    runs-on: "ubuntu-22.04"
+    steps:
+      - uses: "actions/checkout@v2"
+      - uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          php-version: 8.1
+          extensions: curl
+      - run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      - run: composer install --no-progress --prefer-dist --classmap-authoritative --ansi
+      - run: ./vendor/bin/simple-phpunit
