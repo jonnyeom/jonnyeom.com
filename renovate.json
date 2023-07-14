@@ -1,0 +1,77 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "enabledManagers": ["composer"],
+    "extends": [
+        "config:base",
+        ":automergePatch"
+    ],
+    "dependencyDashboard": true,
+    "timezone": "America/New_York",
+    "rangeStrategy": "bump",
+    "assignAutomerge": true,
+    "packageRules": [
+        {
+            "description": "Don't bump the php constraint in composer.json; we manage that ourselves",
+            "matchPackageNames": ["php"],
+            "enabled": false
+        },
+        {
+            "matchPackagePatterns": [
+                "api-platform"
+            ],
+            "groupName": "api-platform packages",
+            "groupSlug": "api-platform"
+        },
+        {
+            "matchPackagePatterns": [
+                "doctrine"
+            ],
+            "groupName": "doctrine packages",
+            "groupSlug": "doctrine"
+        },
+        {
+            "matchPackagePatterns": [
+                "guzzlehttp"
+            ],
+            "groupName": "guzzle packages",
+            "groupSlug": "guzzle"
+        },
+        {
+            "matchPackagePatterns": [
+                "phpunit/phpunit"
+            ],
+            "groupName": "phpunit packages",
+            "groupSlug": "phpunit"
+        },
+        {
+            "matchPackageNames": [
+                "squizlabs/php_codesniffer",
+                "dealerdirect/phpcodesniffer-composer-installer",
+                "escapestudios/symfony2-coding-standard"
+            ],
+            "groupName": "phpcs packages",
+            "groupSlug": "phpcs"
+        },
+        {
+            "matchPackagePrefixes": [
+                "twig/"
+            ],
+            "groupName": "twig packages",
+            "groupSlug": "twig"
+        },
+        {
+            "matchPackagePrefixes": [
+                "symfony/"
+            ],
+            "separateMinorPatch": true,
+            "groupName": "symfony packages",
+            "groupSlug": "symfony"
+        },
+        {
+            "description": "Don't upgrade phpunit/phpunit to 10.x until we do it ourselves",
+            "matchPackageNames": ["phpunit/phpunit"],
+            "matchCurrentVersion": "<10.0.0",
+            "allowedVersions": "<10.0.0"
+        }
+    ]
+}
