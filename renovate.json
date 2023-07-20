@@ -16,6 +16,18 @@
             "enabled": false
         },
         {
+            "matchPackageNames": [
+                "league/commonmark",
+                "leogout/seo-bundle",
+                "nelmio/cors-bundle"
+            ],
+            "matchPackagePatterns": [
+                "spatie"
+            ],
+            "groupName": "application packages",
+            "groupSlug": "application"
+        },
+        {
             "matchPackagePatterns": [
                 "api-platform"
             ],
@@ -24,17 +36,10 @@
         },
         {
             "matchPackagePatterns": [
-                "doctrine"
+                "doctrine/annotations"
             ],
             "groupName": "doctrine packages",
             "groupSlug": "doctrine"
-        },
-        {
-            "matchPackagePatterns": [
-                "guzzlehttp"
-            ],
-            "groupName": "guzzle packages",
-            "groupSlug": "guzzle"
         },
         {
             "matchPackagePatterns": [
@@ -45,11 +50,16 @@
         },
         {
             "matchPackageNames": [
-                "squizlabs/php_codesniffer",
                 "dealerdirect/phpcodesniffer-composer-installer",
-                "escapestudios/symfony2-coding-standard"
+                "doctrine/coding-standard",
+                "escapestudios/symfony2-coding-standard",
+                "rector/rector",
+                "squizlabs/php_codesniffer"
             ],
-            "groupName": "phpcs packages",
+            "matchPackagePatterns": [
+                "phpstan/phpstan"
+            ],
+            "groupName": "Code Quality packages",
             "groupSlug": "phpcs"
         },
         {
