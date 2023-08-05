@@ -1,0 +1,93 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+name: "CI"
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+    cancel-in-progress: true
+
+jobs:
+  phpcs:
+    name: "PHP CS"
+    runs-on: "ubuntu-22.04"
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@v3"
+      - name: Setup PHP
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          php-version: 8.2
+          extensions: curl
+          tools: composer, cs2pr
+      - name: Install dependencies
+        run: "composer install --no-progress --prefer-dist --classmap-authoritative --ansi"
+      - name: Run PHP_CodeSniffer
+        run: "vendor/bin/phpcs -nq --report=checkstyle | cs2pr"
+
+  phpstan:
+    name: "PHPStan"
+    runs-on: "ubuntu-22.04"
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@v3"
+      - name: Setup PHP
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: 8.2
+          tools: composer
+          extensions: curl
+          coverage: none
+          ini-values: memory_limit=-1
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --classmap-authoritative --ansi
+      - name: Setup Kernel Cache
+        run: bin/console cache:warm --env=test
+      - name: Run PHPStan analysis
+        run: |
+          ./vendor/bin/phpstan --version
+          ./vendor/bin/phpstan analyse -c phpstan.neon --no-interaction --no-progress --ansi
+
+  phpunit:
+    name: "PHPUnit"
+    runs-on: "ubuntu-22.04"
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@v3"
+      - name: Setup PHP
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: 8.2
+          extensions: curl
+          ini-values: memory_limit=-1
+          tools: composer
+      - name: Setup problem matchers for PHPUnit
+        run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist --classmap-authoritative --ansi
+      - name: Install PHPUnit
+        run: vendor/bin/simple-phpunit --version
+      - name: Set Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+      - name: Build bundle
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+      - name: Run PHPUnit tests
+        run: vendor/bin/simple-phpunit

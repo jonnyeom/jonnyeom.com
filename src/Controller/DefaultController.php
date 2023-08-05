@@ -33,9 +33,7 @@ class DefaultController extends BaseController
 
         $content = $item->get();
 
-        $this->seo->get('basic')->setTitle('jonnyeom | Home');
-        $this->seo->get('og')->setTitle('jonnyeom | Home');
-        $this->seo->get('twitter')->setTitle('jonnyeom | Home');
+        $this->setSeoTitle('jonnyeom | Home');
 
         return $this->render('page/homepage.html.twig', ['content' => $content]);
     }
@@ -67,9 +65,7 @@ class DefaultController extends BaseController
             }
         }
 
-        $this->seo->get('basic')->setTitle('jonnyeom | Projects');
-        $this->seo->get('og')->setTitle('jonnyeom | Projects');
-        $this->seo->get('twitter')->setTitle('jonnyeom | Projects');
+        $this->setSeoTitle('jonnyeom | Projects');
 
         return $this->render('page/projects.html.twig', ['projects' => $projects]);
     }
@@ -89,9 +85,7 @@ class DefaultController extends BaseController
 
         $content = $item->get();
 
-        $this->seo->get('basic')->setTitle('jonnyeom | About');
-        $this->seo->get('og')->setTitle('jonnyeom | About');
-        $this->seo->get('twitter')->setTitle('jonnyeom | About');
+        $this->setSeoTitle('jonnyeom | About');
 
         return $this->render('page/about.html.twig', ['content' => $content]);
     }

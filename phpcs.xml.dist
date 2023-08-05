@@ -22,4 +22,8 @@
         <severity>0</severity>
     </rule>
 
+    <rule ref="SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly.ReferenceViaFullyQualifiedName">
+        <exclude-pattern>config/bundles\.php</exclude-pattern>
+    </rule>
+
 </ruleset>

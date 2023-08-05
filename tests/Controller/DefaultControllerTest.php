@@ -1,23 +1,17 @@
 <?php
 
-/*
- * This file is part of the Symfony package.
- *
- * (c) Fabien Potencier <fabien@symfony.com>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
+use Generator;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+use function sprintf;
 
 final class DefaultControllerTest extends WebTestCase
 {
-    /**
-     * @dataProvider getPublicUrls
-     */
+    /** @dataProvider getPublicUrls */
     public function testPublicUrls(string $url): void
     {
         $client = static::createClient();
@@ -26,7 +20,7 @@ final class DefaultControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful(sprintf('The %s public URL loads correctly.', $url));
     }
 
-    public function getPublicUrls(): \Generator
+    public function getPublicUrls(): Generator
     {
         yield ['/'];
         yield ['/projects'];

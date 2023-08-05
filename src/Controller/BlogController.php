@@ -25,9 +25,7 @@ class BlogController extends BaseController
     #[Route(path: '/writing', name: 'app_posts')]
     public function index(): Response
     {
-        $this->seo->get('basic')->setTitle('jonnyeom | Writing');
-        $this->seo->get('og')->setTitle('jonnyeom | Writing');
-        $this->seo->get('twitter')->setTitle('jonnyeom | Writing');
+        $this->setSeoTitle('jonnyeom | Writing');
 
         $posts = $this->blogContent->getPosts();
 
@@ -45,18 +43,12 @@ class BlogController extends BaseController
             return $this->redirectToRoute('app_posts');
         }
 
-        $this->seo->get('basic')
-            ->setTitle($post->getTitle() . ' | jonnyeom')
-            ->setDescription($post->getDescription())
-            ->setKeywords(implode(',', $post->getTags()));
+        $this->setSeoTitle($post->getTitle() . ' | jonnyeom');
+        if ($post->getDescription()) {
+            $this->setSeoDescription($post->getDescription());
+        }
 
-        $this->seo->get('og')
-            ->setTitle($post->getTitle() . ' | jonnyeom')
-            ->setDescription($post->getDescription());
-
-        $this->seo->get('twitter')
-            ->setTitle($post->getTitle() . ' | jonnyeom')
-            ->setDescription($post->getDescription());
+        $this->setSeoKeywords(implode(',', $post->getTags()));
 
         $response = $this->render('blog/post.html.twig', ['post' => $post]);
 
