@@ -6,7 +6,8 @@ I am a professional **developer**, experienced in developing enterprise level we
 
 I develop in **PHP** and **JavaScript**, specializing in **Symfony** and **Drupal**. I also have experience in **React**, Vue,
 and AngularJS.  
-I stay involved in **open source** projects, primary Drupal.
+I stay involved in **open source** projects, primary Symfony and its related libraries such as **api-platform** 
+(and sometimes Drupal).
 <br>
 
 **Today** I work as a Lead Developer at Unleashed Technologies. Here I work with **open source** 
