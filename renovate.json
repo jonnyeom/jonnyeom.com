@@ -52,7 +52,6 @@
             "matchPackageNames": [
                 "dealerdirect/phpcodesniffer-composer-installer",
                 "doctrine/coding-standard",
-                "escapestudios/symfony2-coding-standard",
                 "rector/rector",
                 "squizlabs/php_codesniffer"
             ],

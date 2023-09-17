@@ -1,11 +1,11 @@
 {
     "api-platform/core": {
-        "version": "2.6",
+        "version": "2.7",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
+            "branch": "main",
             "version": "2.5",
-            "ref": "05b57782a78c21a664a42055dc11cf1954ca36bb"
+            "ref": "b86557ce5677fa855b1b2608f4a4bc4a8fed8be7"
         },
         "files": [
             "config/packages/api_platform.yaml",
@@ -103,10 +103,10 @@
             "repo": "github.com/symfony/recipes-contrib",
             "branch": "main",
             "version": "1.0",
-            "ref": "d74d4d719d5f53856c9c13544aa22d44144b1819"
+            "ref": "f10b8054de1a94a3b9e8806a6453fd5c98491c44"
         },
         "files": [
-            "phpstan.neon"
+            "phpstan.dist.neon"
         ]
     },
     "phpunit/phpunit": {
