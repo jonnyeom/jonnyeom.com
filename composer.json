@@ -46,8 +46,7 @@
         "symfony/yaml": "5.4.*"
     },
     "require-dev": {
-        "doctrine/coding-standard": "^11.1",
-        "escapestudios/symfony2-coding-standard": "^3.13.0",
+        "doctrine/coding-standard": "^12.0.0",
         "phpstan/phpstan": "^1.10.34",
         "phpstan/phpstan-deprecation-rules": "^1.1.4",
         "phpstan/phpstan-doctrine": "^1.3.43",
