@@ -20,7 +20,7 @@ use function trim;
 
 class DailyScriptureProvider implements ProviderInterface
 {
-    public function __construct(private DailyScriptureLoader $dsLoader)
+    public function __construct(private readonly DailyScriptureLoader $dsLoader)
     {
     }
 
