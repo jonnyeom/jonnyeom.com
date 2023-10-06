@@ -11,7 +11,7 @@
     },
     "require": {
         "php": "^8.2",
-        "api-platform/core": "^2.7.15",
+        "api-platform/core": "^2.7.16",
         "doctrine/annotations": "^2.0.1",
         "league/commonmark": "^2",
         "leogout/seo-bundle": "^1.3",
