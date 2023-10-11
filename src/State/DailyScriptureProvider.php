@@ -30,7 +30,7 @@ class DailyScriptureProvider implements ProviderInterface
      *
      * {@inheritDoc}
      */
-    public function provide(Operation $operation, array $uriVariables = [], array $context = [])
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): DailyScripture
     {
         $dateParam = $uriVariables['date'] ?? null;
 
