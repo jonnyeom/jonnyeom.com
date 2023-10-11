@@ -139,18 +139,6 @@
     "scrivo/highlight.php": {
         "version": "v9.18.1.9"
     },
-    "sensio/framework-extra-bundle": {
-        "version": "5.6",
-        "recipe": {
-            "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "5.2",
-            "ref": "fb7e19da7f013d0d422fa9bce16f5c510e27609b"
-        },
-        "files": [
-            "config/packages/sensio_framework_extra.yaml"
-        ]
-    },
     "spatie/commonmark-highlighter": {
         "version": "3.0.0"
     },
