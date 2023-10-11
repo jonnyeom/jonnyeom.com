@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Contracts\Cache\ItemInterface;
 
 use function file_get_contents;
 use function json_decode;
@@ -13,24 +14,15 @@ use const JSON_THROW_ON_ERROR;
 
 class DailyScriptureLoader
 {
-    public function __construct(private readonly AdapterInterface $cache)
-    {
-    }
-
     /** @return array<mixed> */
     public function getAllScriptures(): array
     {
-        $cid = 'daily_scriptures';
+        $cache = new FilesystemAdapter();
+        $cid   = 'daily_scriptures';
 
-        $item = $this->cache->getItem($cid);
-        if (! $item->isHit()) {
-            $content = file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json');
-
-            $item->set($content);
-            $this->cache->save($item);
-        }
-
-        $content = $item->get();
+        $content = $cache->get($cid, static function (ItemInterface $item) {
+            return file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json');
+        });
 
         return json_decode((string) $content, true, 512, JSON_THROW_ON_ERROR);
     }

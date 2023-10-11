@@ -9,9 +9,9 @@ use DateTime;
 use DirectoryIterator;
 use Psr\Cache\InvalidArgumentException;
 use Spatie\YamlFrontMatter\YamlFrontMatter;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Contracts\Service\Attribute\Required;
+use Symfony\Contracts\Cache\ItemInterface;
 
 use function assert;
 use function file_get_contents;
@@ -23,9 +23,7 @@ use function substr;
 
 class BlogContent
 {
-    private SluggerInterface $slugger;
-
-    public function __construct(private readonly AdapterInterface $cache)
+    public function __construct(private SluggerInterface $slugger)
     {
     }
 
@@ -36,6 +34,7 @@ class BlogContent
      */
     public function getPosts(): array
     {
+        $cache = new FilesystemAdapter();
         $posts = [];
 
         $postsDir = new DirectoryIterator(__DIR__ . '/../Content/Post');
@@ -52,34 +51,31 @@ class BlogContent
             $fileName = substr($fileName, 0, strlen($fileName) - 3);
             $cid      = 'posts_' . $fileName;
 
-            $item = $this->cache->getItem($cid);
-            if (! $item->isHit()) {
+            $post = $cache->get($cid, function (ItemInterface $item) use ($fileName) {
                 // @Todo Parse Yaml as part of Markdown Converter.
                 $postContent = file_get_contents(__DIR__ . '/../Content/Post/' . $fileName . '.md');
                 assert(is_string($postContent));
-                $object = YamlFrontMatter::parse($postContent);
-                $post   = Post::createFromYamlParse($object);
+                $object     = YamlFrontMatter::parse($postContent);
+                $parsedPost = Post::createFromYamlParse($object);
 
                 // @Todo Move this to the Markdown Converter.
                 // Set the Last Updated as the Last Modified time.
-                if ($post->getLastUpdated()) {
+                if ($parsedPost->getLastUpdated()) {
                     $lastUpdated = filemtime(__DIR__ . '/../Content/Post/' . $fileName . '.md');
                     if ($lastUpdated) {
-                        $post->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));
+                        $parsedPost->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));
                     } else {
-                        $post->setLastUpdated($post->getDate());
+                        $parsedPost->setLastUpdated($parsedPost->getDate());
                     }
                 }
 
-                if (! $post->getSlug()) {
-                    $post->setSlug($this->slugger->slug($post->getTitle()));
+                if (! $parsedPost->getSlug()) {
+                    $parsedPost->setSlug($this->slugger->slug($parsedPost->getTitle()));
                 }
 
-                $item->set($post);
-                $this->cache->save($item);
-            }
+                return $parsedPost;
+            });
 
-            $post = $item->get();
             assert($post instanceof Post);
 
             $posts[$post->getSlug()] = $post;
@@ -94,11 +90,5 @@ class BlogContent
         $posts = $this->getPosts();
 
         return $posts[$slug] ?? null;
-    }
-
-    #[Required]
-    public function setSlugger(SluggerInterface $slugger): void
-    {
-        $this->slugger = $slugger;
     }
 }
