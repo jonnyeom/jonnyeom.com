@@ -22,8 +22,8 @@ final class DailyScriptureAPITest extends WebTestCase
 
     public function getPublicUrls(): Generator
     {
-        yield ['/api/daily_scriptures/today'];
         yield ['/api/daily_scriptures/01-01-2023'];
         yield ['/api/daily_scriptures/11-30-2023'];
+        yield ['/api/daily_scriptures/today'];
     }
 }

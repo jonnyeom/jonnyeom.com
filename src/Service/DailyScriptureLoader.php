@@ -20,9 +20,7 @@ class DailyScriptureLoader
         $cache = new FilesystemAdapter();
         $cid   = 'daily_scriptures';
 
-        $content = $cache->get($cid, static function (ItemInterface $item) {
-            return file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json');
-        });
+        $content = $cache->get($cid, static fn (ItemInterface $item) => file_get_contents(__DIR__ . '/../ApiContent/daily-scriptures.json'));
 
         return json_decode((string) $content, true, 512, JSON_THROW_ON_ERROR);
     }

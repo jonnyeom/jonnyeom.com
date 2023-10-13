@@ -23,7 +23,7 @@ use function substr;
 
 class BlogContent
 {
-    public function __construct(private SluggerInterface $slugger)
+    public function __construct(private readonly SluggerInterface $slugger)
     {
     }
 
