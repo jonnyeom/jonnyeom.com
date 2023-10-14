@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use League\CommonMark\CommonMarkConverter;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Cache\ItemInterface;
 
 use function assert;
 use function file_get_contents;
@@ -19,19 +20,18 @@ use const JSON_THROW_ON_ERROR;
 class DefaultController extends BaseController
 {
     #[Route(path: '/', name: 'app_homepage')]
-    public function index(AdapterInterface $cache): Response
+    public function index(): Response
     {
+        $cache = new FilesystemAdapter();
+
         // Get main page content.
-        $item = $cache->getItem('markdown_homepage');
-        if (! $item->isHit()) {
+        $content = $cache->get('markdown_homepage', static function (ItemInterface $item) {
             $converter = new CommonMarkConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/Homepage.md');
             assert(is_string($markdown));
-            $item->set($converter->convert($markdown));
-            $cache->save($item);
-        }
 
-        $content = $item->get();
+            return $converter->convert($markdown);
+        });
 
         $this->setSeoTitle('jonnyeom | Home');
 
@@ -71,19 +71,17 @@ class DefaultController extends BaseController
     }
 
     #[Route(path: '/about', name: 'app_about')]
-    public function about(AdapterInterface $cache): Response
+    public function about(): Response
     {
-        // Get main page content.
-        $item = $cache->getItem('markdown_about');
-        if (! $item->isHit()) {
+        $cache = new FilesystemAdapter();
+
+        $content = $cache->get('markdown_about', static function (ItemInterface $item) {
             $converter = new CommonMarkConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/About.md');
             assert(is_string($markdown));
-            $item->set($converter->convert($markdown));
-            $cache->save($item);
-        }
 
-        $content = $item->get();
+            return $converter->convert($markdown);
+        });
 
         $this->setSeoTitle('jonnyeom | About');
 

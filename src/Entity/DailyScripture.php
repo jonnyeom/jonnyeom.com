@@ -10,7 +10,6 @@ use ApiPlatform\Metadata\Get;
 use App\State\DailyScriptureProvider;
 use DateTime;
 
-/** A Daily Scripture Entity */
 #[ApiResource(operations: [
     new Get(
         openapiContext: [
@@ -30,9 +29,12 @@ use DateTime;
 ])]
 class DailyScripture
 {
-    public function __construct(#[ApiProperty(identifier: true)]
-    private readonly DateTime $date, private readonly string $scripture, private readonly string $body,)
-    {
+    public function __construct(
+        #[ApiProperty(identifier: true)]
+        private readonly DateTime $date,
+        private readonly string $scripture,
+        private readonly string $body,
+    ) {
     }
 
     public function getDate(): string
