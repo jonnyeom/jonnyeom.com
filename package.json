@@ -8,7 +8,7 @@
     "author": "Jonny Eom",
     "description": "Node packages for jonnyeom.com",
     "engines": {
-        "node": "18.x",
+        "node": "20.x",
         "yarn": "1.x"
     },
     "bugs": {
