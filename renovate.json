@@ -56,10 +56,12 @@
                 "squizlabs/php_codesniffer"
             ],
             "matchPackagePatterns": [
-                "phpstan/phpstan"
+                "^phpstan/phpstan$",
+                "/phpstan-",
+                "phpstan/phpdoc-parser"
             ],
             "groupName": "Code Quality packages",
-            "groupSlug": "phpcs"
+            "groupSlug": "code-quality"
         },
         {
             "matchPackagePrefixes": [
@@ -69,12 +71,12 @@
             "groupSlug": "twig"
         },
         {
+            "groupName": "symfony packages",
+            "groupSlug": "symfony",
             "matchPackagePrefixes": [
                 "symfony/"
             ],
-            "separateMinorPatch": true,
-            "groupName": "symfony packages",
-            "groupSlug": "symfony"
+            "separateMinorPatch": true
         },
         {
             "description": "Don't upgrade phpunit/phpunit to 10.x until we do it ourselves",
