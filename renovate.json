@@ -3,7 +3,9 @@
     "enabledManagers": ["composer"],
     "extends": [
         "config:base",
-        ":automergePatch"
+        ":automergePatch",
+        "schedule:weekends",
+        "schedule:automergeEarlyMondays"
     ],
     "dependencyDashboard": true,
     "timezone": "America/New_York",
