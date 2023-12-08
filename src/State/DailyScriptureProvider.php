@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\State;
 
-use ApiPlatform\Core\Exception\InvalidIdentifierException;
-use ApiPlatform\Core\Exception\ItemNotFoundException;
+use ApiPlatform\Metadata\Exception\InvalidIdentifierException;
+use ApiPlatform\Metadata\Exception\ItemNotFoundException;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\Entity\DailyScripture;
