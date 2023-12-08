@@ -1,21 +1,25 @@
 api_platform:
-    metadata_backward_compatibility_layer: false
+    title: Welcome to jonnyeom.com APIs
+    version: 1.0.0
+
+    # Enable the docs
+    enable_docs: false
+
     mapping:
         paths: ['%kernel.project_dir%/src/Entity']
-    patch_formats:
-        json: ['application/merge-patch+json']
-    swagger:
-        versions: [3]
     doctrine:
         enabled: false
-    enable_docs: false
+    swagger:
+        versions: [3]
     http_cache:
         # To make all responses public by default.
         public: true
         invalidation:
             # To enable the tags-based cache invalidation system.
             enabled: true
+
     defaults:
+        stateless: true
         cache_headers:
             # Default value for the response max age.
             max_age: 3600
@@ -23,8 +27,16 @@ api_platform:
             shared_max_age: 3600
             # Default values of the "Vary" HTTP header.
             vary: [ 'Content-Type', 'Authorization', 'Origin' ]
+        extra_properties:
+            standard_put: true
+            rfc_7807_compliant_errors: true
+    event_listeners_backward_compatibility_layer: false
+    keep_legacy_inflector: false
+
+when@test:
+    api_platform:
+        enable_docs: true
 
 when@dev:
     api_platform:
         enable_docs: true
-
