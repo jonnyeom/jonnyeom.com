@@ -3,7 +3,7 @@ api_platform:
     version: 1.0.0
 
     # Enable the docs
-    enable_docs: false
+    enable_docs: true
 
     mapping:
         paths: ['%kernel.project_dir%/src/Entity']
@@ -18,25 +18,18 @@ api_platform:
             # To enable the tags-based cache invalidation system.
             enabled: true
 
+    formats:
+        jsonld: [ 'application/ld+json' ]
+    docs_formats:
+        jsonld: [ 'application/ld+json' ]
+        jsonopenapi: [ 'application/vnd.openapi+json' ]
+        html: [ 'text/html' ]
     defaults:
         stateless: true
         cache_headers:
-            # Default value for the response max age.
-            max_age: 3600
-            # Default value for the response shared (proxy) max age.
-            shared_max_age: 3600
-            # Default values of the "Vary" HTTP header.
             vary: [ 'Content-Type', 'Authorization', 'Origin' ]
         extra_properties:
             standard_put: true
             rfc_7807_compliant_errors: true
     event_listeners_backward_compatibility_layer: false
     keep_legacy_inflector: false
-
-when@test:
-    api_platform:
-        enable_docs: true
-
-when@dev:
-    api_platform:
-        enable_docs: true
