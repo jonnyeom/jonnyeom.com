@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <section class="section pt-0">
+        <div class="container is-max-desktop">
+            <div class="content">
+                {% if error %}
+                    <div class="notification is-warning is-light">
+                        {{ error }}
+                    </div>
+                {% endif %}
+
+                <a href="{{ path('strava_connect_start') }}" class="button is-medium p-0 rounded">
+                    <img src="{{ asset('images/strava/connect/btn_strava_connectwith_light/btn_strava_connectwith_light.svg') }}" alt="Connect with Strava"/>
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
