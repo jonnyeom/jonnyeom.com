@@ -45,8 +45,12 @@ class StravaController extends AbstractController
         }
 
         $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
-        $athlete   = $apiClient->getAthlete();
 
-        return $this->render('strava/data.html.twig', ['data' => $athlete]);
+        return $this->render('strava/data.html.twig', [
+            'data' => [
+                'athlete' => $apiClient->getAthlete(),
+                'activities' => $apiClient->getAthleteActivities(),
+            ],
+        ]);
     }
 }
