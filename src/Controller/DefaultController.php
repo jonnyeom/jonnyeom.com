@@ -87,4 +87,10 @@ class DefaultController extends BaseController
 
         return $this->render('page/about.html.twig', ['content' => $content]);
     }
+
+    #[Route(path: '/experiments', name: 'app_experiments')]
+    public function experiments(): Response
+    {
+        return $this->render('page/experiments.html.twig');
+    }
 }

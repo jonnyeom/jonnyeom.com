@@ -51,6 +51,8 @@
                     <a href="{{ path('app_posts') }}">Writing</a></li>
                 <li{% if app.request.get('_route') == 'app_about' %} class="is-active"{% endif %}>
                     <a href="{{ path('app_about') }}">About</a></li>
+                <li{% if app.request.get('_route') == 'app_experiments' %} class="is-active"{% endif %}>
+                    <a href="{{ path('app_experiments') }}">Experiments</a></li>
             </ul>
         </div>
     </div>

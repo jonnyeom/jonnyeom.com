@@ -19,3 +19,8 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Service\Strava\ClientProvider:
+        arguments:
+            $clientId: '%env(OAUTH_STRAVA_CLIENT_ID)%'
+            $clientSecret: '%env(OAUTH_STRAVA_CLIENT_SECRET)%'
