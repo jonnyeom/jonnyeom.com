@@ -30,7 +30,11 @@ class ClientProvider
     public function getOauthClient(): OAuth
     {
         if (! $this->oauthClient) {
-            $this->oauthClient = $this->factory->getOAuthClient($this->clientId, $this->clientSecret, $this->router->generate('strava_connect_check', [], UrlGeneratorInterface::ABSOLUTE_URL));
+            $this->oauthClient = $this->factory->getOAuthClient(
+                $this->clientId,
+                $this->clientSecret,
+                $this->router->generate('strava_connect_check', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            );
         }
 
         return $this->oauthClient;
@@ -55,7 +59,7 @@ class ClientProvider
     }
 
     /** @throws IdentityProviderException */
-    public function refreshAccessToken(string $refreshToken): AccessTokenInterface
+    public function refreshAccessToken(string|null $refreshToken): AccessTokenInterface
     {
         return $this->getOauthClient()->getAccessToken(
             'refresh_token',
