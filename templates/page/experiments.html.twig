@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <section class="section pt-0">
+        <div class="container is-max-desktop">
+            <div class="columns">
+                <div class="column">
+                    <aside class="menu">
+                        <p class="menu-label">
+                            General
+                        </p>
+                        <ul class="menu-list">
+                            <li><a href="{{ path('strava_home') }}">Strava</a></li>
+                        </ul>
+                    </aside>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
