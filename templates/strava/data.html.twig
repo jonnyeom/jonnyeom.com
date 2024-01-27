@@ -4,7 +4,28 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
-                {{ dump(data) }}
+                <table class="table is-hoverable is-striped">
+                    <thead>
+                    <tr>
+                        <th>Activities</th>
+                        <th>miles</th>
+                        <th>avg bpm</th>
+                    </tr>
+                    </thead>
+                    {% for activity in activities %}
+                        <tr>
+                            <th>{{ activity.start_date_local|date("D n.d") }}</th>
+                            <td>{{ activity.distance ~ ' mi'}}</td>
+                            <td>{% if activity.has_heartrate %} {{ activity.average_heartrate ~ ' bpm' }} {% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+                {% if app.debug %}
+                    {% for activity in activities %}
+                        {{ dump(activity) }}
+                    {% endfor %}
+                {% endif %}
             </div>
         </div>
     </section>

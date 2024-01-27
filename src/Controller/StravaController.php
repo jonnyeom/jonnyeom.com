@@ -21,7 +21,7 @@ class StravaController extends AbstractController
     }
 
     #[Route('/strava', name: 'strava_home')]
-    public function stravaData(Request $request): Response
+    public function stravaHome(Request $request): Response
     {
         // Load the access token from the session, and refresh if required
         $accessToken = $request->getSession()->get('access_token');
@@ -46,11 +46,20 @@ class StravaController extends AbstractController
 
         $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
 
+        $activities = $apiClient->getAthleteActivities();
+        $runActivities = \array_filter($activities, function ($activity) {
+            return $activity['sport_type'] === 'Run';
+        });
+
+        foreach ($runActivities as &$activity) {
+            $activity['distance'] = round($activity['distance'] / 1609, 1);
+            if ($activity['has_heartrate']) {
+                $activity['average_heartrate'] = round($activity['average_heartrate']);
+            }
+        }
+
         return $this->render('strava/data.html.twig', [
-            'data' => [
-                'athlete' => $apiClient->getAthlete(),
-                'activities' => $apiClient->getAthleteActivities(),
-            ],
+            'activities' => $runActivities,
         ]);
     }
 }

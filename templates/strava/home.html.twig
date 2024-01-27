@@ -4,7 +4,7 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
-                {% if error %}
+                {% if error is defined %}
                     <div class="notification is-warning is-light">
                         {{ error }}
                     </div>
