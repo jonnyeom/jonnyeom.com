@@ -12,7 +12,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+use function array_filter;
 use function assert;
+use function round;
 
 class StravaController extends AbstractController
 {
@@ -46,20 +48,20 @@ class StravaController extends AbstractController
 
         $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
 
-        $activities = $apiClient->getAthleteActivities();
-        $runActivities = \array_filter($activities, function ($activity) {
+        $activities    = $apiClient->getAthleteActivities();
+        $runActivities = array_filter($activities, static function ($activity) {
             return $activity['sport_type'] === 'Run';
         });
 
         foreach ($runActivities as &$activity) {
             $activity['distance'] = round($activity['distance'] / 1609, 1);
-            if ($activity['has_heartrate']) {
-                $activity['average_heartrate'] = round($activity['average_heartrate']);
+            if (! $activity['has_heartrate']) {
+                continue;
             }
+
+            $activity['average_heartrate'] = round($activity['average_heartrate']);
         }
 
-        return $this->render('strava/data.html.twig', [
-            'activities' => $runActivities,
-        ]);
+        return $this->render('strava/data.html.twig', ['activities' => $runActivities]);
     }
 }
