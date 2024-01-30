@@ -4,22 +4,38 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
-                <table class="table is-hoverable is-striped">
+                <div class="table-container">
+                <table class="table is-hoverable is-striped is-narrow-mobile">
                     <thead>
                     <tr>
-                        <th>Activities</th>
-                        <th>miles</th>
-                        <th>avg bpm</th>
+                        <th>Week</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                        <th>Sun</th>
+                        <th>total</th>
+                        <th>5 wk avg</th>
                     </tr>
                     </thead>
-                    {% for activity in activities %}
+                    {% for weeklyStat in activitiesByWeek %}
                         <tr>
-                            <th>{{ activity.start_date_local|date("D n.d") }}</th>
-                            <td>{{ activity.distance ~ ' mi'}}</td>
-                            <td>{% if activity.has_heartrate %} {{ activity.average_heartrate ~ ' bpm' }} {% endif %}</td>
+                            <th>{{ weeklyStat.date }}</th>
+                            {% for dailyStat in weeklyStat %}
+                                <td>
+                                    {% if dailyStat.distance > 0 %}
+                                    {{ (dailyStat.distance/1609.34)|round(1)}}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td><b>{{ (weeklyStat.totalDistance/1609.34)|round(1) ~ ' mi' }}</b></td>
+                            <td><b>{{ (weeklyStat.fiveWeekAverage/1609.34)|round(1) ~ ' mi' }}</b></td>
                         </tr>
                     {% endfor %}
                 </table>
+                </div>
             </div>
         </div>
     </section>
