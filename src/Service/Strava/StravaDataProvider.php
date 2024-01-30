@@ -54,9 +54,9 @@ class StravaDataProvider
         }
 
         if ($sportType) {
-            $activities = array_filter($activities, static function ($activity) {
+            $activities = array_values(array_filter($activities, static function ($activity) {
                 return $activity['sport_type'] === 'Run';
-            });
+            }));
         }
 
 //        foreach ($activities as &$activity) {
