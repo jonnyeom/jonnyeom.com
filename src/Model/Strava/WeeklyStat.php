@@ -28,7 +28,10 @@ class WeeklyStat implements IteratorAggregate
     {
         $this->firstDayOfWeek = new DateTimeImmutable($firstDayOfWeek);
         if ($this->firstDayOfWeek->format('D') !== 'Mon') {
-            throw new InvalidStat(sprintf('First day of Week should be a Monday. %s was given', $this->firstDayOfWeek->format('l')));
+            throw new InvalidStat(sprintf(
+                'First day of Week should be a Monday. %s was given',
+                $this->firstDayOfWeek->format('l'),
+            ));
         }
 
         $this->stats = [

@@ -24,8 +24,10 @@ use function strtotime;
 
 class StravaDataProvider
 {
-    public function __construct(private readonly RequestStack $requestStack, private readonly ClientProvider $clientProvider)
-    {
+    public function __construct(
+        private readonly RequestStack $requestStack,
+        private readonly ClientProvider $clientProvider,
+    ) {
     }
 
     /**
@@ -78,7 +80,11 @@ class StravaDataProvider
 
             $weeklyStats[$weekOfActivity->format('Y.W')] = new WeeklyStat($firstDayOfWeek);
             $weekOfActivity                              = $weekOfActivity->modify('+ 1 week');
-        } while ($weekOfActivity->format('Y') < $lastActivity->format('Y') || ($weekOfActivity->format('Y') === $lastActivity->format('Y') && $weekOfActivity->format('W') <= $lastActivity->format('W')));
+        } while (
+            $weekOfActivity->format('Y') < $lastActivity->format('Y') ||
+            ($weekOfActivity->format('Y') === $lastActivity->format('Y') &&
+                $weekOfActivity->format('W') <= $lastActivity->format('W'))
+        );
 
         foreach ($activities as $item) {
             $date = new DateTime($item['start_date_local']);
