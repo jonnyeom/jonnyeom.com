@@ -5,7 +5,7 @@
         <div class="container is-max-desktop">
             <div class="content">
                 <div class="table-container">
-                <table class="table is-hoverable is-striped is-narrow-mobile">
+                <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered">
                     <thead>
                     <tr>
                         <th>Week</th>
@@ -23,15 +23,19 @@
                     {% for weeklyStat in activitiesByWeek %}
                         <tr>
                             <th>{{ weeklyStat.date }}</th>
-                            {% for dailyStat in weeklyStat %}
+                            {% for day, dailyStat in weeklyStat %}
                                 <td>
                                     {% if dailyStat.distance > 0 %}
                                     {{ (dailyStat.distance/1609.34)|round(1)}}
                                     {% endif %}
                                 </td>
                             {% endfor %}
-                            <td><b>{{ (weeklyStat.totalDistance/1609.34)|round(1) ~ ' mi' }}</b></td>
-                            <td><b>{{ (weeklyStat.fiveWeekAverage/1609.34)|round(1) ~ ' mi' }}</b></td>
+                            <td><b>{{ (weeklyStat.totalDistance/1609.34)|round(1) }}<span class="is-hidden-mobile">{{ ' mi' }}</span></b></td>
+                            <td>
+                                {% if not loop.first and date('D') != 'Sun' %}<b>{% endif %}
+                                    {{ (weeklyStat.fiveWeekAverage/1609.34)|round(1) }}<span class="is-hidden-mobile">{{ ' mi' }}</span>
+                                {% if not loop.first and date('D') != 'Sun' %}</b>{% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 </table>
