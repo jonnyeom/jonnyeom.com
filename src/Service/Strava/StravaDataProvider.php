@@ -61,29 +61,19 @@ class StravaDataProvider
             }));
         }
 
-//        foreach ($activities as &$activity) {
-//            $activity['distance'] = round($activity['distance'] / 1609, 1);
-//            if (! $activity['has_heartrate']) {
-//                continue;
-//            }
-//
-//            $activity['average_heartrate'] = round($activity['average_heartrate']);
-//        }
-
-        $firstActivity = new DateTime($activities[0]['start_date_local']);
-        $lastActivity  = new DateTime($activities[count($activities) - 1]['start_date_local']);
-
-        $weekOfActivity = $firstActivity;
+        $weekOfActivity = new DateTime($activities[0]['start_date_local']);
+        $today          = new DateTime();
         $weeklyStats    = [];
+
         do {
             $firstDayOfWeek = date('Y-m-d', strtotime('monday this week', $weekOfActivity->getTimestamp()));
 
             $weeklyStats[$weekOfActivity->format('Y.W')] = new WeeklyStat($firstDayOfWeek);
             $weekOfActivity                              = $weekOfActivity->modify('+ 1 week');
         } while (
-            $weekOfActivity->format('Y') < $lastActivity->format('Y') ||
-            ($weekOfActivity->format('Y') === $lastActivity->format('Y') &&
-                $weekOfActivity->format('W') <= $lastActivity->format('W'))
+            $weekOfActivity->format('Y') < $today->format('Y') ||
+            ($weekOfActivity->format('Y') === $today->format('Y') &&
+                $weekOfActivity->format('W') <= $today->format('W'))
         );
 
         foreach ($activities as $item) {
