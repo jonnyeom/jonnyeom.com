@@ -4,7 +4,7 @@
     "extends": [
         "config:base",
         ":automergePatch",
-        "schedule:weekends",
+        "schedule:earlyMondays",
         "schedule:automergeEarlyMondays"
     ],
     "dependencyDashboard": true,
