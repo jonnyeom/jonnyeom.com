@@ -14,7 +14,7 @@ framework:
         cookie_secure: auto
         cookie_samesite: lax
         cookie_lifetime: 604800
-        gc_maxlifetime: 86400
+        gc_maxlifetime: 604800
 
     #esi: true
     #fragments: true
