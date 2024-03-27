@@ -1,6 +1,6 @@
 {
     "BSN Sports":{
-        "image": "images/projects/bsn.png",
+        "image": "bsn.png",
         "description": "",
         "tags": [
             "Symfony",
@@ -8,14 +8,14 @@
         ]
     },
     "UL Fire Safety Research Institute": {
-        "image": "images/projects/fsri.png",
+        "image": "fsri.png",
         "description": "",
         "tags": [
             "Drupal 9"
         ]
     },
     "UL FSRI Fire Safety Academy": {
-        "image": "images/projects/fsri-lms.png",
+        "image": "fsri-lms.png",
         "description": "",
         "tags": [
             "React",
@@ -23,7 +23,7 @@
         ]
     },
     "UL FSRI Close Before You Doze": {
-        "image": "images/projects/fsri-cbyd.png",
+        "image": "fsri-cbyd.png",
         "description": "",
         "tags": [
             "GatsbyJS",
@@ -31,7 +31,7 @@
         ]
     },
     "U.S. Naval Institute": {
-        "image": "images/projects/usni.png",
+        "image": "usni.png",
         "description": "",
         "tags": [
             "Drupal 8",
@@ -40,14 +40,14 @@
         ]
     },
     "American Medical Informatics Association ®": {
-        "image": "images/projects/amia.png",
+        "image": "amia.png",
         "description": "",
         "tags": [
             "Drupal 9"
         ]
     },
     "International Society for Pharmaceutical Engineering": {
-        "image": "images/projects/ispe.png",
+        "image": "ispe.png",
         "description": "",
         "tags": [
             "Drupal 9",
@@ -55,7 +55,7 @@
         ]
     },
     "ISPE Foundation": {
-        "image": "images/projects/ispe-foundation.png",
+        "image": "ispe-foundation.png",
         "description": "",
         "tags": [
             "Drupal 9",
@@ -64,35 +64,35 @@
         ]
     },
     "The Massachusetts Society of Certified Public Accountants": {
-        "image": "images/projects/mscpa.png",
+        "image": "mscpa.png",
         "description": "",
         "tags": [
             "Drupal 9"
         ]
     },
     "Florida Institute of CPAs": {
-        "image": "images/projects/ficpa.png",
+        "image": "ficpa.png",
         "description": "",
         "tags": [
             "Drupal 9"
         ]
     },
     "Barnard College": {
-        "image": "images/projects/barnard.png",
+        "image": "barnard.png",
         "description": "",
         "tags": [
             "Drupal 8"
         ]
     },
     "Sandy Spring Bank": {
-        "image": "images/projects/ssb.png",
+        "image": "ssb.png",
         "description": "",
         "tags": [
             "Drupal 8"
         ]
     },
     "Association of International Educators": {
-        "image": "images/projects/nafsa.png",
+        "image": "nafsa.png",
         "description": "",
         "tags": [
             "Drupal 9",
@@ -101,7 +101,7 @@
         ]
     },
     "Lab Tests Online": {
-        "image": "images/projects/lab-tests-online.png",
+        "image": "lab-tests-online.png",
         "description": "",
         "tags": [
             "Drupal 8",
@@ -109,14 +109,14 @@
         ]
     },
     "U.S. Naval Institute News": {
-        "image": "images/projects/usni-news.png",
+        "image": "usni-news.png",
         "description": "",
         "tags": [
             "Wordpress"
         ]
     },
     "U.S. Naval Institute Blog": {
-        "image": "images/projects/usni-blog.png",
+        "image": "usni-blog.png",
         "description": "",
         "tags": [
             "AngularJS",
@@ -124,7 +124,7 @@
         ]
     },
     "RCM&D": {
-        "image": "images/projects/rcmd.png",
+        "image": "rcmd.png",
         "description": "",
         "tags": [
             "Drupal 8"

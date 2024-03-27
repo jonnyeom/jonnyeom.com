@@ -9,7 +9,7 @@
                         {% for title, project in batch %}
                             <div class="tile is-parent">
                                 <article class="tile is-child box is-paddingless">
-                                    <figure class="image is-marginless"><img src="{{ asset(project.image) }}"/></figure>
+                                    <figure class="image is-marginless"><img src="{{ asset('images/projects/'~project.image) }}"/></figure>
                                     <div class="tile-bottom">
                                         <h3 class="mb-3">{{ title }}</h3>
                                         {% if project.tags is not empty %}
