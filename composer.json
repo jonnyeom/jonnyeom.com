@@ -11,7 +11,7 @@
     },
     "require": {
         "php": "^8.3",
-        "api-platform/core": "^3.2.19",
+        "api-platform/core": "^3.2.20",
         "basvandorst/stravaphp": "^2.0",
         "doctrine/annotations": "^2.0.1",
         "league/commonmark": "^2",
