@@ -12,10 +12,6 @@
  * The "importmap:require" command can be used to add new entries to this file.
  */
 return [
-    'newAssetMapperApp' => [
-        'path' => './assets/app.js',
-        'entrypoint' => true,
-    ],
     'strava' => [
         'path' => './assets/submodule/strava.js',
         'entrypoint' => true,
