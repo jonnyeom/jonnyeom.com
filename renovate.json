@@ -2,9 +2,9 @@
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "enabledManagers": ["composer"],
     "extends": [
-        "config:base",
+        "config:recommended",
         ":automergePatch",
-        "schedule:earlyMondays",
+        "schedule:weekends",
         "schedule:automergeEarlyMondays"
     ],
     "dependencyDashboard": true,
