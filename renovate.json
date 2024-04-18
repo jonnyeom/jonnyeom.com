@@ -85,6 +85,13 @@
             "matchPackageNames": ["phpunit/phpunit"],
             "matchCurrentVersion": "<10.0.0",
             "allowedVersions": "<10.0.0"
+        },
+        {
+            "description": "Don't upgrade symfony to 7.x until we do it ourselves",
+            "matchPackagePrefixes": [
+                "symfony/"
+            ],
+            "allowedVersions": "<7.0.0"
         }
     ]
 }
