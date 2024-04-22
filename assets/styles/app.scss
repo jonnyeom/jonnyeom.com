@@ -1,10 +1,6 @@
 @charset "utf-8";
 
-// >>> Initial Variables!
-// Import a Google Font
-//@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&amp;display=swap');
-// Colors
+// >>> Custom Colors!
 $dark-green: #414D41;
 $drupal-blue: #064771;
 $green: #7F8C7F;
@@ -18,16 +14,10 @@ $vue-green: #42b983;
 $php-purple: #8892BF;
 $php-dark-purple: #4F5B93;
 
-$code-block-background: #f6f8fa;
-
 $blue-200: #93c5fd;
 $cool-grey: #1f2937;
 $cool-grey-100: #f3f4f6;
 $cool-grey-200: #e5e7eb;
-
-$black:        hsl(0, 0%, 4%);
-$black-bis:    hsl(0, 0%, 7%);
-$black-ter:    hsl(0, 0%, 14%);
 
 $grey-darker:  hsl(0, 0%, 21%);
 $grey-dark:    hsl(0, 0%, 29%);
@@ -36,94 +26,89 @@ $grey-light:   hsl(0, 0%, 71%);
 $grey-lighter: hsl(0, 0%, 86%);
 $grey-lightest: hsl(0, 0%, 93%);
 
-// Set your brand colors
-//$purple: #8A4D76;
-//$pink: #FA7C91;
-//$brown: #757763;
-//$beige-light: #D0D1CD;
-//$beige-lighter: #EFF0EB;
+// Override global Sass variables from the /utilities folder
+@use "bulma/sass/utilities" with (
+  // Colors!
+  $family-primary: 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"',
+  $family-monospace: '"JetBrains Mono",ui-monospace,"Roboto Mono",SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace',
+  $primary: $green,
+  $danger: $light-orange,
+  $info: $theme-blue,
+  $link: $orange,
+  $custom-colors: (
+    'drupal-blue': $drupal-blue,
+    'react-blue': $react-blue,
+    'solr-orange': $solr-orange,
+    'strava-orange': $strava-orange,
+    'theme-blue': $theme-blue,
+    'vue-green': $vue-green,
+    'php-purple': $php-purple
+  ),
 
-// Typography
-$family-primary: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-$family-monospace: "JetBrains Mono",ui-monospace,"Roboto Mono",SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  // Initial colors
+  $black:        hsl(0, 0%, 4%),
+  $black-bis:    hsl(0, 0%, 7%),
+  $black-ter:    hsl(0, 0%, 14%),
+  $grey-darker: $grey-darker,
+  $grey-dark: $grey-dark,
+  $grey: $grey,
+  $grey-light: $grey-light,
+  $grey-lighter: $grey-lighter,
+  $grey-lightest: $grey-lightest,
 
+  // Text colors
+  $text: $cool-grey,
+  $text-weak: $grey-dark,
+  $text-strong: $grey-darker,
 
-
-// >>> Derived Variables!
-
-// Colors
-$primary: $green;
-$danger: $light-orange;
-$info: $theme-blue;
-$link: $orange;
-$custom-colors: (
-        'drupal-blue': $drupal-blue,
-        'react-blue': $react-blue,
-        'solr-orange': $solr-orange,
-        'strava-orange': $strava-orange,
-        'theme-blue': $theme-blue,
-        'vue-green': $vue-green,
-        'php-purple': $php-purple
+  // Code colors
+  $code: $cool-grey,
+  $code-background: $cool-grey-100,
+  $pre: $cool-grey,
+  $pre-background: #f6f8fa,
 );
+@use "bulma/sass/base" with (
+  //$body-font-size: 15px,
+  $body-line-height: 1.55,
+  $code-padding: 0 3px,
+  $code-size: 13px,
+  $pre-font-size: 13px,
+  $pre-padding: 0,
+  $pre-code-font-size: 1em
+);
+@forward "bulma/sass/elements/block";
+@forward "bulma/sass/elements/box";
+@forward "bulma/sass/elements/button";
+@use "bulma/sass/elements/content" with (
+  $content-heading-weight: 600,
+);
+@forward "bulma/sass/elements/icon";
+@forward "bulma/sass/elements/image";
+@forward "bulma/sass/elements/notification";
+@forward "bulma/sass/elements/progress";
+@forward "bulma/sass/elements/table";
+@forward "bulma/sass/elements/tag";
+@forward "bulma/sass/elements/title";
+@forward "bulma/sass/components/card";
+@forward "bulma/sass/components/menu";
+@forward "bulma/sass/components/navbar";
+@forward "bulma/sass/components/tabs";
+@forward "bulma/sass/grid/columns";
+@forward "bulma/sass/grid/grid";
+@forward "bulma/sass/helpers";
+@forward "bulma/sass/layout/container";
+@use "bulma/sass/layout/footer" with (
+  $footer-padding: 3rem 1.5rem 8rem,
+  $footer-background-color: $theme-blue
+);
+@forward "bulma/sass/layout/section";
 
-// Text colors
-$text: $cool-grey;
-$text-light: $grey-dark;
-$text-strong: $grey-darker;
+// Import the themes so that all CSS variables have a value
+@forward "bulma/sass/themes";
 
-// Code colors
-$code: $cool-grey;
-$code-background: $cool-grey-100;
-
-$pre: $text;
-$pre-background: $code-block-background;
-
-
-
-// >>> Generic Variables!
-//$body-font-size: 15px;
-$body-line-height: 1.55;
-
-$code-padding: 0 3px;
-$code-size: 13px;
-
-$pre-font-size: 13px;
-$pre-padding: 0;
-$pre-code-font-size: 1em;
-
-
-
-// >>> Other!
-// Footer
-$footer-padding: 3rem 1.5rem 8rem;
-$footer-background-color: $theme-blue;
-
-
-
-// Import only what you need from Bulma
-//@import "../../node_modules/bulma/bulma";
-@import "../../node_modules/bulma/sass/utilities/_all";
-@import "../../node_modules/bulma/sass/base/_all";
-@import "../../node_modules/bulma/sass/elements/box";
-@import "../../node_modules/bulma/sass/elements/button";
-@import "../../node_modules/bulma/sass/elements/container";
-@import "../../node_modules/bulma/sass/elements/content";
-@import "../../node_modules/bulma/sass/elements/icon";
-@import "../../node_modules/bulma/sass/elements/image";
-@import "../../node_modules/bulma/sass/elements/notification";
-@import "../../node_modules/bulma/sass/elements/other";
-@import "../../node_modules/bulma/sass/elements/progress";
-@import "../../node_modules/bulma/sass/elements/table";
-@import "../../node_modules/bulma/sass/elements/tag";
-@import "../../node_modules/bulma/sass/elements/title";
-@import "../../node_modules/bulma/sass/components/level";
-@import "../../node_modules/bulma/sass/components/menu";
-@import "../../node_modules/bulma/sass/components/navbar";
-@import "../../node_modules/bulma/sass/components/tabs";
-@import "../../node_modules/bulma/sass/grid/columns";
-@import "../../node_modules/bulma/sass/grid/tiles";
-@import "../../node_modules/bulma/sass/helpers/_all";
-@import "../../node_modules/bulma/sass/layout/footer";
-@import "../../node_modules/bulma/sass/layout/section";
-
+// Import custom sass.
 @import "custom";
+
+// Import Font
+//@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&amp;display=swap');

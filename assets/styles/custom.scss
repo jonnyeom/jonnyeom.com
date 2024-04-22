@@ -1,3 +1,7 @@
+@use "bulma/sass/utilities/mixins" as mx;
+@use "bulma/sass/utilities/derived-variables" as dv;
+@use "bulma/sass/utilities/initial-variables" as iv;
+
 body {
   border-top: 12px solid $light-orange;
 }
@@ -8,7 +12,7 @@ nav.menu {
     // On mobile, make it less wide.
     padding: .5em;
 
-    @include tablet {
+    @include mx.tablet {
       font-size: 1.1rem;
       padding: 0.5em 1em;
     }
@@ -41,7 +45,7 @@ nav.menu {
   }
 
   code {
-    border-bottom: 1px solid $cool-grey-200;
+    border-bottom: 1px solid dv.$code-background;
     border-radius: 4px;
     word-break: break-word;
   }
@@ -55,13 +59,13 @@ nav.menu {
       word-break: unset;
 
       &.hljs {
-        background-color: $code-block-background;
+        background-color: dv.$code-background;
         padding: unset;
       }
     }
   }
 
-  @include tablet {
+  @include mx.tablet {
     p, li {
       font-size: 1rem;
     }
@@ -115,11 +119,11 @@ h6:hover .heading-permalink,
 
 .box.php {
   background-color: $php-purple;
-  color: $white;
+  color: iv.$white;
   font-weight: 500;
 
   a {
-    color: $black;
+    color: iv.$black;
     &:hover,
     &:focus {
       color: $php-dark-purple;

@@ -1,11 +1,16 @@
 {% extends 'base.html.twig' %}
 
+{% block importmap %}
+    {{ importmap('strava') }}
+    {{ parent() }}
+{% endblock %}
+
 {% block body %}
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
                 <div class="table-container">
-                <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered">
+                <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered is-fullwidth">
                     <thead>
                     <tr>
                         <th>Week</th>

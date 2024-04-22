@@ -26,5 +26,6 @@ final class DefaultControllerTest extends WebTestCase
         yield ['/projects'];
         yield ['/writing'];
         yield ['/about'];
+        yield ['/strava'];
     }
 }
