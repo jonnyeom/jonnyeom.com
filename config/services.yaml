@@ -20,6 +20,11 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler:
+        arguments:
+            - '%env(DATABASE_URL)%'
+            - { 'ttl': 604800 }
+
     App\Service\Strava\ClientProvider:
         arguments:
             $clientId: '%env(OAUTH_STRAVA_CLIENT_ID)%'
