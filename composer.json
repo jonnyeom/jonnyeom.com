@@ -11,6 +11,7 @@
     },
     "require": {
         "php": "^8.3",
+        "ext-intl": "*",
         "api-platform/core": "^3.2.24",
         "basvandorst/stravaphp": "^2.0",
         "doctrine/annotations": "^2.0.1",
