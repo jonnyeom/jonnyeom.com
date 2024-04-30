@@ -4,7 +4,6 @@ doctrine:
         driver: pgsql
 
         server_version: '15.5'
-        charset: utf8mb4
 
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
