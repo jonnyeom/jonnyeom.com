@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e985b78aa56622db3eb126a9803c2de5",
+    "content-hash": "8f0a37c0ec1cb7c3953fed6b0da85908",
     "packages": [
         {
             "name": "api-platform/core",
-            "version": "v3.2.22",
+            "version": "v3.2.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/core.git",
-                "reference": "04474e418e5df908a6c70ed6056f7c82ea4ae0c6"
+                "reference": "6bd7a713244f0ad62eb7c0cbd774962782aa5951"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/core/zipball/04474e418e5df908a6c70ed6056f7c82ea4ae0c6",
-                "reference": "04474e418e5df908a6c70ed6056f7c82ea4ae0c6",
+                "url": "https://api.github.com/repos/api-platform/core/zipball/6bd7a713244f0ad62eb7c0cbd774962782aa5951",
+                "reference": "6bd7a713244f0ad62eb7c0cbd774962782aa5951",
                 "shasum": ""
             },
             "require": {
@@ -169,9 +169,9 @@
             ],
             "support": {
                 "issues": "https://github.com/api-platform/core/issues",
-                "source": "https://github.com/api-platform/core/tree/v3.2.22"
+                "source": "https://github.com/api-platform/core/tree/v3.2.23"
             },
-            "time": "2024-04-29T13:36:17+00:00"
+            "time": "2024-05-24T16:40:39+00:00"
         },
         {
             "name": "basvandorst/stravaphp",
