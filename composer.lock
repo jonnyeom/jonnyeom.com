@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f9c231b902c30a0558386b55666ad417",
+    "content-hash": "50eb749ee6c22396da0df791a8add432",
     "packages": [
         {
             "name": "api-platform/core",
@@ -3682,16 +3682,16 @@
         },
         {
             "name": "spatie/yaml-front-matter",
-            "version": "2.0.8",
+            "version": "2.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/yaml-front-matter.git",
-                "reference": "f2f1f749a405fafc9d6337067c92c062d51a581c"
+                "reference": "cbe67e1cdd0a29a96d74ccab9400fe663e078392"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/yaml-front-matter/zipball/f2f1f749a405fafc9d6337067c92c062d51a581c",
-                "reference": "f2f1f749a405fafc9d6337067c92c062d51a581c",
+                "url": "https://api.github.com/repos/spatie/yaml-front-matter/zipball/cbe67e1cdd0a29a96d74ccab9400fe663e078392",
+                "reference": "cbe67e1cdd0a29a96d74ccab9400fe663e078392",
                 "shasum": ""
             },
             "require": {
@@ -3728,7 +3728,7 @@
                 "yaml"
             ],
             "support": {
-                "source": "https://github.com/spatie/yaml-front-matter/tree/2.0.8"
+                "source": "https://github.com/spatie/yaml-front-matter/tree/2.0.9"
             },
             "funding": [
                 {
@@ -3740,7 +3740,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-12-04T10:02:52+00:00"
+            "time": "2024-06-13T10:20:51+00:00"
         },
         {
             "name": "symfony/apache-pack",
