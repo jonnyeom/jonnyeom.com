@@ -107,7 +107,7 @@ class DefaultController extends BaseController
 
             return $converter->convert($markdown);
         });
-        
+
         return $this->render('page/medical.html.twig', ['content' => $content]);
     }
 }

@@ -24,9 +24,7 @@ final class MarkdownConverter extends \League\CommonMark\MarkdownConverter
                 'normalize' => 'relative',
                 'placeholder' => '[TOC]',
             ],
-            'heading_permalink' => [
-                'insert' => 'after',
-            ],
+            'heading_permalink' => ['insert' => 'after'],
         ]);
 
         $environment->addExtension(new CommonMarkCoreExtension());
