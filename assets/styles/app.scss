@@ -9,7 +9,7 @@ $orange: #A6664B;
 $react-blue: #61dafb;
 $solr-orange: #D9411E;
 $strava-orange: #FC4C02;
-$theme-blue: #DFE6E4;
+$theme-blue: rgb(76, 97, 91);
 $vue-green: #42b983;
 $php-purple: #8892BF;
 $php-dark-purple: #4F5B93;
@@ -99,7 +99,7 @@ $grey-lightest: hsl(0, 0%, 93%);
 @forward "bulma/sass/layout/container";
 @use "bulma/sass/layout/footer" with (
   $footer-padding: 3rem 1.5rem 8rem,
-  $footer-background-color: $theme-blue
+  $footer-background-color: hsla(var(--bulma-theme-blue-h),var(--bulma-theme-blue-s),var(--bulma-theme-blue-l),.2)
 );
 @forward "bulma/sass/layout/section";
 
