@@ -100,7 +100,7 @@ class DefaultController extends BaseController
     {
         $cache = new FilesystemAdapter();
 
-        $content = $cache->get('markdown_about', static function (ItemInterface $item) {
+        $content = $cache->get('markdown_medical', static function (ItemInterface $item) {
             $converter = new MarkdownConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/Medical.md');
             assert(is_string($markdown));
