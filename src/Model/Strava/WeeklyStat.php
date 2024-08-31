@@ -20,7 +20,15 @@ class WeeklyStat implements IteratorAggregate
     /** @var DailyStat[] $stats */
     private array $stats;
     private DateTimeInterface $firstDayOfWeek;
+
+    /**
+     * Total weekly distance, in meters.
+     */
     private float $totalDistance   = 0;
+
+    /**
+     * 5 week distance Average, in meters.
+     */
     private float $fiveWeekAverage = 0;
 
     /** @throws InvalidStat */
@@ -60,6 +68,14 @@ class WeeklyStat implements IteratorAggregate
     public function getTotalDistance(): float
     {
         return $this->totalDistance;
+    }
+
+    /**
+     * Gets total Relative Miles for the week.
+     */
+    public function getTotalMiles(): float
+    {
+        return round($this->totalDistance / 1609.34, 1);
     }
 
     public function getFiveWeekAverage(): float

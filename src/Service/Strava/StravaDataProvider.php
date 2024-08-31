@@ -61,6 +61,19 @@ class StravaDataProvider
             }));
         }
 
+        $weeklyStats = $this->generateWeeklyStats($activities);
+        $this->calculateWeeklyMetrics($weeklyStats);
+
+        return $weeklyStats;
+    }
+
+    /**
+     * @param array<int, mixed> $activities
+     *
+     * @return array<string, WeeklyStat>
+     */
+    public static function generateWeeklyStats(array $activities): array
+    {
         $weekOfActivity = new DateTime($activities[0]['start_date_local']);
         $today          = new DateTime();
         $weeklyStats    = [];
@@ -81,13 +94,11 @@ class StravaDataProvider
             $weeklyStats[$date->format('Y.W')]->addStravaActivity($item);
         }
 
-        $this->calculateWeeklyMetrics($weeklyStats);
-
         return $weeklyStats;
     }
 
     /** @param WeeklyStat[] $weeklyStats */
-    private function calculateWeeklyMetrics(array $weeklyStats): void
+    public static function calculateWeeklyMetrics(array $weeklyStats): void
     {
         $dekeyedWeeklyStats = array_values($weeklyStats);
         foreach ($dekeyedWeeklyStats as $index => $weeklyStat) {
