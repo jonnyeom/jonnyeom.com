@@ -13,7 +13,6 @@ use League\OAuth2\Client\Token\AccessTokenInterface;
 use Strava\API\Exception;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-use function array_filter;
 use function array_merge;
 use function array_values;
 use function assert;
@@ -55,11 +54,11 @@ class StravaDataProvider
             $activities = array_merge($activities, $response);
         }
 
-        if ($sportType) {
-            $activities = array_values(array_filter($activities, static function ($activity) {
-                return $activity['sport_type'] === 'Run';
-            }));
-        }
+//        if ($sportType) {
+//            $activities = array_values(array_filter($activities, static function ($activity) {
+//                return $activity['sport_type'] === 'Run';
+//            }));
+//        }
 
         $weeklyStats = $this->generateWeeklyStats($activities);
         $this->calculateWeeklyMetrics($weeklyStats);

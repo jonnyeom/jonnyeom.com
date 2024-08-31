@@ -13,6 +13,7 @@ use Exception;
 use IteratorAggregate;
 use Traversable;
 
+use function round;
 use function sprintf;
 
 class WeeklyStat implements IteratorAggregate
@@ -22,9 +23,9 @@ class WeeklyStat implements IteratorAggregate
     private DateTimeInterface $firstDayOfWeek;
 
     /**
-     * Total weekly distance, in meters.
+     * Total weekly relative distance, in meters.
      */
-    private float $totalDistance   = 0;
+    private float $totalDistance = 0;
 
     /**
      * 5 week distance Average, in meters.
@@ -54,15 +55,31 @@ class WeeklyStat implements IteratorAggregate
     }
 
     /**
-     * @param array<mixed, mixed> $activity
+     * @param array<int, mixed> $activity
      *
      * @throws Exception
      */
     public function addStravaActivity(array $activity): void
     {
         $date = new DateTime($activity['start_date_local']);
-        $this->stats[$date->format('D')]->addDistance($activity['distance']);
-        $this->totalDistance += $activity['distance'];
+        $this->stats[$date->format('D')]->addActivity($activity);
+
+        switch ($activity['sport_type']) {
+            case 'Tennis':
+                $this->distance += $activity['distance'] * 2;
+                break;
+            case 'Swim':
+                $this->totalDistance += $activity['distance'] * 4;
+                break;
+            case 'Bike':
+                $this->totalDistance += $activity['distance'] / 3;
+                break;
+            case 'Run':
+                $this->totalDistance += $activity['distance'];
+                break;
+            default:
+                // Log something.
+        }
     }
 
     public function getTotalDistance(): float
