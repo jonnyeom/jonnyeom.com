@@ -45,8 +45,8 @@ class WeeklyStatTest extends TestCase
         }
 
         $this->assertCount(7, $weeklyStat);
-        $this->assertSame(9136.9, $weeklyStat->getTotalDistance());
-        $this->assertSame(5.7, $weeklyStat->getTotalMiles());
+        $this->assertSame(15000.0, $weeklyStat->getTotalDistance());
+        $this->assertSame(9.3, $weeklyStat->getTotalMiles());
         $this->assertSame('10.30', $weeklyStat->getDate());
     }
 }

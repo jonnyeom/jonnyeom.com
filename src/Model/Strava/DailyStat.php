@@ -6,9 +6,10 @@ namespace App\Model\Strava;
 
 use function round;
 
+/** @phpstan-type Activity array{sport_type: string, distance: int, start_date_local: string} */
 class DailyStat
 {
-    /** @var array<int, mixed> $activities */
+    /** @var array<int, Activity> $activities */
     private array $activities;
 
     /**
@@ -20,19 +21,13 @@ class DailyStat
     {
     }
 
-    public function addDistance(float $distance): void
-    {
-        // @Todo: Convert to relative distance.
-        $this->distance += $distance;
-    }
-
-    /** @return mixed[] */
+    /** @return Activity[] */
     public function getActivities(): array
     {
         return $this->activities;
     }
 
-    /** @param array<string, mixed> $activity */
+    /** @param Activity $activity */
     public function addActivity(array $activity): void
     {
         $this->activities[] = $activity;
@@ -68,6 +63,6 @@ class DailyStat
     public function getRelativeMiles(): float
     {
         // Meters >> Miles.
-        return round($this->distance / 1690.34, 1);
+        return round($this->distance / 1609.34, 1);
     }
 }

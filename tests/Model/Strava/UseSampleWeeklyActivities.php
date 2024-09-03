@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Tests\Model\Strava;
 
+use App\Model\Strava\DailyStat;
+
+/** @phpstan-import-type Activity from DailyStat */
 trait UseSampleWeeklyActivities
 {
-    /** @return array<int, mixed> */
+    /** @return array<int, Activity> */
     public function getSampleWeeklyActivities(): array
     {
         return [
+            // 5k run.
             [
                 'resource_state' => 2,
-                'athlete' => ['id' => 16050682, 'resource_state' => 1],
-                'name' => 'easy 2.6mi 152bpm',
-                'distance' => 4112.9,
-                'moving_time' => 1517,
-                'elapsed_time' => 1600,
+                'athlete' => ['id' => 12345678, 'resource_state' => 1],
+                'name' => '5k Run at 8min/mi pace',
+                'distance' => 5000,
+                'moving_time' => 1491,
+                'elapsed_time' => 1491,
                 'total_elevation_gain' => 15.0,
                 'type' => 'Run',
                 'sport_type' => 'Run',
@@ -63,13 +67,14 @@ trait UseSampleWeeklyActivities
                 'total_photo_count' => 0,
                 'has_kudoed' => false,
             ],
+            // 10k run.
             [
                 'resource_state' => 2,
-                'athlete' => [ 'id' => 16050682, 'resource_state' => 1 ],
-                'name' => 'faster? 3.1mi 148bpm',
-                'distance' => 5024.0,
-                'moving_time' => 1900,
-                'elapsed_time' => 1930,
+                'athlete' => [ 'id' => 12345678, 'resource_state' => 1 ],
+                'name' => '10k Run at 9min/mi pace',
+                'distance' => 10000,
+                'moving_time' => 3169,
+                'elapsed_time' => 3469,
                 'total_elevation_gain' => 82.0,
                 'type' => 'Run',
                 'sport_type' => 'Run',
