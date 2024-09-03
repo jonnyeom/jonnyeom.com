@@ -6,7 +6,7 @@ namespace App\Model\Strava;
 
 use function round;
 
-/** @phpstan-type Activity array{sport_type: string, distance: int, start_date_local: string} */
+/** @phpstan-type Activity array{sport_type: string, distance: float, start_date_local: string} */
 class DailyStat
 {
     /** @var array<int, Activity> $activities */

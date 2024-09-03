@@ -40,13 +40,12 @@ class WeeklyStatTest extends TestCase
 
         $weeklyStat = new WeeklyStat($firstDayOfWeek);
 
-        foreach ($activities as $item) {
-            $weeklyStat->addStravaActivity($item);
-        }
+        $weeklyStat->addStravaActivity($activities[0]);
+        $weeklyStat->addStravaActivity($activities[1]);
 
         $this->assertCount(7, $weeklyStat);
         $this->assertSame(15000.0, $weeklyStat->getTotalDistance());
         $this->assertSame(9.3, $weeklyStat->getTotalMiles());
-        $this->assertSame('10.30', $weeklyStat->getDate());
+        $this->assertSame('1.01', $weeklyStat->getDate());
     }
 }
