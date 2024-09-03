@@ -69,7 +69,7 @@ class StravaDataProvider
     /**
      * @param array<int, mixed> $activities
      *
-     * @return array<string, WeeklyStat>
+     * @return array<int, WeeklyStat>
      */
     public static function generateWeeklyStats(array $activities): array
     {

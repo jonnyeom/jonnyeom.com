@@ -55,7 +55,7 @@ class WeeklyStat implements IteratorAggregate
     }
 
     /**
-     * @param array<int, mixed> $activity
+     * @param array<string, mixed> $activity
      *
      * @throws Exception
      */
@@ -66,7 +66,7 @@ class WeeklyStat implements IteratorAggregate
 
         switch ($activity['sport_type']) {
             case 'Tennis':
-                $this->distance += $activity['distance'] * 2;
+                $this->totalDistance += $activity['distance'] * 2;
                 break;
             case 'Swim':
                 $this->totalDistance += $activity['distance'] * 4;

@@ -26,7 +26,13 @@ class DailyStat
         $this->distance += $distance;
     }
 
-    /** @param array<int, mixed> $activity */
+    /** @return mixed[] */
+    public function getActivities(): array
+    {
+        return $this->activities;
+    }
+
+    /** @param array<string, mixed> $activity */
     public function addActivity(array $activity): void
     {
         $this->activities[] = $activity;
