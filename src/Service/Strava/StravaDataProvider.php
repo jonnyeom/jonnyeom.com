@@ -13,7 +13,6 @@ use League\OAuth2\Client\Token\AccessTokenInterface;
 use Strava\API\Exception;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-use function array_filter;
 use function array_merge;
 use function array_values;
 use function assert;
@@ -55,12 +54,25 @@ class StravaDataProvider
             $activities = array_merge($activities, $response);
         }
 
-        if ($sportType) {
-            $activities = array_values(array_filter($activities, static function ($activity) {
-                return $activity['sport_type'] === 'Run';
-            }));
-        }
+//        if ($sportType) {
+//            $activities = array_values(array_filter($activities, static function ($activity) {
+//                return $activity['sport_type'] === 'Run';
+//            }));
+//        }
 
+        $weeklyStats = $this->generateWeeklyStats($activities);
+        $this->calculateWeeklyMetrics($weeklyStats);
+
+        return $weeklyStats;
+    }
+
+    /**
+     * @param array<int, mixed> $activities
+     *
+     * @return array<int, WeeklyStat>
+     */
+    public static function generateWeeklyStats(array $activities): array
+    {
         $weekOfActivity = new DateTime($activities[0]['start_date_local']);
         $today          = new DateTime();
         $weeklyStats    = [];
@@ -81,13 +93,11 @@ class StravaDataProvider
             $weeklyStats[$date->format('Y.W')]->addStravaActivity($item);
         }
 
-        $this->calculateWeeklyMetrics($weeklyStats);
-
         return $weeklyStats;
     }
 
     /** @param WeeklyStat[] $weeklyStats */
-    private function calculateWeeklyMetrics(array $weeklyStats): void
+    public static function calculateWeeklyMetrics(array $weeklyStats): void
     {
         $dekeyedWeeklyStats = array_values($weeklyStats);
         foreach ($dekeyedWeeklyStats as $index => $weeklyStat) {

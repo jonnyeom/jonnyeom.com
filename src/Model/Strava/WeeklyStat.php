@@ -13,6 +13,7 @@ use Exception;
 use IteratorAggregate;
 use Traversable;
 
+use function round;
 use function sprintf;
 
 class WeeklyStat implements IteratorAggregate
@@ -20,7 +21,15 @@ class WeeklyStat implements IteratorAggregate
     /** @var DailyStat[] $stats */
     private array $stats;
     private DateTimeInterface $firstDayOfWeek;
-    private float $totalDistance   = 0;
+
+    /**
+     * Total weekly relative distance, in meters.
+     */
+    private float $totalDistance = 0;
+
+    /**
+     * 5 week distance Average, in meters.
+     */
     private float $fiveWeekAverage = 0;
 
     /** @throws InvalidStat */
@@ -46,20 +55,44 @@ class WeeklyStat implements IteratorAggregate
     }
 
     /**
-     * @param array<mixed, mixed> $activity
+     * @param array<string, mixed> $activity
      *
      * @throws Exception
      */
     public function addStravaActivity(array $activity): void
     {
         $date = new DateTime($activity['start_date_local']);
-        $this->stats[$date->format('D')]->addDistance($activity['distance']);
-        $this->totalDistance += $activity['distance'];
+        $this->stats[$date->format('D')]->addActivity($activity);
+
+        switch ($activity['sport_type']) {
+            case 'Tennis':
+                $this->totalDistance += $activity['distance'] * 2;
+                break;
+            case 'Swim':
+                $this->totalDistance += $activity['distance'] * 4;
+                break;
+            case 'Bike':
+                $this->totalDistance += $activity['distance'] / 3;
+                break;
+            case 'Run':
+                $this->totalDistance += $activity['distance'];
+                break;
+            default:
+                // Log something.
+        }
     }
 
     public function getTotalDistance(): float
     {
         return $this->totalDistance;
+    }
+
+    /**
+     * Gets total Relative Miles for the week.
+     */
+    public function getTotalMiles(): float
+    {
+        return round($this->totalDistance / 1609.34, 1);
     }
 
     public function getFiveWeekAverage(): float

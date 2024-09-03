@@ -22,7 +22,7 @@ class StravaController extends BaseController
         $this->setSeoKeywords('strava,running,metrics,mileage');
 
         try {
-            $runsByWeek = $stravaDataProvider->getDataByWeek('Run');
+            $runsByWeek = $stravaDataProvider->getDataByWeek();
         } catch (AccessTokenMissing) {
             return $this->render('strava/home.html.twig');
         } catch (IdentityProviderException $e) {
