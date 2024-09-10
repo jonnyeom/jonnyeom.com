@@ -6,11 +6,11 @@ namespace App\Controller;
 
 use App\Exception\Strava\AccessTokenMissing;
 use App\Service\Strava\StravaDataProvider;
-use Exception;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Throwable;
 
 use function array_reverse;
 
@@ -25,7 +25,7 @@ class StravaController extends BaseController
 
         try {
             $runsByWeek = $stravaDataProvider->getDataByWeek();
-        } catch (AccessTokenMissing|IdentityProviderException|Exception $e) {
+        } catch (AccessTokenMissing | IdentityProviderException | Throwable $e) {
             $logger->error($e->getMessage());
 
             return $this->render('strava/home.html.twig', [
