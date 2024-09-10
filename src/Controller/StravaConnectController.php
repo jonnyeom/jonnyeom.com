@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Throwable;
 
 class StravaConnectController extends AbstractController
 {
@@ -38,7 +39,7 @@ class StravaConnectController extends AbstractController
 
         // @Todo: Add state?
 
-        if (! $code = $request->get('code')) {
+        if (! $code = $request->query->get('code')) {
             return $this->redirectToRoute('strava_home');
         }
 
@@ -47,7 +48,7 @@ class StravaConnectController extends AbstractController
 
             // Fetch and store the AccessToken.
             $request->getSession()->set('access_token', $accessToken);
-        } catch (IdentityProviderException $e) {
+        } catch (IdentityProviderException | Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
             $logger->error('Strava access error: ' . $e->getMessage());
