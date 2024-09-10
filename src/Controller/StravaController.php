@@ -25,7 +25,9 @@ class StravaController extends BaseController
 
         try {
             $runsByWeek = $stravaDataProvider->getDataByWeek();
-        } catch (AccessTokenMissing | IdentityProviderException | Throwable $e) {
+        } catch (AccessTokenMissing) {
+            return $this->render('strava/home.html.twig');
+        } catch (IdentityProviderException | Throwable $e) {
             $logger->error($e->getMessage());
 
             return $this->render('strava/home.html.twig', [
