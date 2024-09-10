@@ -21,8 +21,13 @@ class StravaConnectController extends AbstractController
     }
 
     #[Route('/strava/connect', name: 'strava_connect_start')]
-    public function connectAction(): Response
+    public function connectAction(Request $request): Response
     {
+        // If we already have an access token, no need to get another one.
+        if ($request->getSession()->get('access_token')) {
+            return $this->redirectToRoute('strava_home');
+        }
+
         $oauth = $this->clientProvider->getOAuthClient();
 
         return new RedirectResponse($oauth->getAuthorizationUrl([
@@ -39,6 +44,11 @@ class StravaConnectController extends AbstractController
 
         // @Todo: Add state?
 
+        // If we already have an access token, no need to get another one.
+        if ($request->getSession()->get('access_token')) {
+            return $this->redirectToRoute('strava_home');
+        }
+
         if (! $code = $request->query->get('code')) {
             return $this->redirectToRoute('strava_home');
         }
@@ -51,17 +61,20 @@ class StravaConnectController extends AbstractController
         } catch (IdentityProviderException | Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
-            $logger->error('Strava access error: ' . $e->getMessage());
+            $logger->error($e->getMessage());
 
-            return $this->render('strava/home.html.twig', [
-                'error' => $e->getMessage(),
-            ]);
+            $this->addFlash(
+                'error',
+                'Strava access error: ' . $e->getMessage(),
+            );
+
+            return $this->redirectToRoute('strava_logout');
         }
 
         return $this->redirectToRoute('strava_home');
     }
 
-    #[Route('/strava/logout', name: 'strava_connect_end')]
+    #[Route('/strava/logout', name: 'strava_logout')]
     public function logoutAction(Request $request): Response
     {
         $request->getSession()->set('access_token', null);
