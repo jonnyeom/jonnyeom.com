@@ -1692,6 +1692,26 @@ adjust-sourcemap-loader@^4.0.0:
     loader-utils "^2.0.0"
     regex-parser "^2.2.11"
 
+ag-charts-types@10.2.0:
+  version "10.2.0"
+  resolved "https://registry.yarnpkg.com/ag-charts-types/-/ag-charts-types-10.2.0.tgz#9af7e333d196d02da1635b19b2649a9b2d06241a"
+  integrity sha512-PUqH1QtugpYLnlbMdeSZVf5PpT1XZVsP69qN1JXhetLtQpVC28zaj7ikwu9CMA9N9b+dBboA9QcjUQUJZVUokQ==
+
+ag-grid-community@32.2.0:
+  version "32.2.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-32.2.0.tgz#67e2d962202961293717e5a9a1c30973e0869819"
+  integrity sha512-zr29DGo6U4JR6pSOgZrZWuN1CTWdpUCfZWWpF47us6MzdFWGN5gcdiXGw40wg9XMGacShNX1aW8o33S4yVkzMw==
+  dependencies:
+    ag-charts-types "10.2.0"
+
+ag-grid-react@^32.2.0:
+  version "32.2.0"
+  resolved "https://registry.yarnpkg.com/ag-grid-react/-/ag-grid-react-32.2.0.tgz#eeaa2654d12368bc1a8e16e61a7339e85b2966fd"
+  integrity sha512-9jPyvcY0+7fP/XzL/oMLBve/ox1gFWtl/aQ/+fvQ5AEnDJxN8P84Kp5JapMsPLkSf9WI/5fOCoIKHSaXcU7mNQ==
+  dependencies:
+    ag-grid-community "32.2.0"
+    prop-types "^15.8.1"
+
 ajv-formats@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/ajv-formats/-/ajv-formats-2.1.1.tgz#6e669400659eb74973bbf2e33327180a0996b520"
@@ -4352,7 +4372,7 @@ longest@^1.0.0:
   resolved "https://registry.yarnpkg.com/longest/-/longest-1.0.1.tgz#30a0b2da38f73770e8294a0d22e6625ed77d0097"
   integrity sha512-k+yt5n3l48JU4k8ftnKG6V7u32wyH2NfKzeMto9F/QRE0amxy/LayxwlvjjkZEIzqR+19IrtFO8p5kB9QaYUFg==
 
-loose-envify@^1.1.0:
+loose-envify@^1.1.0, loose-envify@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz#71ee51fa7be4caec1a63839f7e682d8132d30caf"
   integrity sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==
@@ -4708,7 +4728,7 @@ nth-check@^2.0.1:
   dependencies:
     boolbase "^1.0.0"
 
-object-assign@^4.0.1, object-assign@^4.1.0:
+object-assign@^4.0.1, object-assign@^4.1.0, object-assign@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.1.1.tgz#2109adc7965887cfc05cbbd442cac8bfbb360863"
   integrity sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==
@@ -5368,6 +5388,15 @@ process-nextick-args@~2.0.0:
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.1.tgz#7820d9b16120cc55ca9ae7792680ae7dba6d7fe2"
   integrity sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==
 
+prop-types@^15.8.1:
+  version "15.8.1"
+  resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
+  integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
+  dependencies:
+    loose-envify "^1.4.0"
+    object-assign "^4.1.1"
+    react-is "^16.13.1"
+
 proto-list@~1.2.1:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/proto-list/-/proto-list-1.2.4.tgz#212d5bfe1318306a420f6402b8e26ff39647a849"
@@ -5454,6 +5483,11 @@ react-dom@^18.0:
   dependencies:
     loose-envify "^1.1.0"
     scheduler "^0.23.2"
+
+react-is@^16.13.1:
+  version "16.13.1"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
+  integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
 react@^18.0:
   version "18.3.1"

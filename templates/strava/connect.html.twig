@@ -4,11 +4,14 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
-                {% if error is defined %}
-                    <div class="notification is-warning is-light">
-                        {{ error }}
-                    </div>
-                {% endif %}
+                {# read and display all flash messages #}
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="notification is-warning is-light">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
 
                 <a href="{{ path('strava_connect_start') }}" class="button is-medium p-0 rounded">
                     <img src="{{ asset('images/strava/connect/btn_strava_connectwith_light/btn_strava_connectwith_light.svg') }}" alt="Connect with Strava"/>
