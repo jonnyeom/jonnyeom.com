@@ -3,6 +3,9 @@
 {% block body %}
     <section class="section pt-0">
         <div class="container is-max-desktop">
+            <div {{ react_component('Hello', { fullName: 'Fabien' }) }}>
+                Loading... <i class="fas fa-cog fa-spin fa-3x"></i>
+            </div>
             <div class="columns">
                 <div class="column is-full-mobile is-three-quarters-tablet">
                     <div class="content markdown">

@@ -25,7 +25,7 @@ class StravaConnectController extends AbstractController
     {
         // If we already have an access token, no need to get another one.
         if ($request->getSession()->get('access_token')) {
-            return $this->redirectToRoute('strava_home');
+            return $this->redirectToRoute('strava_metrics');
         }
 
         $oauth = $this->clientProvider->getOAuthClient();
@@ -46,11 +46,11 @@ class StravaConnectController extends AbstractController
 
         // If we already have an access token, no need to get another one.
         if ($request->getSession()->get('access_token')) {
-            return $this->redirectToRoute('strava_home');
+            return $this->redirectToRoute('strava_metrics');
         }
 
         if (! $code = $request->query->get('code')) {
-            return $this->redirectToRoute('strava_home');
+            return $this->redirectToRoute('strava_metrics');
         }
 
         try {
@@ -71,7 +71,7 @@ class StravaConnectController extends AbstractController
             return $this->redirectToRoute('strava_logout');
         }
 
-        return $this->redirectToRoute('strava_home');
+        return $this->redirectToRoute('strava_metrics');
     }
 
     #[Route('/strava/logout', name: 'strava_logout')]
@@ -79,6 +79,6 @@ class StravaConnectController extends AbstractController
     {
         $request->getSession()->set('access_token', null);
 
-        return $this->redirectToRoute('strava_home');
+        return $this->redirectToRoute('strava_metrics');
     }
 }

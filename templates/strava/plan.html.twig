@@ -1,0 +1,19 @@
+{% extends 'strava/base.html.twig' %}
+
+{% block body %}
+    <section class="section pt-0">
+        <div class="container is-max-desktop">
+            <div class="content">
+                <div {{ react_component('Hello', { fullName: 'Strava User' }) }}>
+                    Loading... <i class="fas fa-cog fa-spin fa-3x"></i>
+                </div>
+
+                <div class=" is-flex is-align-items-center is-justify-content-center">
+                    <img src="{{ asset('images/strava/api/powered by Strava/pwrdBy_strava_light/api_logo_pwrdBy_strava_horiz_light.svg') }}" alt="Powered by Strava" width="150"/>
+                    <span> | </span>
+                    <a href="https://www.strava.com/" class="pl-2 has-text-strava-orange has-text-weight-bold">view on Strava</a>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
