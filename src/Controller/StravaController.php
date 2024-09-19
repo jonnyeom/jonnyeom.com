@@ -16,8 +16,8 @@ use function array_reverse;
 
 class StravaController extends BaseController
 {
-    #[Route('/strava', name: 'strava_home')]
-    public function stravaHome(StravaDataProvider $stravaDataProvider, LoggerInterface $logger): Response
+    #[Route('/strava', name: 'strava_metrics')]
+    public function stravaMetrics(StravaDataProvider $stravaDataProvider, LoggerInterface $logger): Response
     {
         $this->setSeoTitle('jonnyeom | Weekly running metrics');
         $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
@@ -26,7 +26,7 @@ class StravaController extends BaseController
         try {
             $runsByWeek = $stravaDataProvider->getDataByWeek();
         } catch (AccessTokenMissing) {
-            return $this->render('strava/home.html.twig', ['error' => 'No Access token :(']);
+            return $this->render('strava/connect.html.twig', ['error' => 'No Access token :(']);
         } catch (IdentityProviderException | Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
@@ -40,6 +40,16 @@ class StravaController extends BaseController
             return $this->redirectToRoute('strava_logout');
         }
 
-        return $this->render('strava/data.html.twig', ['activitiesByWeek' => array_reverse($runsByWeek, true)]);
+        return $this->render('strava/metrics.html.twig', ['activitiesByWeek' => array_reverse($runsByWeek, true)]);
+    }
+
+    #[Route('/strava/plan', name: 'strava_plan')]
+    public function stravaPlan(): Response
+    {
+        $this->setSeoTitle('jonnyeom | Weekly running metrics');
+        $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
+        $this->setSeoKeywords('strava,running,metrics,mileage');
+
+        return $this->render('strava/plan.html.twig');
     }
 }
