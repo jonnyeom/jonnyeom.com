@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Throwable;
 
 use function array_reverse;
+use function array_values;
 
 class StravaController extends BaseController
 {
@@ -40,7 +41,7 @@ class StravaController extends BaseController
             return $this->redirectToRoute('strava_logout');
         }
 
-        return $this->render('strava/metrics.html.twig', ['activitiesByWeek' => array_reverse($runsByWeek, true)]);
+        return $this->render('strava/metrics.html.twig', ['activitiesByWeek' => array_values(array_reverse($runsByWeek))]);
     }
 
     #[Route('/strava/plan', name: 'strava_plan')]
