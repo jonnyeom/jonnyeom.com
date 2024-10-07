@@ -23,6 +23,7 @@
                         <th>Sun</th>
                         <th>total</th>
                         <th>5 wk avg</th>
+                        <th></th>
                     </tr>
                     </thead>
                     {% for weeklyStat in activitiesByWeek %}
@@ -40,6 +41,11 @@
                                 {% if not loop.first and date('D') != 'Sun' %}<b>{% endif %}
                                     {{ (weeklyStat.fiveWeekAverage/1609.34)|round(1) }}<span class="is-hidden-mobile">{{ ' mi' }}</span>
                                 {% if not loop.first and date('D') != 'Sun' %}</b>{% endif %}
+                            </td>
+                            <td>
+                                {% if not loop.last %}
+                                    {{ ((activitiesByWeek[loop.index0].fiveWeekAverage - activitiesByWeek[loop.index].fiveWeekAverage)/1609.34)|round(1) }}
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}
