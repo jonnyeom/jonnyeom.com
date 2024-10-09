@@ -16,7 +16,7 @@
     },
     "dependencies": {
         "ag-grid-react": "^32.2.0",
-        "bulma": "1.0.0",
+        "bulma": "^1.0.2",
         "highlight.js": "^11.4.0"
     },
     "devDependencies": {
