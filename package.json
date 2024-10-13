@@ -32,7 +32,7 @@
         "imagemin-pngquant": "^10.0.0",
         "react": "^18.0",
         "react-dom": "^18.0",
-        "regenerator-runtime": "^0.14.0",
+        "regenerator-runtime": "^0.14.1",
         "sass": "^1.53.0",
         "sass-loader": "^16.0.2",
         "webpack": "^5.74.0",
