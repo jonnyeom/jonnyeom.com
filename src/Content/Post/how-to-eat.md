@@ -2,7 +2,6 @@
 title: How to eat
 description: How I eat and manage my diet. Methods and tips I developed and live by over time.
 tags: []
-published: false
 ---
 
 This how I eat / manage my diet. 
