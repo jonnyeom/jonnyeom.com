@@ -1,6 +1,9 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "enabledManagers": ["composer","npm"],
+    "enabledManagers": [
+        "composer",
+        "npm"
+    ],
     "extends": [
         "config:recommended",
         ":automergePatch",
@@ -14,84 +17,84 @@
     "packageRules": [
         {
             "description": "Don't bump the php constraint in composer.json; we manage that ourselves",
-            "matchPackageNames": ["php"],
+            "matchPackageNames": [
+                "php"
+            ],
             "enabled": false
         },
         {
             "matchPackageNames": [
                 "league/commonmark",
                 "leogout/seo-bundle",
-                "nelmio/cors-bundle"
-            ],
-            "matchPackagePatterns": [
-                "spatie"
+                "nelmio/cors-bundle",
+                "/spatie/"
             ],
             "groupName": "application packages",
             "groupSlug": "application"
         },
         {
-            "matchPackagePatterns": [
-                "api-platform"
-            ],
             "groupName": "api-platform packages",
-            "groupSlug": "api-platform"
+            "groupSlug": "api-platform",
+            "matchPackageNames": [
+                "/api-platform/"
+            ]
         },
         {
-            "matchPackagePatterns": [
-                "doctrine/annotations"
-            ],
             "groupName": "doctrine packages",
-            "groupSlug": "doctrine"
+            "groupSlug": "doctrine",
+            "matchPackageNames": [
+                "/doctrine/annotations/"
+            ]
         },
         {
-            "matchPackagePatterns": [
-                "phpunit/phpunit"
-            ],
             "groupName": "phpunit packages",
-            "groupSlug": "phpunit"
+            "groupSlug": "phpunit",
+            "matchPackageNames": [
+                "/phpunit/phpunit/"
+            ]
         },
         {
             "matchPackageNames": [
                 "dealerdirect/phpcodesniffer-composer-installer",
                 "doctrine/coding-standard",
                 "rector/rector",
-                "squizlabs/php_codesniffer"
-            ],
-            "matchPackagePatterns": [
-                "^phpstan/phpstan$",
-                "/phpstan-",
-                "phpstan/phpdoc-parser"
+                "squizlabs/php_codesniffer",
+                "/^phpstan/phpstan$/",
+                "//phpstan-/",
+                "/phpstan/phpdoc-parser/"
             ],
             "groupName": "Code Quality packages",
             "groupSlug": "code-quality"
         },
         {
-            "matchPackagePrefixes": [
-                "twig/"
-            ],
             "groupName": "twig packages",
-            "groupSlug": "twig"
+            "groupSlug": "twig",
+            "matchPackageNames": [
+                "twig/{/,}**"
+            ]
         },
         {
             "groupName": "symfony packages",
             "groupSlug": "symfony",
-            "matchPackagePrefixes": [
-                "symfony/"
-            ],
-            "separateMinorPatch": true
+            "separateMinorPatch": true,
+            "matchPackageNames": [
+                "symfony/{/,}**"
+            ]
         },
         {
             "description": "Don't upgrade phpunit/phpunit to 10.x until we do it ourselves",
-            "matchPackageNames": ["phpunit/phpunit"],
+            "matchPackageNames": [
+                "phpunit/phpunit"
+            ],
             "matchCurrentVersion": "<10.0.0",
             "allowedVersions": "<10.0.0"
         },
         {
             "description": "Don't upgrade symfony to 7.x until we do it ourselves",
-            "matchPackagePrefixes": [
-                "symfony/"
-            ],
-            "allowedVersions": "<7.0.0"
+            "allowedVersions": "<7.0.0",
+            "matchPackageNames": [
+                "symfony/{/,}**"
+            ]
         }
     ]
 }
