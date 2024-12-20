@@ -9,7 +9,7 @@
     "description": "Node packages for jonnyeom.com",
     "engines": {
         "node": "20.x",
-        "yarn": "1.x"
+        "yarn": "1.22.22"
     },
     "bugs": {
         "url": "https://github.com/jonnyeom/jonnyeom/issues"
