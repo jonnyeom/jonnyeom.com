@@ -59,7 +59,7 @@
     },
     "require-dev": {
         "doctrine/coding-standard": "^12.0.0",
-        "phpstan/phpstan": "^1.12.19",
+        "phpstan/phpstan": "^1.12.20",
         "phpstan/phpstan-deprecation-rules": "^1.2.1",
         "phpstan/phpstan-doctrine": "^1.5.7",
         "phpstan/phpstan-symfony": "^1.4.13",
