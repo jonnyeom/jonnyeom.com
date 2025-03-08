@@ -1326,24 +1326,24 @@ adjust-sourcemap-loader@^4.0.0:
     loader-utils "^2.0.0"
     regex-parser "^2.2.11"
 
-ag-charts-types@11.1.0:
-  version "11.1.0"
-  resolved "https://registry.yarnpkg.com/ag-charts-types/-/ag-charts-types-11.1.0.tgz#f651c746e558b17f2e1d4cdaa07565003b174fbc"
-  integrity sha512-9cu2vJuFZNrhf7o5USG5n/meTIJKhJfTIds5ziRV+FI3mT1QZME2nchu4WQnoIE8gft9ACkuhtCUgOyW44A2iQ==
+ag-charts-types@11.1.1:
+  version "11.1.1"
+  resolved "https://registry.yarnpkg.com/ag-charts-types/-/ag-charts-types-11.1.1.tgz#2d5132978248c9422b7129df6d2c3537c1ad99c5"
+  integrity sha512-bRmUcf5VVhEEekhX8Vk0NSwa8Te8YM/zchjyYKR2CX4vDYiwoohM1Jg9RFvbIhVbLC1S6QrPEbx5v2C6RDfpSA==
 
-ag-grid-community@33.1.0:
-  version "33.1.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-33.1.0.tgz#da4518ed4d44b7c8bc4b8834d31de47651690d7d"
-  integrity sha512-xPEgNjRuudfimbGytoDttjlgAjz/N+muq7Tgw2GTMuUeSG0z54kBObvJxhezOEEashVMKBpqb/YhzIE6e+opqQ==
+ag-grid-community@33.1.1:
+  version "33.1.1"
+  resolved "https://registry.yarnpkg.com/ag-grid-community/-/ag-grid-community-33.1.1.tgz#04f0317317ea1d35f128dc1a4f8e70a04aa27774"
+  integrity sha512-CNubIro0ipj4nfQ5WJPG9Isp7UI6MMDvNzrPdHNf3W+IoM8Uv3RUhjEn7xQqpQHuu6o/tMjrqpacipMUkhzqnw==
   dependencies:
-    ag-charts-types "11.1.0"
+    ag-charts-types "11.1.1"
 
-ag-grid-react@^33.1.0:
-  version "33.1.0"
-  resolved "https://registry.yarnpkg.com/ag-grid-react/-/ag-grid-react-33.1.0.tgz#ceb7377559485576270761cfd3aae5435ae4c507"
-  integrity sha512-YB/t6U+P7HPcGY+ukJiVYtQNbDsNVVocDITPANsy21pfh5ojvoNfKEdieC904IPTdgjSMTpNDQJogBzTpMLTCA==
+ag-grid-react@^33.1.1:
+  version "33.1.1"
+  resolved "https://registry.yarnpkg.com/ag-grid-react/-/ag-grid-react-33.1.1.tgz#58346ba67bb595905816775d02dfda40c63ceb5f"
+  integrity sha512-xJ+t2gpqUUwpFqAeDvKz/GLVR4unkOghfQBr8iIY9RAdGFarYFClJavsOa8XPVVUqEB9OIuPVFnOdtocbX0jeA==
   dependencies:
-    ag-grid-community "33.1.0"
+    ag-grid-community "33.1.1"
     prop-types "^15.8.1"
 
 ajv-formats@^2.1.1:
@@ -4578,10 +4578,10 @@ sass-loader@^16.0.5:
   dependencies:
     neo-async "^2.6.2"
 
-sass@^1.85.0:
-  version "1.85.0"
-  resolved "https://registry.yarnpkg.com/sass/-/sass-1.85.0.tgz#0127ef697d83144496401553f0a0e87be83df45d"
-  integrity sha512-3ToiC1xZ1Y8aU7+CkgCI/tqyuPXEmYGJXO7H4uqp0xkLXUqp88rQQ4j1HmP37xSJLbCJPaIiv+cT1y+grssrww==
+sass@^1.85.1:
+  version "1.85.1"
+  resolved "https://registry.yarnpkg.com/sass/-/sass-1.85.1.tgz#18ab0bb48110ae99163778f06445b406148ca0d5"
+  integrity sha512-Uk8WpxM5v+0cMR0XjX9KfRIacmSG86RH4DCCZjLU2rFh5tyutt9siAXJ7G+YfxQ99Q6wrRMbMlVl6KqUms71ag==
   dependencies:
     chokidar "^4.0.0"
     immutable "^5.0.2"
