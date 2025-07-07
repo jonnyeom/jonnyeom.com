@@ -27,7 +27,7 @@
         "@symfony/stimulus-bridge": "^4.0.0",
         "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
         "@symfony/webpack-encore": "^5.0.1",
-        "core-js": "^3.40.0",
+        "core-js": "^3.44.0",
         "imagemin-cli": "^8.0.0",
         "imagemin-pngquant": "^10.0.0",
         "react": "^18.3.1",
