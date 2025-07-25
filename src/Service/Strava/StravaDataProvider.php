@@ -30,7 +30,7 @@ class StravaDataProvider
     }
 
     /**
-     * @return array<int, WeeklyStat>
+     * @return array<int|string, WeeklyStat>
      *
      * @throws AccessTokenMissing
      * @throws Exception
@@ -69,7 +69,7 @@ class StravaDataProvider
     /**
      * @param array<int, mixed> $activities
      *
-     * @return array<int, WeeklyStat>
+     * @return array<int|string, WeeklyStat>
      */
     public static function generateWeeklyStats(array $activities): array
     {
