@@ -7,13 +7,14 @@
     "extends": [
         "config:best-practices",
         "default:automergePatch",
+        "default:maintainLockFilesWeekly",
         "default:separateMultipleMajorReleases",
         "schedule:weekends",
         "schedule:automergeEarlyMondays"
     ],
     "dependencyDashboard": true,
     "timezone": "America/New_York",
-    "rangeStrategy": "update-lockfile",
+    "rangeStrategy": "bump",
     "automergeType": "branch",
     "minimumReleaseAge": "7 days",
     "packageRules": [
