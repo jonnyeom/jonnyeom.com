@@ -16,7 +16,7 @@
     "require": {
         "php": "^8.3.19",
         "ext-intl": "*",
-        "api-platform/core": "^3.4.16",
+        "api-platform/core": "^3.4.17",
         "basvandorst/stravaphp": "^2.0.0",
         "doctrine/annotations": "^2.0.2",
         "doctrine/dbal": "^3.9.4",
