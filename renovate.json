@@ -13,9 +13,9 @@
     ],
     "dependencyDashboard": true,
     "timezone": "America/New_York",
-    "rangeStrategy": "bump",
+    "rangeStrategy": "update-lockfile",
     "automergeType": "branch",
-    "minimumReleaseAge": "14 days",
+    "minimumReleaseAge": "7 days",
     "packageRules": [
         {
             "description": "Don't bump the php constraint in composer.json; we manage that ourselves",
