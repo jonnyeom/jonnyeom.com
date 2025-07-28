@@ -13,6 +13,33 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+  build_php:
+    name: "Build php deps"
+    runs-on: "ubuntu-22.04"
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@v4"
+      - name: Setup PHP
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          php-version: 8.3
+          extensions: curl
+          tools: composer, cs2pr
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Install dependencies
+        run: "composer install --no-progress --prefer-dist --classmap-authoritative --ansi"
+
   phpcs:
     name: "PHP CS"
     runs-on: "ubuntu-22.04"
@@ -28,8 +55,6 @@ jobs:
           php-version: 8.3
           extensions: curl
           tools: composer, cs2pr
-      - name: Install dependencies
-        run: "composer install --no-progress --prefer-dist --classmap-authoritative --ansi"
       - name: Run PHP_CodeSniffer
         run: "vendor/bin/phpcs -nq --report=checkstyle | cs2pr"
 
@@ -49,8 +74,6 @@ jobs:
           extensions: curl
           coverage: none
           ini-values: memory_limit=-1
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --classmap-authoritative --ansi
       - name: Setup Kernel Cache
         run: bin/console cache:warm --env=test
       - name: Run PHPStan analysis
@@ -59,7 +82,7 @@ jobs:
           ./vendor/bin/phpstan analyse -c phpstan.dist.neon --no-interaction --no-progress --ansi
 
   yarn_build:
-    name: "Yarn Build"
+    name: "Build node deps"
     runs-on: "ubuntu-22.04"
     strategy:
       fail-fast: false
@@ -73,7 +96,7 @@ jobs:
           node-version: '22.x'
           cache: 'yarn'
       - name: Install dependencies
-        run: yarn --frozen-lockfile
+        run: yarn --immutable
       - name: Build bundle
         run: yarn build
 
@@ -94,8 +117,6 @@ jobs:
           tools: composer
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist --classmap-authoritative --ansi
       - name: Install PHPUnit
         run: vendor/bin/simple-phpunit --version
       - name: Run PHPUnit tests
