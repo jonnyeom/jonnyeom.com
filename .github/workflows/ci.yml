@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -58,6 +58,22 @@ jobs:
           ./vendor/bin/phpstan --version
           ./vendor/bin/phpstan analyse -c phpstan.dist.neon --no-interaction --no-progress --ansi
 
+  yarn build:
+    name: "Yarn Build"
+    runs-on: "ubuntu-22.04"
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+      - name: Build bundle
+        run: yarn build
+
   phpunit:
     name: "PHPUnit"
     runs-on: "ubuntu-22.04"
@@ -65,7 +81,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -79,17 +95,5 @@ jobs:
         run: composer install --no-progress --prefer-dist --classmap-authoritative --ansi
       - name: Install PHPUnit
         run: vendor/bin/simple-phpunit --version
-      - name: Set Node.js 16.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20.x
-      - name: Run install
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install
-      - name: Build bundle
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: build
       - name: Run PHPUnit tests
         run: vendor/bin/simple-phpunit
