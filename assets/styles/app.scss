@@ -1,70 +1,46 @@
 @charset "utf-8";
 
-// >>> Custom Colors!
-$dark-green: #414D41;
-$drupal-blue: #064771;
-$green: #7F8C7F;
-$light-orange: #E3CDB8;
-$orange: #A6664B;
-$react-blue: #61dafb;
-$solr-orange: #D9411E;
-$strava-orange: #FC4C02;
-$theme-blue: rgb(76, 97, 91);
-$vue-green: #42b983;
-$php-purple: #8892BF;
-$php-dark-purple: #4F5B93;
-
-$blue-200: #93c5fd;
-$cool-grey: #1f2937;
-$cool-grey-100: #f3f4f6;
-$cool-grey-200: #e5e7eb;
-
-$grey-darker:  hsl(0, 0%, 21%);
-$grey-dark:    hsl(0, 0%, 29%);
-$grey:         hsl(0, 0%, 48%);
-$grey-light:   hsl(0, 0%, 71%);
-$grey-lighter: hsl(0, 0%, 86%);
-$grey-lightest: hsl(0, 0%, 93%);
+@use "./theme";
 
 // Override global Sass variables from the /utilities folder
 @use "bulma/sass/utilities" with (
   // Colors!
   $family-primary: 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"',
   $family-monospace: '"JetBrains Mono",ui-monospace,"Roboto Mono",SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace',
-  $primary: $green,
-  $danger: $light-orange,
-  $info: $theme-blue,
-  $link: $orange,
+  $primary: theme.$green,
+  $danger: theme.$light-orange,
+  $info: theme.$theme-blue,
+  $link: theme.$orange,
   $custom-colors: (
-    'drupal-blue': $drupal-blue,
-    'react-blue': $react-blue,
-    'solr-orange': $solr-orange,
-    'strava-orange': $strava-orange,
-    'theme-blue': $theme-blue,
-    'vue-green': $vue-green,
-    'php-purple': $php-purple
+    'drupal-blue': theme.$drupal-blue,
+    'react-blue': theme.$react-blue,
+    'solr-orange': theme.$solr-orange,
+    'strava-orange': theme.$strava-orange,
+    'theme-blue': theme.$theme-blue,
+    'vue-green': theme.$vue-green,
+    'php-purple': theme.$php-purple
   ),
 
   // Initial colors
   $black:        hsl(0, 0%, 4%),
   $black-bis:    hsl(0, 0%, 7%),
   $black-ter:    hsl(0, 0%, 14%),
-  $grey-darker: $grey-darker,
-  $grey-dark: $grey-dark,
-  $grey: $grey,
-  $grey-light: $grey-light,
-  $grey-lighter: $grey-lighter,
-  $grey-lightest: $grey-lightest,
+  $grey-darker: theme.$grey-darker,
+  $grey-dark: theme.$grey-dark,
+  $grey: theme.$grey,
+  $grey-light: theme.$grey-light,
+  $grey-lighter: theme.$grey-lighter,
+  $grey-lightest: theme.$grey-lightest,
 
   // Text colors
-  $text: $cool-grey,
-  $text-weak: $grey-dark,
-  $text-strong: $grey-darker,
+  $text: theme.$cool-grey,
+  $text-weak: theme.$grey-dark,
+  $text-strong: theme.$grey-darker,
 
   // Code colors
-  $code: $cool-grey,
-  $code-background: $cool-grey-100,
-  $pre: $cool-grey,
+  $code: theme.$cool-grey,
+  $code-background: theme.$cool-grey-100,
+  $pre: theme.$cool-grey,
   $pre-background: #f6f8fa,
 );
 @use "bulma/sass/base" with (
@@ -107,7 +83,7 @@ $grey-lightest: hsl(0, 0%, 93%);
 @forward "bulma/sass/themes";
 
 // Import custom sass.
-@import "custom";
+@use "./custom";
 
 // Import Font
 //@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');

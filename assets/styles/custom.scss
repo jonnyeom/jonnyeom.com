@@ -1,9 +1,11 @@
-@use "bulma/sass/utilities/mixins" as mx;
-@use "bulma/sass/utilities/derived-variables" as dv;
-@use "bulma/sass/utilities/initial-variables" as iv;
+@use "../../node_modules/bulma/sass/utilities/mixins" as mx;
+@use "../../node_modules/bulma/sass/utilities/derived-variables" as dv;
+@use "../../node_modules/bulma/sass/utilities/initial-variables" as iv;
+
+@use "./theme";
 
 body {
-  border-top: 12px solid $light-orange;
+  border-top: 12px solid theme.$light-orange;
 }
 
 // Menu
@@ -114,13 +116,13 @@ h4:hover .heading-permalink,
 h5:hover .heading-permalink,
 h6:hover .heading-permalink,
 .heading-permalink:hover {
-  color: $blue-200;
+  color: theme.$blue-200;
   text-decoration: none;
   visibility: visible;
 }
 
 .box.php {
-  background-color: $php-purple;
+  background-color: theme.$php-purple;
   color: iv.$white;
   font-weight: 500;
 
@@ -128,7 +130,7 @@ h6:hover .heading-permalink,
     color: iv.$black;
     &:hover,
     &:focus {
-      color: $php-dark-purple;
+      color: theme.$php-dark-purple;
     }
   }
 }
