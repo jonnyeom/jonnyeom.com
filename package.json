@@ -26,7 +26,7 @@
         "@hotwired/stimulus": "3.2.2",
         "@symfony/stimulus-bridge": "4.0.1",
         "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
-        "@symfony/webpack-encore": "5.0.1",
+        "@symfony/webpack-encore": "5.1.0",
         "core-js": "3.40.0",
         "imagemin-cli": "8.0.0",
         "imagemin-pngquant": "10.0.0",
