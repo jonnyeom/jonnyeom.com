@@ -33,7 +33,6 @@
         "spatie/yaml-front-matter": "^2.1.0",
         "symfony/apache-pack": "^1.0.1",
         "symfony/asset": "6.4.13",
-        "symfony/asset-mapper": "6.4.20",
         "symfony/console": "6.4.20",
         "symfony/dotenv": "6.4.16",
         "symfony/expression-language": "6.4.13",
@@ -99,8 +98,7 @@
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
             "assets:install --symlink --relative %PUBLIC_DIR%": "symfony-cmd",
-            "assets:install %PUBLIC_DIR%": "symfony-cmd",
-            "importmap:install": "symfony-cmd"
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
         },
         "post-install-cmd": [
             "@auto-scripts"
