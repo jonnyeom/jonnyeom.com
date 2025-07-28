@@ -13,15 +13,15 @@ Run the built in dev server.
 symfony serve
 ```
 
-In the project directory, you can run:
+Vite dev server with HMR
 
 #### `yarn dev`
 
-This will recompile the frontend assets and watch for sass file changes.
+Vite Build
 
 #### `yarn build`
 
-This will recompile the frontend assets, optimized for production.
+Optimize images for project images
 
 #### `./node_modules/imagemin-cli/cli.js --plugin.pngquant.quality={0.6,0.8} src/images/projects/* --out-dir=public/images/projects`
 
