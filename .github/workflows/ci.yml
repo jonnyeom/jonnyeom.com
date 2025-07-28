@@ -39,6 +39,11 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
       - name: Install dependencies
         run: "composer install --no-progress --prefer-dist --classmap-authoritative --ansi"
+      - name: Cache vendor for jobs
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ github.sha }}
 
   phpcs:
     name: "PHP CS"
@@ -55,6 +60,11 @@ jobs:
           php-version: 8.3
           extensions: curl
           tools: composer, cs2pr
+      - name: Retrieve cached vendor folder
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ github.sha }}
       - name: Run PHP_CodeSniffer
         run: "vendor/bin/phpcs -nq --report=checkstyle | cs2pr"
 
@@ -74,6 +84,11 @@ jobs:
           extensions: curl
           coverage: none
           ini-values: memory_limit=-1
+      - name: Retrieve cached vendor folder
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ github.sha }}
       - name: Setup Kernel Cache
         run: bin/console cache:warm --env=test
       - name: Run PHPStan analysis
@@ -88,6 +103,11 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Retrieve cached vendor folder
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ github.sha }}
       - name: Enable Corepack
         run: corepack enable
       - name: Use Node.js
@@ -115,6 +135,11 @@ jobs:
           extensions: curl
           ini-values: memory_limit=-1
           tools: composer
+      - name: Retrieve cached vendor folder
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ github.sha }}
       - name: Setup problem matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
       - name: Install PHPUnit
