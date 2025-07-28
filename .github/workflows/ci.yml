@@ -13,8 +13,8 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-  build_php:
-    name: "Build php deps"
+  build:
+    name: "Build deps"
     runs-on: "ubuntu-22.04"
     strategy:
       fail-fast: false
@@ -48,6 +48,7 @@ jobs:
   phpcs:
     name: "PHP CS"
     runs-on: "ubuntu-22.04"
+    needs: build
     strategy:
       fail-fast: false
     steps:
@@ -71,6 +72,7 @@ jobs:
   phpstan:
     name: "PHPStan"
     runs-on: "ubuntu-22.04"
+    needs: build
     strategy:
       fail-fast: false
     steps:
@@ -99,6 +101,7 @@ jobs:
   yarn_build:
     name: "Build node deps"
     runs-on: "ubuntu-22.04"
+    needs: build
     strategy:
       fail-fast: false
     steps:
@@ -123,6 +126,7 @@ jobs:
   phpunit:
     name: "PHPUnit"
     runs-on: "ubuntu-22.04"
+    needs: build
     strategy:
       fail-fast: false
     steps:
