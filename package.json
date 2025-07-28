@@ -8,9 +8,9 @@
     "author": "Jonny Eom",
     "description": "Node packages for jonnyeom.com",
     "engines": {
-        "node": "20.x",
-        "yarn": "1.22.22"
+        "node": "22.x"
     },
+    "packageManager": "yarn@4.9.2",
     "bugs": {
         "url": "https://github.com/jonnyeom/jonnyeom/issues"
     },
