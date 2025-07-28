@@ -34,14 +34,6 @@ jonnyeom.db
 /.php-cs-fixer.cache
 /.php-cs-fixer.dist.php
 ###< friendsofphp/php-cs-fixer ###
-
-###> symfony/webpack-encore-bundle ###
-/node_modules/
-/public/build/
-npm-debug.log
-yarn-error.log
-###< symfony/webpack-encore-bundle ###
-
 ###> phpunit/phpunit ###
 /phpunit.xml
 .phpunit.result.cache
@@ -60,3 +52,8 @@ phpstan.neon
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> pentatrion/vite-bundle ###
+/node_modules/
+/public/build/
+###< pentatrion/vite-bundle ###
