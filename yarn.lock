@@ -870,6 +870,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@symfony/ux-react@file:vendor/symfony/ux-react/assets::locator=jonnyeom.com%40workspace%3A.":
+  version: 2.27.0
+  resolution: "@symfony/ux-react@file:vendor/symfony/ux-react/assets#vendor/symfony/ux-react/assets::hash=e194c0&locator=jonnyeom.com%40workspace%3A."
+  peerDependencies:
+    "@hotwired/stimulus": ^3.0.0
+    react: ^18.0
+    react-dom: ^18.0
+  checksum: 10c0/30027e1256b24fdc571a3805db13a287aff8c3b686996429cb128d790eaf46be73420885a24f8208ceaae84c956711b00ec5a678b35c22fb38c7702af6fe465b
+  languageName: node
+  linkType: hard
+
 "@tokenizer/token@npm:^0.3.0":
   version: 0.3.0
   resolution: "@tokenizer/token@npm:0.3.0"
@@ -3347,6 +3358,7 @@ __metadata:
   dependencies:
     "@hotwired/stimulus": "npm:3.2.2"
     "@symfony/stimulus-bridge": "npm:4.0.1"
+    "@symfony/ux-react": "file:vendor/symfony/ux-react/assets"
     "@vitejs/plugin-react": "npm:^4.7.0"
     ag-grid-react: "npm:^33.3.2"
     bulma: "npm:^1.0.4"
