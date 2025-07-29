@@ -872,12 +872,12 @@ __metadata:
 
 "@symfony/ux-react@file:vendor/symfony/ux-react/assets::locator=jonnyeom.com%40workspace%3A.":
   version: 2.27.0
-  resolution: "@symfony/ux-react@file:vendor/symfony/ux-react/assets#vendor/symfony/ux-react/assets::hash=e194c0&locator=jonnyeom.com%40workspace%3A."
+  resolution: "@symfony/ux-react@file:vendor/symfony/ux-react/assets#vendor/symfony/ux-react/assets::hash=4f6818&locator=jonnyeom.com%40workspace%3A."
   peerDependencies:
     "@hotwired/stimulus": ^3.0.0
     react: ^18.0
     react-dom: ^18.0
-  checksum: 10c0/30027e1256b24fdc571a3805db13a287aff8c3b686996429cb128d790eaf46be73420885a24f8208ceaae84c956711b00ec5a678b35c22fb38c7702af6fe465b
+  checksum: 10c0/bf38be8c9767f82620e5eebdc305746e18ec71de1e970d6e0ce4a7169eda8c2e220ebc58591d0f0cd835ac239cef8df1168cb544e09c69344565e8f0642cb8d6
   languageName: node
   linkType: hard
 
