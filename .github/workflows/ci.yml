@@ -25,7 +25,7 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: none
-          php-version: 8.3
+          php-version: 8.4
           extensions: curl
           tools: composer, cs2pr
       - name: Enable Corepack
@@ -74,7 +74,7 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           coverage: none
-          php-version: 8.3
+          php-version: 8.4
           extensions: curl
           tools: composer, cs2pr
       - name: Retrieve cached vendor folder
@@ -97,7 +97,7 @@ jobs:
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
-          php-version: 8.3
+          php-version: 8.4
           tools: composer
           extensions: curl
           coverage: none
@@ -126,7 +126,7 @@ jobs:
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
-          php-version: 8.3
+          php-version: 8.4
           extensions: curl
           ini-values: memory_limit=-1
           tools: composer
