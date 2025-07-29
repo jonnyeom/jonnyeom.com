@@ -52,7 +52,7 @@ jobs:
           path: vendor
           key: ${{ github.sha }}-vendor
       - name: Install dependencies
-        run: yarn --immutable
+        run: yarn install
       - name: Build bundle
         run: yarn build
       - name: Cache build for jobs
