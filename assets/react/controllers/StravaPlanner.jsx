@@ -1,10 +1,9 @@
-// Theme
+import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
 import { AgGridReact } from "ag-grid-react";
-// React Grid Logic
-import "ag-grid-community/styles/ag-grid.css";
-// Core CSS
-import "ag-grid-community/styles/ag-theme-quartz.css";
 import React, { useState } from "react";
+
+// Register all Community features
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Create new GridExample component
 const GridExample = () => {
@@ -39,6 +38,7 @@ const GridExample = () => {
             style={{ width: "100%", height: "100%" }}
         >
             <AgGridReact
+                theme={themeQuartz}
                 rowData={rowData}
                 columnDefs={colDefs}
                 defaultColDef={defaultColDef}
