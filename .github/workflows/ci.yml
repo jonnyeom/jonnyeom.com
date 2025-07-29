@@ -15,7 +15,6 @@ concurrency:
 jobs:
   build:
     name: "Build deps"
-    runs-on: "ubuntu-22.04"
     strategy:
       fail-fast: false
     steps:
@@ -33,7 +32,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: '22.17.1'
           cache: 'yarn'
       - name: Get composer cache directory
         id: composer-cache
