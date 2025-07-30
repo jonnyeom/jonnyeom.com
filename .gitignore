@@ -4,13 +4,9 @@
 jonnyeom.db
 /bin/.phpunit
 
-### Yarn
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+### Node
+/.pnp
+.pnp.js
 
 ###> symfony/framework-bundle ###
 /.env.local
