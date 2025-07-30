@@ -30,8 +30,6 @@ jobs:
           tools: composer, cs2pr
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
