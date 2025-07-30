@@ -28,6 +28,10 @@ jobs:
           php-version: 8.4
           extensions: curl
           tools: composer, cs2pr
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -49,10 +53,6 @@ jobs:
         with:
           path: vendor
           key: ${{ github.sha }}-vendor
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Install pnpm
-        run: corepack use pnpm@10.13.1
       - name: Install node dependencies
         run: pnpm install
       - name: Build bundle
