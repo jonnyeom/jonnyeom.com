@@ -30,6 +30,8 @@ jobs:
           tools: composer, cs2pr
       - name: Enable Corepack
         run: corepack enable
+      - name: Install pnpm
+        run: corepack use pnpm@10.13.1
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
