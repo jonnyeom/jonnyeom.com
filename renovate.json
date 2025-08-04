@@ -7,7 +7,6 @@
     "extends": [
         "config:best-practices",
         "default:automergePatch",
-        "default:maintainLockFilesWeekly",
         "default:separateMultipleMajorReleases",
         "schedule:weekends",
         "schedule:automergeEarlyMondays"
