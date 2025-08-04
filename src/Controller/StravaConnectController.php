@@ -31,7 +31,7 @@ class StravaConnectController extends AbstractController
         $oauth = $this->clientProvider->getOAuthClient();
 
         return new RedirectResponse($oauth->getAuthorizationUrl([
-            'scope' => ['read_all', 'profile:read_all', 'activity:read_all'],
+            'scope' => ['read', 'activity:read'],
         ]));
     }
 
