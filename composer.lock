@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c64ba41d6fce52e175d6edbc275c57ef",
+    "content-hash": "6ee0407ca92a479e4fe86d40a033e56c",
     "packages": [
         {
             "name": "api-platform/core",
@@ -2653,35 +2653,26 @@
         },
         {
             "name": "pentatrion/vite-bundle",
-            "version": "v8.2.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lhapaipai/vite-bundle.git",
-                "reference": "e4cc14b4586cff1d55f51f6eebe6f62a0d9d7b17"
+                "reference": "bbb4683beed5cf1f5c8af17e0f677964ce3fa21b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lhapaipai/vite-bundle/zipball/e4cc14b4586cff1d55f51f6eebe6f62a0d9d7b17",
-                "reference": "e4cc14b4586cff1d55f51f6eebe6f62a0d9d7b17",
+                "url": "https://api.github.com/repos/lhapaipai/vite-bundle/zipball/bbb4683beed5cf1f5c8af17e0f677964ce3fa21b",
+                "reference": "bbb4683beed5cf1f5c8af17e0f677964ce3fa21b",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.0",
-                "symfony/asset": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/config": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/dependency-injection": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/framework-bundle": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/http-client": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/http-kernel": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/twig-bundle": "^4.4 || ^5.0 || ^6.0 || ^7.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.9",
-                "phpstan/phpstan": "^1.8",
-                "phpstan/phpstan-symfony": "^1.3",
-                "phpunit/phpunit": "^9.5",
-                "symfony/phpunit-bridge": "^4.4 || ^5.0 || ^6.0 || ^7.0",
-                "symfony/web-link": "^4.4 || ^5.0 || ^6.0 || ^7.0"
+                "php": "^7.2.5 || ^8.0",
+                "symfony/config": "^4.4 || ^5.0 || ^6.0",
+                "symfony/dependency-injection": "^4.4 || ^5.0 || ^6.0",
+                "symfony/framework-bundle": "^4.4 || ^5.0 || ^6.0",
+                "symfony/http-client": "^4.4 || ^5.0 || ^6.0",
+                "symfony/http-kernel": "^4.4 || ^5.0 || ^6.0",
+                "symfony/twig-bundle": "^4.4 || ^5.0 || ^6.0"
             },
             "type": "symfony-bundle",
             "autoload": {
@@ -2708,9 +2699,9 @@
             ],
             "support": {
                 "issues": "https://github.com/lhapaipai/vite-bundle/issues",
-                "source": "https://github.com/lhapaipai/vite-bundle/tree/v8.2.0"
+                "source": "https://github.com/lhapaipai/vite-bundle/tree/v1.2.0"
             },
-            "time": "2025-06-24T10:50:50+00:00"
+            "time": "2022-02-20T20:07:53+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
