@@ -19,7 +19,7 @@
         "api-platform/core": "^3.4.17",
         "basvandorst/stravaphp": "^2.0.0",
         "doctrine/annotations": "^2.0.2",
-        "doctrine/dbal": "^3.10.1",
+        "doctrine/dbal": "^3.10.2",
         "doctrine/doctrine-bundle": "^2.15.2",
         "doctrine/doctrine-migrations-bundle": "^3.4.2",
         "doctrine/orm": "^3.5.2",
