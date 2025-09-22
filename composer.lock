@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b8ebb4d7863a2c2657a1d69452705ded",
+    "content-hash": "b7d66b0dddf6469ba07b7441e283ae67",
     "packages": [
         {
             "name": "api-platform/core",
@@ -2653,16 +2653,16 @@
         },
         {
             "name": "pentatrion/vite-bundle",
-            "version": "v8.2.0",
+            "version": "v8.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lhapaipai/vite-bundle.git",
-                "reference": "e4cc14b4586cff1d55f51f6eebe6f62a0d9d7b17"
+                "reference": "be23b5ea89e38a68d4db787333c4d592d8a5020f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lhapaipai/vite-bundle/zipball/e4cc14b4586cff1d55f51f6eebe6f62a0d9d7b17",
-                "reference": "e4cc14b4586cff1d55f51f6eebe6f62a0d9d7b17",
+                "url": "https://api.github.com/repos/lhapaipai/vite-bundle/zipball/be23b5ea89e38a68d4db787333c4d592d8a5020f",
+                "reference": "be23b5ea89e38a68d4db787333c4d592d8a5020f",
                 "shasum": ""
             },
             "require": {
@@ -2708,9 +2708,9 @@
             ],
             "support": {
                 "issues": "https://github.com/lhapaipai/vite-bundle/issues",
-                "source": "https://github.com/lhapaipai/vite-bundle/tree/v8.2.0"
+                "source": "https://github.com/lhapaipai/vite-bundle/tree/v8.2.1"
             },
-            "time": "2025-06-24T10:50:50+00:00"
+            "time": "2025-08-16T20:29:55+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
@@ -11859,7 +11859,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3.24",
+        "php": "^8.3.25",
         "ext-intl": "*"
     },
     "platform-dev": {},
