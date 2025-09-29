@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b7d66b0dddf6469ba07b7441e283ae67",
+    "content-hash": "4700699b7bcf42f6641b01c60ee595cd",
     "packages": [
         {
             "name": "api-platform/core",
@@ -2653,16 +2653,16 @@
         },
         {
             "name": "pentatrion/vite-bundle",
-            "version": "v8.2.1",
+            "version": "v8.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lhapaipai/vite-bundle.git",
-                "reference": "be23b5ea89e38a68d4db787333c4d592d8a5020f"
+                "reference": "3d8bc20bf9561b876e6645ac12d4682135f26623"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lhapaipai/vite-bundle/zipball/be23b5ea89e38a68d4db787333c4d592d8a5020f",
-                "reference": "be23b5ea89e38a68d4db787333c4d592d8a5020f",
+                "url": "https://api.github.com/repos/lhapaipai/vite-bundle/zipball/3d8bc20bf9561b876e6645ac12d4682135f26623",
+                "reference": "3d8bc20bf9561b876e6645ac12d4682135f26623",
                 "shasum": ""
             },
             "require": {
@@ -2708,9 +2708,9 @@
             ],
             "support": {
                 "issues": "https://github.com/lhapaipai/vite-bundle/issues",
-                "source": "https://github.com/lhapaipai/vite-bundle/tree/v8.2.1"
+                "source": "https://github.com/lhapaipai/vite-bundle/tree/v8.2.2"
             },
-            "time": "2025-08-16T20:29:55+00:00"
+            "time": "2025-09-20T17:12:07+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
