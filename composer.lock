@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9e7317e248c6388b75ee13b60750c2a4",
+    "content-hash": "e2c478c8957dc799f0a080f073b59f52",
     "packages": [
         {
             "name": "api-platform/core",
@@ -7614,32 +7614,32 @@
         },
         {
             "name": "symfony/stimulus-bundle",
-            "version": "v2.27.0",
+            "version": "v2.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/stimulus-bundle.git",
-                "reference": "defaeb91bd366f9f43dbe54dbdfd9bc3c4138814"
+                "reference": "c5ea8ee2ccd45447b7f4b6b82f704ee5e76127f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/stimulus-bundle/zipball/defaeb91bd366f9f43dbe54dbdfd9bc3c4138814",
-                "reference": "defaeb91bd366f9f43dbe54dbdfd9bc3c4138814",
+                "url": "https://api.github.com/repos/symfony/stimulus-bundle/zipball/c5ea8ee2ccd45447b7f4b6b82f704ee5e76127f0",
+                "reference": "c5ea8ee2ccd45447b7f4b6b82f704ee5e76127f0",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.1",
-                "symfony/config": "^5.4|^6.0|^7.0",
-                "symfony/dependency-injection": "^5.4|^6.0|^7.0",
+                "symfony/config": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/dependency-injection": "^5.4|^6.0|^7.0|^8.0",
                 "symfony/deprecation-contracts": "^2.0|^3.0",
-                "symfony/finder": "^5.4|^6.0|^7.0",
-                "symfony/http-kernel": "^5.4|^6.0|^7.0",
+                "symfony/finder": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/http-kernel": "^5.4|^6.0|^7.0|^8.0",
                 "twig/twig": "^2.15.3|^3.8"
             },
             "require-dev": {
-                "symfony/asset-mapper": "^6.3|^7.0",
-                "symfony/framework-bundle": "^5.4|^6.0|^7.0",
-                "symfony/phpunit-bridge": "^5.4|^6.0|^7.0",
-                "symfony/twig-bundle": "^5.4|^6.0|^7.0",
+                "symfony/asset-mapper": "^6.3|^7.0|^8.0",
+                "symfony/framework-bundle": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/phpunit-bridge": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/twig-bundle": "^5.4|^6.0|^7.0|^8.0",
                 "zenstruck/browser": "^1.4"
             },
             "type": "symfony-bundle",
@@ -7663,7 +7663,7 @@
                 "symfony-ux"
             ],
             "support": {
-                "source": "https://github.com/symfony/stimulus-bundle/tree/v2.27.0"
+                "source": "https://github.com/symfony/stimulus-bundle/tree/v2.31.0"
             },
             "funding": [
                 {
@@ -7675,11 +7675,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-06-22T19:07:55+00:00"
+            "time": "2025-09-24T13:27:42+00:00"
         },
         {
             "name": "symfony/stopwatch",
@@ -8217,16 +8221,16 @@
         },
         {
             "name": "symfony/ux-react",
-            "version": "v2.28.2",
+            "version": "v2.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/ux-react.git",
-                "reference": "844b5d99a2e5295dab1a3ffec36bb1e0e55a6607"
+                "reference": "57d3a160e7275d648a8d7cd39aef9d6e9e375f82"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ux-react/zipball/844b5d99a2e5295dab1a3ffec36bb1e0e55a6607",
-                "reference": "844b5d99a2e5295dab1a3ffec36bb1e0e55a6607",
+                "url": "https://api.github.com/repos/symfony/ux-react/zipball/57d3a160e7275d648a8d7cd39aef9d6e9e375f82",
+                "reference": "57d3a160e7275d648a8d7cd39aef9d6e9e375f82",
                 "shasum": ""
             },
             "require": {
@@ -8234,12 +8238,12 @@
                 "symfony/stimulus-bundle": "^2.9.1"
             },
             "require-dev": {
-                "symfony/asset-mapper": "^6.3|^7.0",
-                "symfony/finder": "^5.4|^6.0|^7.0",
-                "symfony/framework-bundle": "^5.4|^6.0|^7.0",
-                "symfony/phpunit-bridge": "^5.4|^6.0|^7.0",
-                "symfony/twig-bundle": "^5.4|^6.0|^7.0",
-                "symfony/var-dumper": "^5.4|^6.0|^7.0"
+                "symfony/asset-mapper": "^6.3|^7.0|^8.0",
+                "symfony/finder": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/framework-bundle": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/phpunit-bridge": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/twig-bundle": "^5.4|^6.0|^7.0|^8.0",
+                "symfony/var-dumper": "^5.4|^6.0|^7.0|^8.0"
             },
             "type": "symfony-bundle",
             "extra": {
@@ -8273,7 +8277,7 @@
                 "symfony-ux"
             ],
             "support": {
-                "source": "https://github.com/symfony/ux-react/tree/v2.28.2"
+                "source": "https://github.com/symfony/ux-react/tree/v2.31.0"
             },
             "funding": [
                 {
@@ -8293,7 +8297,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-29T07:04:28+00:00"
+            "time": "2025-10-16T07:24:06+00:00"
         },
         {
             "name": "symfony/validator",
@@ -11866,7 +11870,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3.26",
+        "php": "^8.3.27",
         "ext-intl": "*"
     },
     "platform-dev": {},
