@@ -42,20 +42,13 @@
             ]
         },
         {
-            "groupName": "doctrine packages",
-            "groupSlug": "doctrine",
-            "matchPackageNames": [
-                "/doctrine/annotations/"
-            ]
-        },
-        {
             "matchPackageNames": [
                 "dealerdirect/phpcodesniffer-composer-installer",
                 "doctrine/coding-standard",
                 "rector/rector",
                 "squizlabs/php_codesniffer",
                 "/^phpstan/phpstan$/",
-                "//phpstan-/",
+                "/phpstan-/",
                 "/phpstan/phpdoc-parser/",
                 "/phpunit/phpunit/"
             ],
