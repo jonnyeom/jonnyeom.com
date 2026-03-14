@@ -1,0 +1,11 @@
+.git
+.gitignore
+node_modules
+vendor
+var/cache
+var/log
+.env
+.env.*
+!.env.test
+coverage
+phpunit.xml
