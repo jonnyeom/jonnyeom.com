@@ -32,7 +32,7 @@ importers:
         version: file:vendor/symfony/ux-react/assets(@hotwired/stimulus@3.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@vitejs/plugin-react':
         specifier: 4.7.0
-        version: 4.7.0(vite@7.0.6(@types/node@25.5.0)(sass@1.89.2))
+        version: 4.7.0(vite@7.0.8(@types/node@25.5.0)(sass@1.89.2))
       imagemin-cli:
         specifier: 8.0.0
         version: 8.0.0
@@ -49,11 +49,11 @@ importers:
         specifier: 1.89.2
         version: 1.89.2
       vite:
-        specifier: 7.0.6
-        version: 7.0.6(@types/node@25.5.0)(sass@1.89.2)
+        specifier: 7.0.8
+        version: 7.0.8(@types/node@25.5.0)(sass@1.89.2)
       vite-plugin-symfony:
         specifier: 8.2.2
-        version: 8.2.2(vite@7.0.6(@types/node@25.5.0)(sass@1.89.2))
+        version: 8.2.2(vite@7.0.8(@types/node@25.5.0)(sass@1.89.2))
 
 packages:
 
@@ -2247,8 +2247,8 @@ packages:
     peerDependencies:
       vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0
 
-  vite@7.0.6:
-    resolution: {integrity: sha512-MHFiOENNBd+Bd9uvc8GEsIzdkn1JxMmEeYX35tI3fv0sJBUTfW5tQsoaOwuY4KhBI09A3dUJ/DXf2yxPVPUceg==}
+  vite@7.0.8:
+    resolution: {integrity: sha512-cJBdq0/u+8rgstg9t7UkBilf8ipLmeXJO30NxD5HAHOivnj10ocV8YtR/XBvd2wQpN3TmcaxNKaHX3tN7o5F5A==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2753,7 +2753,7 @@ snapshots:
 
   '@types/webpack-env@1.18.8': {}
 
-  '@vitejs/plugin-react@4.7.0(vite@7.0.6(@types/node@25.5.0)(sass@1.89.2))':
+  '@vitejs/plugin-react@4.7.0(vite@7.0.8(@types/node@25.5.0)(sass@1.89.2))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -2761,7 +2761,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 7.0.6(@types/node@25.5.0)(sass@1.89.2)
+      vite: 7.0.8(@types/node@25.5.0)(sass@1.89.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -4567,17 +4567,17 @@ snapshots:
       spdx-expression-parse: 3.0.1
     optional: true
 
-  vite-plugin-symfony@8.2.2(vite@7.0.6(@types/node@25.5.0)(sass@1.89.2)):
+  vite-plugin-symfony@8.2.2(vite@7.0.8(@types/node@25.5.0)(sass@1.89.2)):
     dependencies:
       debug: 4.4.3
       fast-glob: 3.3.3
       picocolors: 1.1.1
       sirv: 3.0.2
-      vite: 7.0.6(@types/node@25.5.0)(sass@1.89.2)
+      vite: 7.0.8(@types/node@25.5.0)(sass@1.89.2)
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.0.6(@types/node@25.5.0)(sass@1.89.2):
+  vite@7.0.8(@types/node@25.5.0)(sass@1.89.2):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
