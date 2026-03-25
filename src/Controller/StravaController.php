@@ -28,9 +28,7 @@ class StravaController extends BaseController
             $runsByWeek = $stravaDataProvider->getDataByWeek();
         } catch (AccessTokenMissing) {
             return $this->render('strava/connect.html.twig', ['error' => 'No Access token :(']);
-        } catch (IdentityProviderException | Throwable $e) {
-            // something went wrong!
-            // probably you should return the reason to the user.
+        } catch (IdentityProviderException $e) {
             $logger->error($e->getMessage());
 
             $this->addFlash(
@@ -39,6 +37,13 @@ class StravaController extends BaseController
             );
 
             return $this->redirectToRoute('strava_logout');
+        } catch (Throwable $e) {
+            $logger->error($e->getMessage());
+
+            $this->addFlash(
+                'error',
+                'Application error: ' . $e->getMessage(),
+            );
         }
 
         return $this->render('strava/metrics.html.twig', ['activitiesByWeek' => array_values(array_reverse($runsByWeek))]);
