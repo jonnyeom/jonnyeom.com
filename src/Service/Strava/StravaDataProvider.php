@@ -42,7 +42,7 @@ class StravaDataProvider
 
         $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
 
-        $dataBeginning = (string) strtotime('30 October 2023');
+        $dataBeginning = (string) strtotime('30 April 2025');
 
         $page        = 1;
         $activities  = [];

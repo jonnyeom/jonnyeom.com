@@ -54,7 +54,10 @@
 );
 @forward "bulma/sass/elements/block";
 @forward "bulma/sass/elements/box";
-@forward "bulma/sass/elements/button";
+@use "bulma/sass/elements/button" with (
+  $button-ghost-color: theme.$cool-grey,
+  $button-ghost-hover-decoration: none,
+);
 @use "bulma/sass/elements/content" with (
   $content-heading-weight: 600,
 );
@@ -66,6 +69,9 @@
 @forward "bulma/sass/elements/tag";
 @forward "bulma/sass/elements/title";
 @forward "bulma/sass/components/card";
+@use "bulma/sass/components/dropdown" with (
+  $dropdown-menu-min-width: 8rem,
+);
 @forward "bulma/sass/components/menu";
 @forward "bulma/sass/components/navbar";
 @forward "bulma/sass/components/tabs";

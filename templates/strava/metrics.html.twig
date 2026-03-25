@@ -27,7 +27,36 @@
                             {% for day, dailyStat in weeklyStat %}
                                 <td>
                                     {% if dailyStat.miles > 0 %}
-                                        {{ dailyStat.miles }}
+                                        <div class="dropdown is-hoverable">
+                                            <div class="dropdown-trigger">
+                                                <p class="" aria-haspopup="true" aria-controls="dropdown-menu-4">
+                                                    <span class="icon-text">
+                                                      <span>{{ dailyStat.miles }}</span>
+                                                        {% for sport_icon in dailyStat.activitiesIcons %}
+                                                            <span class="icon">
+                                                                <i class="fas fa-{{ sport_icon }}"></i>
+                                                            </span>
+                                                        {% endfor %}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                            {% if dailyStat.activities|length > 1 %}
+                                                <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+                                                    <div class="dropdown-content has-text-left">
+                                                        {% for activity in dailyStat.activities %}
+                                                            <div class="dropdown-item">
+                                                                <span class="icon-text">
+                                                                  <span>{{ (activity.distance/1609.34)|round(1) }}</span>
+                                                                  <span class="icon">
+                                                                    <i class="fas fa-{{ activity.sport_icon }}"></i>
+                                                                  </span>
+                                                                </span>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </div>
                                     {% endif %}
                                 </td>
                             {% endfor %}
