@@ -44,6 +44,8 @@ class StravaController extends BaseController
                 'error',
                 'Application error: ' . $e->getMessage(),
             );
+
+            $runsByWeek = [];
         }
 
         return $this->render('strava/metrics.html.twig', ['activitiesByWeek' => array_values(array_reverse($runsByWeek))]);

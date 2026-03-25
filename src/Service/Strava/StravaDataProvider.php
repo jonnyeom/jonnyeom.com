@@ -90,10 +90,6 @@ class StravaDataProvider
 
         foreach ($activities as $item) {
             $date = new DateTime($item['start_date_local']);
-            if (! $weeklyStats[$date->format('o.W')]) {
-                 continue;
-            }
-
             $weeklyStats[$date->format('o.W')]->addStravaActivity($item);
         }
 

@@ -6,10 +6,9 @@ namespace App\Model\Strava;
 
 use function array_map;
 use function array_unique;
-use function in_array;
 use function round;
 
-/** @phpstan-type Activity array{sport_type: string, sport_icon: float, distance: float, start_date_local: string} */
+/** @phpstan-type Activity array{sport_type: string, distance: float, start_date_local: string} */
 class DailyStat
 {
     /** @var array<int, Activity> $activities */
@@ -33,39 +32,40 @@ class DailyStat
     /** @return string[] */
     public function getActivitiesIcons(): array
     {
-        return array_unique(array_map(static fn (array $activity) => $activity['sport_icon'], $this->activities));
+        return array_unique(array_map(fn (array $activity) => $this->getSportIcon($activity['sport_type']), $this->activities));
     }
 
     /** @param Activity $activity */
     public function addActivity(array $activity): void
     {
-        if (! in_array($activity['sport_type'], ['Tennis', 'Swim', 'Bike', 'Run'], true)) {
-            return;
-        }
-
         switch ($activity['sport_type']) {
             case 'Tennis':
-                $this->distance        += $activity['distance'] * 2;
-                $activity['sport_icon'] = 'table-tennis-paddle-ball';
+                $this->distance += $activity['distance'] * 2;
                 break;
             case 'Swim':
-                $this->distance        += $activity['distance'] * 4;
-                $activity['sport_icon'] = 'person-swimming';
+                $this->distance += $activity['distance'] * 4;
                 break;
             case 'Bike':
-                $this->distance        += $activity['distance'] / 3;
-                $activity['sport_icon'] = 'person-biking';
+                $this->distance += $activity['distance'] / 3;
                 break;
             case 'Run':
-                $this->distance        += $activity['distance'];
-                $activity['sport_icon'] = 'person-running';
+                $this->distance += $activity['distance'];
                 break;
             default:
-                // Technically, this should never happen.
-                $activity['sport_icon'] = 'strava';
         }
 
         $this->activities[] = $activity;
+    }
+
+    private function getSportIcon(string $sportType): string
+    {
+        return match ($sportType) {
+            'Tennis' => 'table-tennis-paddle-ball',
+            'Swim' => 'person-swimming',
+            'Bike' => 'person-biking',
+            'Run' => 'person-running',
+            default => 'strava',
+        };
     }
 
     public function getDistance(): float
