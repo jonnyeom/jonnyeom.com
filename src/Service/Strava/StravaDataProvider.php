@@ -80,17 +80,21 @@ class StravaDataProvider
         do {
             $firstDayOfWeek = date('Y-m-d', strtotime('monday this week', $weekOfActivity->getTimestamp()));
 
-            $weeklyStats[$weekOfActivity->format('Y.W')] = new WeeklyStat($firstDayOfWeek);
+            $weeklyStats[$weekOfActivity->format('o.W')] = new WeeklyStat($firstDayOfWeek);
             $weekOfActivity                              = $weekOfActivity->modify('+ 1 week');
         } while (
-            $weekOfActivity->format('Y') < $today->format('Y') ||
-            ($weekOfActivity->format('Y') === $today->format('Y') &&
+            $weekOfActivity->format('o') < $today->format('o') ||
+            ($weekOfActivity->format('o') === $today->format('o') &&
                 $weekOfActivity->format('W') <= $today->format('W'))
         );
 
         foreach ($activities as $item) {
             $date = new DateTime($item['start_date_local']);
-            $weeklyStats[$date->format('Y.W')]->addStravaActivity($item);
+            if (! $weeklyStats[$date->format('o.W')]) {
+                 continue;
+            }
+
+            $weeklyStats[$date->format('o.W')]->addStravaActivity($item);
         }
 
         return $weeklyStats;
