@@ -27,7 +27,7 @@
         {
             "matchPackageNames": [
                 "league/commonmark",
-                "leogout/seo-bundle",
+                "rami/seo-bundle",
                 "nelmio/cors-bundle",
                 "/spatie/"
             ],

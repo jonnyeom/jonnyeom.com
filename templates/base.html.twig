@@ -18,7 +18,8 @@
     <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {{ leogout_seo() }}
+    {{ meta_tags(title: seo_title, description: seo_description, keywords: seo_keywords, image: seo_image, canonical: seo_url) }}
+    {{ open_graph(title: seo_title, description: seo_description, url: seo_url, image: seo_image) }}
 
     {% block stylesheets %}
         <link rel="icon"
