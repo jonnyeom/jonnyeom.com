@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "805b312c4a0b2dc8ba8760c4a47f5a82",
+    "content-hash": "602067bbf67ea63a51f467f4eaf4985d",
     "packages": [
         {
             "name": "api-platform/core",
@@ -2285,56 +2285,6 @@
             "time": "2025-11-25T22:17:17+00:00"
         },
         {
-            "name": "leogout/seo-bundle",
-            "version": "v1.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/leogout/SeoBundle.git",
-                "reference": "a7af1339cf2b9aebc73bdaf24ee4a972b2dc37ab"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/leogout/SeoBundle/zipball/a7af1339cf2b9aebc73bdaf24ee4a972b2dc37ab",
-                "reference": "a7af1339cf2b9aebc73bdaf24ee4a972b2dc37ab",
-                "shasum": ""
-            },
-            "require": {
-                "symfony/framework-bundle": "~2.8|~3.0|~4.0|~5.0|~6.0",
-                "twig/twig": ">=2.7.0"
-            },
-            "require-dev": {
-                "phpspec/prophecy-phpunit": "^2.0",
-                "phpunit/phpunit": "^9.5",
-                "symfony/phpunit-bridge": "~5.0|~6.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "Leogout\\Bundle\\SeoBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "leogout",
-                    "email": "leogout@gmail.com"
-                }
-            ],
-            "description": "A Symfony bundle to generate SEO meta tags.",
-            "keywords": [
-                "seo"
-            ],
-            "support": {
-                "issues": "https://github.com/leogout/SeoBundle/issues",
-                "source": "https://github.com/leogout/SeoBundle/tree/v1.3.0"
-            },
-            "abandoned": true,
-            "time": "2022-08-12T12:57:41+00:00"
-        },
-        {
             "name": "monolog/monolog",
             "version": "3.10.0",
             "source": {
@@ -3452,6 +3402,71 @@
                 "source": "https://github.com/ralouphie/getallheaders/tree/develop"
             },
             "time": "2019-03-08T08:55:37+00:00"
+        },
+        {
+            "name": "rami/seo-bundle",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/abdellahrk/SeoBundle.git",
+                "reference": "e98a941763b777ae5be3009ad20a6f16df33b158"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/abdellahrk/SeoBundle/zipball/e98a941763b777ae5be3009ad20a6f16df33b158",
+                "reference": "e98a941763b777ae5be3009ad20a6f16df33b158",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/persistence": "^3.4 || ^4.0",
+                "ext-dom": "*",
+                "php": "^8.2",
+                "symfony/cache": "^6.0 || ^7.0 || ^8.0",
+                "symfony/config": "^6.0 || ^7.0 || ^8.0",
+                "symfony/console": "^6.0 || ^7.0 || ^8.0",
+                "symfony/dependency-injection": "^6.0 || ^7.0 || ^8.0",
+                "symfony/event-dispatcher": "^6.0 || ^7.0 || ^8.0",
+                "symfony/http-kernel": "^6.0 | ^7.0 || ^8.0",
+                "symfony/messenger": "^6.0 || ^7.0 || ^8.0",
+                "symfony/routing": "^6.0 || ^7.0 || ^8.0",
+                "twig/twig": "^2.0 || ^3.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11 || ^12.1",
+                "symfony/framework-bundle": "^6.0 || ^7.0 || ^8.0",
+                "symfony/profiler-pack": "^1.0",
+                "symfony/serializer": "^6.0 || ^7.0 || ^8.0",
+                "symfony/test-pack": "^1.0",
+                "symfony/yaml": "^6.0 || ^7.0 || ^8.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Rami\\SeoBundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Abdellah Ramadan",
+                    "email": "ramadanabdel24@gmail.com"
+                }
+            ],
+            "description": "All in One Symfony Seo Bundle",
+            "keywords": [
+                "Symfony Bundle",
+                "seo",
+                "symfony seo"
+            ],
+            "support": {
+                "issues": "https://github.com/abdellahrk/SeoBundle/issues",
+                "source": "https://github.com/abdellahrk/SeoBundle/tree/v1.2.0"
+            },
+            "time": "2025-12-19T21:27:44+00:00"
         },
         {
             "name": "scrivo/highlight.php",
@@ -5752,6 +5767,97 @@
                 }
             ],
             "time": "2026-02-08T20:40:30+00:00"
+        },
+        {
+            "name": "symfony/messenger",
+            "version": "v6.4.35",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/messenger.git",
+                "reference": "4f377837498a37d6e6d12640fec624bbd44ebbbf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/messenger/zipball/4f377837498a37d6e6d12640fec624bbd44ebbbf",
+                "reference": "4f377837498a37d6e6d12640fec624bbd44ebbbf",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "psr/log": "^1|^2|^3",
+                "symfony/clock": "^6.3|^7.0",
+                "symfony/deprecation-contracts": "^2.5|^3"
+            },
+            "conflict": {
+                "symfony/console": "<6.3",
+                "symfony/event-dispatcher": "<5.4",
+                "symfony/event-dispatcher-contracts": "<2.5",
+                "symfony/framework-bundle": "<5.4",
+                "symfony/http-kernel": "<5.4",
+                "symfony/serializer": "<5.4"
+            },
+            "require-dev": {
+                "psr/cache": "^1.0|^2.0|^3.0",
+                "symfony/console": "^6.3|^7.0",
+                "symfony/dependency-injection": "^5.4|^6.0|^7.0",
+                "symfony/event-dispatcher": "^5.4|^6.0|^7.0",
+                "symfony/http-kernel": "^5.4|^6.0|^7.0",
+                "symfony/process": "^5.4|^6.0|^7.0",
+                "symfony/property-access": "^5.4|^6.0|^7.0",
+                "symfony/rate-limiter": "^5.4|^6.0|^7.0",
+                "symfony/routing": "^5.4|^6.0|^7.0",
+                "symfony/serializer": "^5.4|^6.0|^7.0",
+                "symfony/service-contracts": "^2.5|^3",
+                "symfony/stopwatch": "^5.4|^6.0|^7.0",
+                "symfony/validator": "^5.4|^6.0|^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Messenger\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Samuel Roze",
+                    "email": "samuel.roze@gmail.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Helps applications send and receive messages to/from other applications or via message queues",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/messenger/tree/v6.4.35"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-03-04T13:20:04+00:00"
         },
         {
             "name": "symfony/monolog-bridge",

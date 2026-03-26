@@ -1,0 +1,10 @@
+seo:
+    meta_tags:
+        title: jonnyeom | Jonathan Eom
+        description: A professional developer, experienced in developing enterprise level websites and applications. Experienced in AngularJS, Drupal, GatsbyJS JavaScript, PHP, React, Symfony, Vue.
+    open_graph:
+        title: jonnyeom | Jonathan Eom
+        description: A professional developer, experienced in developing enterprise level websites and applications. Experienced in AngularJS, Drupal, GatsbyJS JavaScript, PHP, React, Symfony, Vue.
+        url: https://www.jonnyeom.com/
+        type: website
+        sitename: jonnyeom

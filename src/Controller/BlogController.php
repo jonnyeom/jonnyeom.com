@@ -6,7 +6,9 @@ namespace App\Controller;
 
 use App\Model\Post;
 use App\Service\BlogContent;
-use Leogout\Bundle\SeoBundle\Provider\SeoGeneratorProvider;
+use Rami\SeoBundle\Metas\MetaTagsManagerInterface;
+use Rami\SeoBundle\OpenGraph\OpenGraphManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -17,9 +19,10 @@ use function uasort;
 
 class BlogController extends BaseController
 {
-    public function __construct(SeoGeneratorProvider $seoGeneratorProvider, private readonly BlogContent $blogContent)
+    public function __construct(MetaTagsManagerInterface $metaTags, OpenGraphManagerInterface $openGraph, private readonly BlogContent $blogContent, #[Autowire('%seo.meta_tags%')]
+    array $metaTagsDefaults = [],)
     {
-        parent::__construct($seoGeneratorProvider);
+        parent::__construct($metaTags, $openGraph, $metaTagsDefaults);
     }
 
     #[Route(path: '/writing', name: 'app_posts')]
