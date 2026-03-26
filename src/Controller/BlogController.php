@@ -19,9 +19,14 @@ use function uasort;
 
 class BlogController extends BaseController
 {
-    public function __construct(MetaTagsManagerInterface $metaTags, OpenGraphManagerInterface $openGraph, private readonly BlogContent $blogContent, #[Autowire('%seo.meta_tags%')]
-    array $metaTagsDefaults = [],)
-    {
+    /** @param array<string, string> $metaTagsDefaults */
+    public function __construct(
+        MetaTagsManagerInterface $metaTags,
+        OpenGraphManagerInterface $openGraph,
+        private readonly BlogContent $blogContent,
+        #[Autowire('%seo.meta_tags%')]
+        array $metaTagsDefaults = [],
+    ) {
         parent::__construct($metaTags, $openGraph, $metaTagsDefaults);
     }
 
