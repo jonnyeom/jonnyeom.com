@@ -26,11 +26,11 @@ class BaseController extends AbstractController
             $this->metaTags->setTitle($metaTagsDefaults['title']);
         }
 
-        if (empty($metaTagsDefaults['description'])) {
-            return;
+        if (! empty($metaTagsDefaults['description'])) {
+            $this->metaTags->setDescription($metaTagsDefaults['description']);
         }
 
-        $this->metaTags->setDescription($metaTagsDefaults['description']);
+        $this->openGraph->setImage('https://www.jonnyeom.com/images/jonnyeom.jpg');
     }
 
     #[Route(path: '/in-progress', name: 'app_in_progress')]
