@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Controller;
 
-use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 use function sprintf;
 
 final class DefaultControllerTest extends WebTestCase
 {
-    /** @dataProvider getPublicUrls */
+    #[DataProvider('getPublicUrls')]
     public function testPublicUrls(string $url): void
     {
         $client = static::createClient();
@@ -20,14 +20,17 @@ final class DefaultControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful(sprintf('The %s public URL loads correctly.', $url));
     }
 
-    public function getPublicUrls(): Generator
+    /** @return array<array{string}> */
+    public static function getPublicUrls(): array
     {
-        yield ['/'];
-        yield ['/projects'];
-        yield ['/writing'];
-        yield ['/about'];
-        yield ['/experiments'];
-        yield ['/medical'];
-        yield ['/strava'];
+        return [
+            ['/'],
+            ['/projects'],
+            ['/writing'],
+            ['/about'],
+            ['/experiments'],
+            ['/medical'],
+            ['/strava'],
+        ];
     }
 }
