@@ -14,7 +14,7 @@ final class SeoTagsTest extends WebTestCase
         $crawler = $client->request('GET', '/experiments');
 
         $description = $crawler->filter('meta[name="description"]')->attr('content');
-        $this->assertNotEmpty($description);
+        $this->assertIsString($description);
         $this->assertStringContainsString('professional developer', $description);
     }
 
@@ -58,9 +58,11 @@ final class SeoTagsTest extends WebTestCase
         $crawler = $client->request('GET', '/writing/example-script-to-run-phpcs-on-only-changed-files');
 
         $description = $crawler->filter('meta[name="description"]')->attr('content');
+        $this->assertIsString($description);
         $this->assertStringContainsString('PHP CodeSniffer', $description);
 
         $keywords = $crawler->filter('meta[name="keywords"]')->attr('content');
+        $this->assertIsString($keywords);
         $this->assertStringContainsString('code-example', $keywords);
         $this->assertStringContainsString('ci', $keywords);
     }

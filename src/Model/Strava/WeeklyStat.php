@@ -115,6 +115,6 @@ class WeeklyStat implements IteratorAggregate
     /** @return ArrayIterator<string, DailyStat> */
     public function getIterator(): Traversable
     {
-        yield from $this->stats;
+        return new ArrayIterator($this->stats);
     }
 }

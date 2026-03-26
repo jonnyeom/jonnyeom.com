@@ -17,6 +17,7 @@
     <file>src/</file>
     <file>tests/</file>
     <exclude-pattern>bin/.phpunit</exclude-pattern>
+    <exclude-pattern>config/reference.php</exclude-pattern>
 
     <rule ref="SlevomatCodingStandard.ControlStructures.AssignmentInCondition">
         <severity>0</severity>
