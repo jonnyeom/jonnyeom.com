@@ -56,11 +56,11 @@
     "require-dev": {
         "doctrine/coding-standard": "^14.0.0",
         "phpstan/phpdoc-parser": "^2.3.2",
-        "phpstan/phpstan": "^1.12.32",
+        "phpstan/phpstan": "^1.12.33",
         "phpstan/phpstan-deprecation-rules": "^1.2.1",
         "phpstan/phpstan-doctrine": "^1.5.7",
         "phpstan/phpstan-symfony": "^1.4.16",
-        "phpunit/phpunit": "^11.0",
+        "phpunit/phpunit": "^11.0.10",
         "rector/rector": "^1.2.10",
         "squizlabs/php_codesniffer": "^4.0.1",
         "symfony/browser-kit": "^7.4",
