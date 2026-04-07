@@ -32,7 +32,7 @@ class DailyStat
     /** @return string[] */
     public function getActivitiesIcons(): array
     {
-        return array_unique(array_map(fn (array $activity) => $this->getSportIcon($activity['sport_type']), $this->activities));
+        return array_filter(array_unique(array_map(fn (array $activity) => $this->getSportIcon($activity['sport_type']), $this->activities)), static fn($icon) => $icon !== null);
     }
 
     /** @param Activity $activity */
@@ -52,19 +52,20 @@ class DailyStat
                 $this->distance += $activity['distance'];
                 break;
             default:
+                dump($activity);
         }
 
         $this->activities[] = $activity;
     }
 
-    private function getSportIcon(string $sportType): string
+    public function getSportIcon(string $sportType): ?string
     {
         return match ($sportType) {
             'Tennis' => 'table-tennis-paddle-ball',
             'Swim' => 'person-swimming',
             'Bike' => 'person-biking',
             'Run' => 'person-running',
-            default => 'strava',
+            default => null,
         };
     }
 

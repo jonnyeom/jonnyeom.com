@@ -48,7 +48,7 @@
                                                                 <span class="icon-text">
                                                                   <span>{{ (activity.distance/1609.34)|round(1) }}</span>
                                                                   <span class="icon">
-                                                                    <i class="fas fa-{{ activity.sport_icon }}"></i>
+                                                                    <i class="fas fa-{{ dailyStat.getSportIcon(activity.sport_type) }}"></i>
                                                                   </span>
                                                                 </span>
                                                             </div>
