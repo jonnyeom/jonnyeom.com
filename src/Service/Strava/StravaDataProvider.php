@@ -12,6 +12,8 @@ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use Strava\API\Exception;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 use function array_merge;
 use function array_values;
@@ -19,13 +21,20 @@ use function assert;
 use function count;
 use function date;
 use function min;
+use function strcmp;
 use function strtotime;
+use function usort;
 
 class StravaDataProvider
 {
+    private const int CURRENT_WEEK_TTL = 43200;   // 12 hours
+
+    private const int PAST_WEEK_TTL = 2592000;    // 30 days
+
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ClientProvider $clientProvider,
+        private readonly CacheInterface $cache,
     ) {
     }
 
@@ -38,32 +47,63 @@ class StravaDataProvider
      */
     public function getDataByWeek(string|null $sportType = null): array
     {
-        $accessToken = $this->getApiToken();
+        $today          = new DateTime();
+        $currentWeekKey = $today->format('o.W');
+        $mondayThisWeek = (string) strtotime('monday this week', $today->getTimestamp());
+        $dataBeginning  = (string) strtotime('30 April 2025');
 
-        $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
+        $pastActivities = $this->cache->get(
+            'strava_past_' . $currentWeekKey,
+            function (ItemInterface $item) use ($mondayThisWeek, $dataBeginning): array {
+                $item->expiresAfter(self::PAST_WEEK_TTL);
 
-        $dataBeginning = (string) strtotime('30 April 2025');
+                return $this->fetchActivities($mondayThisWeek, $dataBeginning);
+            },
+        );
 
-        $page        = 1;
-        $activities  = [];
-        $response    = $apiClient->getAthleteActivities(null, $dataBeginning, $page);
-        $activities += $response;
-        while (count($response) === 30) {
-            $page++;
-            $response   = $apiClient->getAthleteActivities(null, $dataBeginning, $page);
-            $activities = array_merge($activities, $response);
-        }
+        $currentActivities = $this->cache->get(
+            'strava_current_' . $currentWeekKey,
+            function (ItemInterface $item) use ($mondayThisWeek): array {
+                $item->expiresAfter(self::CURRENT_WEEK_TTL);
 
-//        if ($sportType) {
-//            $activities = array_values(array_filter($activities, static function ($activity) {
-//                return $activity['sport_type'] === 'Run';
-//            }));
-//        }
+                return $this->fetchActivities(null, $mondayThisWeek);
+            },
+        );
 
-        $weeklyStats = $this->generateWeeklyStats($activities);
+        $allActivities = array_merge($pastActivities, $currentActivities);
+        usort($allActivities, static fn (array $a, array $b): int => strcmp(
+            $a['start_date_local'],
+            $b['start_date_local'],
+        ));
+
+        $weeklyStats = $this->generateWeeklyStats($allActivities);
         $this->calculateWeeklyMetrics($weeklyStats);
 
         return $weeklyStats;
+    }
+
+    /**
+     * @return array<int, mixed>
+     *
+     * @throws AccessTokenMissing
+     * @throws IdentityProviderException
+     */
+    private function fetchActivities(string|null $before, string $after): array
+    {
+        $accessToken = $this->getApiToken();
+        $apiClient   = $this->clientProvider->getAPIClient($accessToken->getToken());
+
+        $page        = 1;
+        $activities  = [];
+        $response    = $apiClient->getAthleteActivities($before, $after, $page);
+        $activities += $response;
+        while (count($response) === 30) {
+            $page++;
+            $response   = $apiClient->getAthleteActivities($before, $after, $page);
+            $activities = array_merge($activities, $response);
+        }
+
+        return $activities;
     }
 
     /**

@@ -52,7 +52,6 @@ class DailyStat
                 $this->distance += $activity['distance'];
                 break;
             default:
-                dump($activity);
         }
 
         $this->activities[] = $activity;
