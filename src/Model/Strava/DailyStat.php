@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\Strava;
 
+use function array_filter;
 use function array_map;
 use function array_unique;
 use function round;
@@ -32,7 +33,7 @@ class DailyStat
     /** @return string[] */
     public function getActivitiesIcons(): array
     {
-        return array_filter(array_unique(array_map(fn (array $activity) => $this->getSportIcon($activity['sport_type']), $this->activities)), static fn($icon) => $icon !== null);
+        return array_filter(array_unique(array_map(fn (array $activity) => $this->getSportIcon($activity['sport_type']), $this->activities)), static fn ($icon) => $icon !== null);
     }
 
     /** @param Activity $activity */
@@ -57,7 +58,7 @@ class DailyStat
         $this->activities[] = $activity;
     }
 
-    public function getSportIcon(string $sportType): ?string
+    public function getSportIcon(string $sportType): string|null
     {
         return match ($sportType) {
             'Tennis' => 'table-tennis-paddle-ball',
