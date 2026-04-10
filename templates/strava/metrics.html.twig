@@ -31,9 +31,13 @@
                                             <div class="dropdown-trigger">
                                                 <p class="" aria-haspopup="true" aria-controls="dropdown-menu-4">
                                                     <span class="icon-text">
-                                                      <span>{{ dailyStat.miles }}</span>
+                                                      <span class="is-inline-flex">{{ dailyStat.miles }}
+                                                          {% if dailyStat.activitiesIcons|length > 1 %}
+                                                              <span class="is-hidden-tablet">*</span>
+                                                          {% endif %}
+                                                      </span>
                                                         {% for sport_icon in dailyStat.activitiesIcons %}
-                                                            <span class="icon">
+                                                            <span class="icon is-hidden-mobile">
                                                                 <i class="fas fa-{{ sport_icon }}"></i>
                                                             </span>
                                                         {% endfor %}
