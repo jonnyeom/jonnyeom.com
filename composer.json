@@ -60,7 +60,7 @@
         "phpstan/phpstan-deprecation-rules": "^1.2.1",
         "phpstan/phpstan-doctrine": "^1.5.7",
         "phpstan/phpstan-symfony": "^1.4.16",
-        "phpunit/phpunit": "^11.0.10",
+        "phpunit/phpunit": "^11.5.55",
         "rector/rector": "^1.2.10",
         "squizlabs/php_codesniffer": "^4.0.1",
         "symfony/browser-kit": "^7.4",
