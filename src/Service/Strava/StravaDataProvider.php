@@ -8,7 +8,7 @@ use App\Exception\Strava\AccessTokenMissing;
 use App\Model\Strava\WeeklyStat;
 use DateTime;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use League\OAuth2\Client\Token\AccessTokenInterface;
+use League\OAuth2\Client\Token\AccessToken;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -173,13 +173,15 @@ class StravaDataProvider
             return $this->activitiesCache[$neededWeeks];
         }
 
+        $accessToken = $this->getApiToken();
+
         // Chunk 0 = current week. Past chunks cover CHUNK_SIZE weeks each.
         $pastChunksNeeded = (int) ceil(max(0, $neededWeeks - 1) / self::CHUNK_SIZE);
 
-        $activities = $this->getActivitiesForChunk(0);
+        $activities = $this->getActivitiesForChunk(0, $accessToken);
 
         for ($i = 1; $i <= $pastChunksNeeded; $i++) {
-            $activities = array_merge($activities, $this->getActivitiesForChunk($i));
+            $activities = array_merge($activities, $this->getActivitiesForChunk($i, $accessToken));
         }
 
         usort($activities, static fn (array $a, array $b): int => strcmp(
@@ -203,19 +205,20 @@ class StravaDataProvider
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    private function getActivitiesForChunk(int $chunkIndex): array
+    private function getActivitiesForChunk(int $chunkIndex, AccessToken $accessToken): array
     {
         $today          = new DateTime();
+        $athleteId      = (string) $accessToken->getResourceOwnerId();
         $currentWeekKey = $today->format('o.W');
         $mondayThisWeek = (int) strtotime('monday this week', $today->getTimestamp());
 
         if ($chunkIndex === 0) {
             return $this->cache->get(
-                'strava_current_' . $currentWeekKey,
-                function (ItemInterface $item) use ($mondayThisWeek): array {
+                'strava_current_' . $athleteId . '_' . $currentWeekKey,
+                function (ItemInterface $item) use ($mondayThisWeek, $accessToken): array {
                     $item->expiresAfter(self::CURRENT_WEEK_TTL);
 
-                    return $this->fetchActivities(null, (string) $mondayThisWeek);
+                    return $this->fetchActivities(null, (string) $mondayThisWeek, $accessToken);
                 },
             );
         }
@@ -226,11 +229,11 @@ class StravaDataProvider
         $chunkStart = (int) strtotime(sprintf('-%d weeks', $chunkIndex * self::CHUNK_SIZE), $mondayThisWeek);
 
         return $this->cache->get(
-            'strava_chunk_' . $chunkIndex . '_' . $currentWeekKey,
-            function (ItemInterface $item) use ($chunkEnd, $chunkStart): array {
+            'strava_chunk_' . $chunkIndex . '_' . $athleteId . '_' . $currentWeekKey,
+            function (ItemInterface $item) use ($chunkEnd, $chunkStart, $accessToken): array {
                 $item->expiresAfter(self::PAST_WEEK_TTL);
 
-                return $this->fetchActivities((string) $chunkEnd, (string) $chunkStart);
+                return $this->fetchActivities((string) $chunkEnd, (string) $chunkStart, $accessToken);
             },
         );
     }
@@ -269,10 +272,9 @@ class StravaDataProvider
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    private function fetchActivities(string|null $before, string $after): array
+    private function fetchActivities(string|null $before, string $after, AccessToken $accessToken): array
     {
-        $accessToken = $this->getApiToken();
-        $apiClient   = $this->clientProvider->getAPIClient($accessToken->getToken());
+        $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
 
         $page        = 1;
         $activities  = [];
@@ -291,7 +293,7 @@ class StravaDataProvider
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    private function getApiToken(): AccessTokenInterface
+    private function getApiToken(): AccessToken
     {
         $request = $this->requestStack->getCurrentRequest();
         assert($request !== null);
@@ -302,10 +304,11 @@ class StravaDataProvider
             throw new AccessTokenMissing();
         }
 
-        assert($accessToken instanceof AccessTokenInterface);
+        assert($accessToken instanceof AccessToken);
 
         if ($accessToken->hasExpired()) {
             $accessToken = $this->clientProvider->refreshAccessToken($accessToken->getRefreshToken());
+            assert($accessToken instanceof AccessToken);
 
             // Update the stored access token for next time
             $request->getSession()->set('access_token', $accessToken);
