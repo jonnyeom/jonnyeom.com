@@ -13,16 +13,15 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
+use function array_filter;
 use function array_key_exists;
 use function array_merge;
 use function array_reverse;
 use function array_slice;
 use function array_values;
 use function assert;
-use function ceil;
 use function count;
 use function date;
-use function max;
 use function min;
 use function sprintf;
 use function strcmp;
@@ -35,8 +34,8 @@ class StravaDataProvider
 
     private const int PAST_WEEK_TTL = 2592000;    // 30 days
 
-    /** Number of weeks per cached chunk. Matches LOAD_MORE_SIZE in the Live Component. */
-    private const int CHUNK_SIZE = 10;
+    /** Number of weeks fetched in a single Strava API call on a past-week cache miss. */
+    private const int PREFETCH_WEEKS = 50;
 
     /**
      * Request-level activity cache keyed by neededWeeks.
@@ -159,8 +158,9 @@ class StravaDataProvider
 
     /**
      * Loads and sorts enough activities to cover $neededWeeks.
-     * Activities are fetched in 10-week chunks and cached individually, so
-     * each "Load More" click only hits the Strava API for the one new chunk.
+     * Activities are cached per individual ISO week, so historical data is never invalidated
+     * when the current week changes. On a cache miss the Strava API is called once for a
+     * bulk window of PREFETCH_WEEKS weeks, and every week in that window is pre-warmed.
      *
      * @return array<int, mixed>
      *
@@ -173,15 +173,21 @@ class StravaDataProvider
             return $this->activitiesCache[$neededWeeks];
         }
 
-        $accessToken = $this->getApiToken();
+        $accessToken    = $this->getApiToken();
+        $today          = new DateTime();
+        $mondayThisWeek = (int) strtotime('monday this week', $today->getTimestamp());
+        $currentWeekKey = $today->format('o.W');
+        $athleteId      = (string) $accessToken->getResourceOwnerId();
 
-        // Chunk 0 = current week. Past chunks cover CHUNK_SIZE weeks each.
-        $pastChunksNeeded = (int) ceil(max(0, $neededWeeks - 1) / self::CHUNK_SIZE);
+        $neededWeekKeys = $this->buildNeededWeekKeys($neededWeeks, $mondayThisWeek);
 
-        $activities = $this->getActivitiesForChunk(0, $accessToken);
-
-        for ($i = 1; $i <= $pastChunksNeeded; $i++) {
-            $activities = array_merge($activities, $this->getActivitiesForChunk($i, $accessToken));
+        $activities = [];
+        // Iterate newest-first so each cache miss pre-warms the older weeks we still need.
+        foreach (array_reverse($neededWeekKeys, true) as $weekKey => $mondayTs) {
+            $activities = array_merge(
+                $activities,
+                $this->getActivitiesForWeek($weekKey, $athleteId, $accessToken, $mondayTs, $currentWeekKey),
+            );
         }
 
         usort($activities, static fn (array $a, array $b): int => strcmp(
@@ -195,47 +201,110 @@ class StravaDataProvider
     }
 
     /**
-     * Fetches (or returns from Symfony cache) activities for a single 10-week chunk.
+     * Fetches (or returns from Symfony cache) activities for a single ISO week.
      *
-     * Chunk 0  : current week only (TTL 12 h — changes as new activities are recorded)
-     * Chunk N≥1: weeks [(N-1)*10+1 … N*10] before the current Monday (TTL 30 d)
+     * Cache keys encode the actual week directly, making entries easy to filter and find:
+     *   strava_current_{athleteId}_{weekKey}  — current week (TTL 12 h, activities still being recorded)
+     *   strava_week_{athleteId}_{weekKey}     — past week    (TTL 30 d, immutable once the week ends)
+     *
+     * On a cache miss for a past week, fetches PREFETCH_WEEKS weeks in one Strava API call
+     * and pre-warms individual week caches so subsequent weeks are served from cache.
      *
      * @return array<int, mixed>
      *
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    private function getActivitiesForChunk(int $chunkIndex, AccessToken $accessToken): array
-    {
-        $today          = new DateTime();
-        $athleteId      = (string) $accessToken->getResourceOwnerId();
-        $currentWeekKey = $today->format('o.W');
-        $mondayThisWeek = (int) strtotime('monday this week', $today->getTimestamp());
-
-        if ($chunkIndex === 0) {
+    private function getActivitiesForWeek(
+        string $weekKey,
+        string $athleteId,
+        AccessToken $accessToken,
+        int $weekMonday,
+        string $currentWeekKey,
+    ): array {
+        if ($weekKey === $currentWeekKey) {
             return $this->cache->get(
-                'strava_current_' . $athleteId . '_' . $currentWeekKey,
-                function (ItemInterface $item) use ($mondayThisWeek, $accessToken): array {
+                'strava_current_' . $athleteId . '_' . $weekKey,
+                function (ItemInterface $item) use ($weekMonday, $accessToken): array {
                     $item->expiresAfter(self::CURRENT_WEEK_TTL);
 
-                    return $this->fetchActivities(null, (string) $mondayThisWeek, $accessToken);
+                    return $this->fetchActivities(null, (string) $weekMonday, $accessToken);
                 },
             );
         }
 
-        // Upper bound (exclusive): start of chunk = Monday N*10 weeks ago
-        // Lower bound (exclusive): end of chunk   = Monday (N-1)*10 weeks ago
-        $chunkEnd   = (int) strtotime(sprintf('-%d weeks', ($chunkIndex - 1) * self::CHUNK_SIZE), $mondayThisWeek);
-        $chunkStart = (int) strtotime(sprintf('-%d weeks', $chunkIndex * self::CHUNK_SIZE), $mondayThisWeek);
-
         return $this->cache->get(
-            'strava_chunk_' . $chunkIndex . '_' . $athleteId . '_' . $currentWeekKey,
-            function (ItemInterface $item) use ($chunkEnd, $chunkStart, $accessToken): array {
+            'strava_week_' . $athleteId . '_' . $weekKey,
+            function (ItemInterface $item) use ($weekMonday, $athleteId, $accessToken): array {
                 $item->expiresAfter(self::PAST_WEEK_TTL);
 
-                return $this->fetchActivities((string) $chunkEnd, (string) $chunkStart, $accessToken);
+                // Bulk-fetch this week plus PREFETCH_WEEKS - 1 older weeks in one API call.
+                $bulkBefore = $weekMonday + 7 * 24 * 3600;
+                $bulkAfter  = (int) strtotime(
+                    sprintf('-%d weeks', self::PREFETCH_WEEKS - 1),
+                    $weekMonday,
+                );
+
+                $allActivities = $this->fetchActivities((string) $bulkBefore, (string) $bulkAfter, $accessToken);
+
+                // Pre-warm per-week caches for the older weeks in the bulk range.
+                for ($i = 1; $i < self::PREFETCH_WEEKS; $i++) {
+                    $prewarmMonday     = (int) strtotime(sprintf('-%d weeks', $i), $weekMonday);
+                    $prewarmNext       = $prewarmMonday + 7 * 24 * 3600;
+                    $prewarmWeekKey    = (new DateTime('@' . $prewarmMonday))->format('o.W');
+                    $prewarmActivities = $this->filterActivitiesByWindow($allActivities, $prewarmMonday, $prewarmNext);
+
+                    $this->cache->get(
+                        'strava_week_' . $athleteId . '_' . $prewarmWeekKey,
+                        static function (ItemInterface $prewarmItem) use ($prewarmActivities): array {
+                            $prewarmItem->expiresAfter(self::PAST_WEEK_TTL);
+
+                            return $prewarmActivities;
+                        },
+                    );
+                }
+
+                // Return this week's activities.
+                return $this->filterActivitiesByWindow($allActivities, $weekMonday, $bulkBefore);
             },
         );
+    }
+
+    /**
+     * Returns the last $neededWeeks ISO week keys (oldest first), mapped to their Monday timestamp.
+     * Keys are ISO week strings in o.W format (e.g. "2026.15"), values are Monday Unix timestamps.
+     *
+     * @return array<array-key, int>
+     */
+    private function buildNeededWeekKeys(int $neededWeeks, int $mondayThisWeek): array
+    {
+        $weekKeys = [];
+        for ($i = $neededWeeks - 1; $i >= 0; $i--) {
+            $mondayTs           = (int) strtotime(sprintf('-%d weeks', $i), $mondayThisWeek);
+            $weekKey            = (new DateTime('@' . $mondayTs))->format('o.W');
+            $weekKeys[$weekKey] = $mondayTs;
+        }
+
+        return $weekKeys;
+    }
+
+    /**
+     * Returns activities whose start_date_local falls strictly between $after and $before.
+     *
+     * @param array<int, mixed> $activities
+     *
+     * @return array<int, mixed>
+     */
+    private function filterActivitiesByWindow(array $activities, int $after, int $before): array
+    {
+        return array_values(array_filter(
+            $activities,
+            static function (array $activity) use ($after, $before): bool {
+                $ts = (int) strtotime($activity['start_date_local']);
+
+                return $ts > $after && $ts < $before;
+            },
+        ));
     }
 
     /**
