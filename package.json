@@ -24,6 +24,7 @@
     "devDependencies": {
         "@hotwired/stimulus": "3.2.2",
         "@symfony/stimulus-bridge": "4.0.1",
+        "@symfony/ux-live-component": "file:vendor/symfony/ux-live-component/assets",
         "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
         "@vitejs/plugin-react": "4.7.0",
         "imagemin-cli": "8.0.0",

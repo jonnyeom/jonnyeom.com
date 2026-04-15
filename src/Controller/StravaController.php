@@ -4,51 +4,24 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Exception\Strava\AccessTokenMissing;
-use App\Service\Strava\StravaDataProvider;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Throwable;
-
-use function array_reverse;
-use function array_values;
 
 class StravaController extends BaseController
 {
     #[Route('/strava', name: 'strava_metrics')]
-    public function stravaMetrics(StravaDataProvider $stravaDataProvider, LoggerInterface $logger): Response
+    public function stravaMetrics(Request $request): Response
     {
+        if (! $request->getSession()->get('access_token')) {
+            return $this->redirectToRoute('strava_connect_entry');
+        }
+
         $this->setSeoTitle('jonnyeom | Weekly running metrics');
         $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
         $this->setSeoKeywords('strava,running,metrics,mileage');
 
-        try {
-            $runsByWeek = $stravaDataProvider->getDataByWeek();
-        } catch (AccessTokenMissing) {
-            return $this->render('strava/connect.html.twig', ['error' => 'No Access token :(']);
-        } catch (IdentityProviderException $e) {
-            $logger->error($e->getMessage());
-
-            $this->addFlash(
-                'error',
-                'Strava access error: ' . $e->getMessage(),
-            );
-
-            return $this->redirectToRoute('strava_logout');
-        } catch (Throwable $e) {
-            $logger->error($e->getMessage());
-
-            $this->addFlash(
-                'error',
-                'Application error: ' . $e->getMessage(),
-            );
-
-            $runsByWeek = [];
-        }
-
-        return $this->render('strava/metrics.html.twig', ['activitiesByWeek' => array_values(array_reverse($runsByWeek))]);
+        return $this->render('strava/metrics.html.twig');
     }
 
     #[Route('/strava/plan', name: 'strava_plan')]

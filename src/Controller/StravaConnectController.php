@@ -20,6 +20,17 @@ class StravaConnectController extends AbstractController
     {
     }
 
+    #[Route('/strava/connect/entry', name: 'strava_connect_entry')]
+    public function connectEntry(Request $request): Response
+    {
+        // If we already have an access token, no need to get another one.
+        if ($request->getSession()->get('access_token')) {
+            return $this->redirectToRoute('strava_metrics');
+        }
+
+        return $this->render('strava/connect.html.twig', ['error' => 'No Access token :(']);
+    }
+
     #[Route('/strava/connect', name: 'strava_connect_start')]
     public function connectAction(Request $request): Response
     {

@@ -1,0 +1,96 @@
+<div {{ attributes }}>
+    {% if this.error %}
+        <div class="notification is-danger">{{ this.error }}</div>
+    {% else %}
+        {% set weeklyStats = this.weeklyStats %}
+        <div class="table-container">
+            <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered is-fullwidth">
+                <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                    <th>Sun</th>
+                    <th>total</th>
+                    <th>5 wk avg</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for weeklyStat in weeklyStats %}
+                    <tr>
+                        <th>{{ weeklyStat.date }}</th>
+                        {% for day, dailyStat in weeklyStat %}
+                            <td>
+                                {% if dailyStat.miles > 0 %}
+                                    <div class="dropdown is-hoverable">
+                                        <div class="dropdown-trigger">
+                                            <p class="" aria-haspopup="true" aria-controls="dropdown-menu-4">
+                                                <span class="icon-text">
+                                                  <span class="is-inline-flex">{{ dailyStat.miles }}
+                                                      {% if dailyStat.activitiesIcons|length > 1 %}
+                                                          <span class="is-hidden-tablet">*</span>
+                                                      {% endif %}
+                                                  </span>
+                                                    {% for sport_icon in dailyStat.activitiesIcons %}
+                                                        <span class="icon is-hidden-mobile">
+                                                            <i class="fas fa-{{ sport_icon }}"></i>
+                                                        </span>
+                                                    {% endfor %}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        {% if dailyStat.activities|length > 1 %}
+                                            <div class="dropdown-menu" id="dropdown-menu4" role="menu">
+                                                <div class="dropdown-content has-text-left">
+                                                    {% for activity in dailyStat.activities %}
+                                                        <div class="dropdown-item">
+                                                            <span class="icon-text">
+                                                              <span>{{ (activity.distance/1609.34)|round(1) }}</span>
+                                                              <span class="icon">
+                                                                <i class="fas fa-{{ dailyStat.getSportIcon(activity.sport_type) }}"></i>
+                                                              </span>
+                                                            </span>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                        <td><b>{{ weeklyStat.totalMiles }}<span class="is-hidden-mobile">{{ ' mi' }}</span></b></td>
+                        <td>
+                            {% if not loop.first and date('D') != 'Sun' %}<b>{% endif %}
+                                {{ (weeklyStat.fiveWeekAverage/1609.34)|round(1) }}<span class="is-hidden-mobile">{{ ' mi' }}</span>
+                            {% if not loop.first and date('D') != 'Sun' %}</b>{% endif %}
+                        </td>
+                        <td>
+                            {% if not loop.last %}
+                                {{ ((weeklyStats[loop.index0].fiveWeekAverage - weeklyStats[loop.index].fiveWeekAverage)/1609.34)|round(1) }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if this.hasMore %}
+            <div class="has-text-centered py-4">
+                <button
+                    data-action="live#action"
+                    data-live-action-param="loadMore"
+                    class="button"
+                >
+                    Load more
+                </button>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
