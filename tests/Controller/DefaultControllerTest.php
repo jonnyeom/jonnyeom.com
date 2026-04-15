@@ -30,7 +30,6 @@ final class DefaultControllerTest extends WebTestCase
             ['/about'],
             ['/experiments'],
             ['/medical'],
-            ['/strava'],
         ];
     }
 }

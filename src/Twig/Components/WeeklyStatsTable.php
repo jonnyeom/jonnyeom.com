@@ -20,11 +20,11 @@ class WeeklyStatsTable extends AbstractController
 {
     use DefaultActionTrait;
 
-    private const int INITIAL_LIMIT  = 20;
-    private const int LOAD_MORE_SIZE = 10;
+    private const int INITIAL_VISIBLE_WEEKS = 20;
+    private const int LOAD_MORE_SIZE        = 10;
 
     #[LiveProp(writable: true)]
-    public int $limit = self::INITIAL_LIMIT;
+    public int $visibleWeeks = self::INITIAL_VISIBLE_WEEKS;
 
     private string|null $error = null;
 
@@ -40,7 +40,7 @@ class WeeklyStatsTable extends AbstractController
     #[LiveAction]
     public function loadMore(): void
     {
-        $this->limit += self::LOAD_MORE_SIZE;
+        $this->visibleWeeks += self::LOAD_MORE_SIZE;
     }
 
     /** @return array<int, WeeklyStat> */
@@ -49,15 +49,6 @@ class WeeklyStatsTable extends AbstractController
         $this->load();
 
         return $this->weeklyStatsCache ?? [];
-    }
-
-    public function hasMore(): bool
-    {
-        try {
-            return $this->limit < $this->stravaDataProvider->getTotalWeekCount();
-        } catch (Throwable) {
-            return false;
-        }
     }
 
     public function getError(): string|null
@@ -76,7 +67,7 @@ class WeeklyStatsTable extends AbstractController
         $this->loaded = true;
 
         try {
-            $this->weeklyStatsCache = $this->stravaDataProvider->getWeeklyStatsPaged($this->limit);
+            $this->weeklyStatsCache = $this->stravaDataProvider->getWeeklyStatsPaged($this->visibleWeeks);
         } catch (AccessTokenMissing) {
             $this->error            = 'No access token. Please connect to Strava.';
             $this->weeklyStatsCache = [];
