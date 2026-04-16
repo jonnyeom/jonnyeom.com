@@ -16,13 +16,16 @@ use Traversable;
 use function round;
 use function sprintf;
 
-/** @phpstan-import-type Activity from DailyStat */
+/**
+ * @phpstan-import-type Activity from DailyStat
+ * @implements IteratorAggregate<string, DailyStat>
+ */
 class WeeklyStat implements IteratorAggregate
 {
     /** @var DailyStat[] $stats */
     private array $stats;
 
-    private DateTimeInterface $firstDayOfWeek;
+    private readonly DateTimeInterface $firstDayOfWeek;
 
     /**
      * Total weekly relative distance, in meters.

@@ -33,12 +33,12 @@ class CustomHeadingParser implements BlockStartParserInterface
 
         $cursor->advanceToNextNonSpaceOrTab();
 
-        $atxHeading = self::getAtxHeader($cursor);
-        if ($atxHeading) {
+        $atxHeading = $this->getAtxHeader($cursor);
+        if ($atxHeading instanceof HeadingParser) {
             return BlockStart::of($atxHeading)->at($cursor);
         }
 
-        $setextHeadingLevel = self::getSetextHeadingLevel($cursor);
+        $setextHeadingLevel = $this->getSetextHeadingLevel($cursor);
         if ($setextHeadingLevel > 0) {
             $content = $parserState->getParagraphContent();
             if ($content !== null) {
@@ -53,7 +53,7 @@ class CustomHeadingParser implements BlockStartParserInterface
         return BlockStart::none();
     }
 
-    private static function getAtxHeader(Cursor $cursor): HeadingParser|null
+    private function getAtxHeader(Cursor $cursor): HeadingParser|null
     {
         $match = RegexHelper::matchFirst('/^#{1,6}(?:[ \t]+|$)/', $cursor->getRemainder());
         if (! $match) {
@@ -77,7 +77,7 @@ class CustomHeadingParser implements BlockStartParserInterface
         return new HeadingParser($level, $str);
     }
 
-    private static function getSetextHeadingLevel(Cursor $cursor): int
+    private function getSetextHeadingLevel(Cursor $cursor): int
     {
         $match = RegexHelper::matchFirst('/^(?:=+|-+)[ \t]*$/', $cursor->getRemainder());
         if ($match === null) {

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\Strava\ClientProvider;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -18,6 +17,17 @@ class StravaConnectController extends AbstractController
 {
     public function __construct(private readonly ClientProvider $clientProvider)
     {
+    }
+
+    #[Route('/strava/connect/entry', name: 'strava_connect_entry')]
+    public function connectEntry(Request $request): Response
+    {
+        // If we already have an access token, no need to get another one.
+        if ($request->getSession()->get('access_token')) {
+            return $this->redirectToRoute('strava_metrics');
+        }
+
+        return $this->render('strava/connect.html.twig', ['error' => 'No Access token :(']);
     }
 
     #[Route('/strava/connect', name: 'strava_connect_start')]
@@ -58,7 +68,7 @@ class StravaConnectController extends AbstractController
 
             // Fetch and store the AccessToken.
             $request->getSession()->set('access_token', $accessToken);
-        } catch (IdentityProviderException | Throwable $e) {
+        } catch (Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
             $logger->error($e->getMessage());

@@ -11,11 +11,9 @@ use Strava\API\Factory;
 use Strava\API\OAuth;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-use function array_merge;
-
 class ClientProvider
 {
-    private Factory $factory;
+    private readonly Factory $factory;
     private OAuth|null $oauthClient = null;
     private Client|null $apiClient  = null;
 
@@ -29,7 +27,7 @@ class ClientProvider
 
     public function getOauthClient(): OAuth
     {
-        if (! $this->oauthClient) {
+        if (! $this->oauthClient instanceof OAuth) {
             $this->oauthClient = $this->factory->getOAuthClient(
                 $this->clientId,
                 $this->clientSecret,
@@ -42,7 +40,7 @@ class ClientProvider
 
     public function getAPIClient(string $accessToken): Client
     {
-        if (! $this->apiClient) {
+        if (! $this->apiClient instanceof Client) {
             $this->apiClient = $this->factory->getAPIClient($accessToken);
         }
 
@@ -63,7 +61,7 @@ class ClientProvider
     {
         return $this->getOauthClient()->getAccessToken(
             'refresh_token',
-            array_merge(['refresh_token' => $refreshToken]),
+            ['refresh_token' => $refreshToken],
         );
     }
 }

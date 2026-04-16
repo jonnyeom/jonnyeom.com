@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7a0dacd90132b56f278fb0701a3ab47",
+    "content-hash": "7e332fc88493ffad25033423e6e2d769",
     "packages": [
         {
             "name": "api-platform/core",
@@ -8301,6 +8301,107 @@
             "time": "2026-03-04T12:49:16+00:00"
         },
         {
+            "name": "symfony/ux-live-component",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/ux-live-component.git",
+                "reference": "a65719c5aa06e2cdd957aae34a35bb4541206484"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/ux-live-component/zipball/a65719c5aa06e2cdd957aae34a35bb4541206484",
+                "reference": "a65719c5aa06e2cdd957aae34a35bb4541206484",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4",
+                "symfony/deprecation-contracts": "^2.5|^3.0",
+                "symfony/property-access": "^7.4|^8.0",
+                "symfony/property-info": "^7.4|^8.0",
+                "symfony/stimulus-bundle": "^2.9|^3.0",
+                "symfony/type-info": "^7.4|^8.0",
+                "symfony/ux-twig-component": "^2.33.0|^3.0",
+                "twig/twig": "^3.10.3"
+            },
+            "conflict": {
+                "symfony/config": "<6.4"
+            },
+            "require-dev": {
+                "doctrine/annotations": "^1.0|^2.0",
+                "doctrine/collections": "^1.6.8|^2.0",
+                "doctrine/doctrine-bundle": "^2.14|^3.0|^4.0",
+                "doctrine/orm": "^2.9.4|^3.0",
+                "doctrine/persistence": "^2.5.2|^3.0|^4.0",
+                "phpdocumentor/reflection-docblock": "^5.6.2",
+                "phpunit/phpunit": "^11.1|^12.0",
+                "symfony/config": "^7.4|^8.0",
+                "symfony/dependency-injection": "^7.4|^8.0",
+                "symfony/expression-language": "^7.4|^8.0",
+                "symfony/form": "^7.4|^8.0",
+                "symfony/framework-bundle": "^7.4|^8.0",
+                "symfony/options-resolver": "^7.4|^8.0",
+                "symfony/security-bundle": "^7.4|^8.0",
+                "symfony/serializer": "^7.4|^8.0",
+                "symfony/twig-bundle": "^7.4|^8.0",
+                "symfony/uid": "^7.4|^8.0",
+                "symfony/validator": "^7.4|^8.0",
+                "zenstruck/browser": "^1.9",
+                "zenstruck/foundry": "^2.7"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/ux",
+                    "name": "symfony/ux"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\UX\\LiveComponent\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Live components for Symfony",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "components",
+                "symfony-ux",
+                "twig"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/ux-live-component/tree/v3.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-04-10T05:40:22+00:00"
+        },
+        {
             "name": "symfony/ux-react",
             "version": "v2.34.0",
             "source": {
@@ -8379,6 +8480,94 @@
                 }
             ],
             "time": "2026-03-21T22:29:11+00:00"
+        },
+        {
+            "name": "symfony/ux-twig-component",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/ux-twig-component.git",
+                "reference": "dea344e320238234c94f63b152d65821c80cd103"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/ux-twig-component/zipball/dea344e320238234c94f63b152d65821c80cd103",
+                "reference": "dea344e320238234c94f63b152d65821c80cd103",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.4",
+                "symfony/dependency-injection": "^7.4|^8.0",
+                "symfony/deprecation-contracts": "^2.2|^3.0",
+                "symfony/event-dispatcher": "^7.4|^8.0",
+                "symfony/property-access": "^7.4|^8.0",
+                "twig/twig": "^3.10.3"
+            },
+            "conflict": {
+                "symfony/config": "<6.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.1|^12.0",
+                "symfony/console": "^7.4|^8.0",
+                "symfony/css-selector": "^7.4|^8.0",
+                "symfony/dom-crawler": "^7.4|^8.0",
+                "symfony/framework-bundle": "^7.4|^8.0",
+                "symfony/stimulus-bundle": "^2.9.1|^3.0",
+                "symfony/twig-bundle": "^7.4|^8.0",
+                "twig/extra-bundle": "^3.10.3",
+                "twig/html-extra": "^3.10.3"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/ux",
+                    "name": "symfony/ux"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\UX\\TwigComponent\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Twig components for Symfony",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "components",
+                "symfony-ux",
+                "twig"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/ux-twig-component/tree/v3.0.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-04-09T22:56:44+00:00"
         },
         {
             "name": "symfony/validator",
@@ -9472,15 +9661,15 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.33",
+            "version": "2.1.48",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/37982d6fc7cbb746dda7773530cda557cdf119e1",
-                "reference": "37982d6fc7cbb746dda7773530cda557cdf119e1",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/231397213efb7c0a066ee024b5c3c87f2d3adfa0",
+                "reference": "231397213efb7c0a066ee024b5c3c87f2d3adfa0",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2|^8.0"
+                "php": "^7.4|^8.0"
             },
             "conflict": {
                 "phpstan/phpstan-shim": "*"
@@ -9521,30 +9710,30 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-28T20:30:03+00:00"
+            "time": "2026-04-15T20:24:19+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
-            "version": "1.2.1",
+            "version": "2.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-deprecation-rules.git",
-                "reference": "f94d246cc143ec5a23da868f8f7e1393b50eaa82"
+                "reference": "6b5571001a7f04fa0422254c30a0017ec2f2cacc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-deprecation-rules/zipball/f94d246cc143ec5a23da868f8f7e1393b50eaa82",
-                "reference": "f94d246cc143ec5a23da868f8f7e1393b50eaa82",
+                "url": "https://api.github.com/repos/phpstan/phpstan-deprecation-rules/zipball/6b5571001a7f04fa0422254c30a0017ec2f2cacc",
+                "reference": "6b5571001a7f04fa0422254c30a0017ec2f2cacc",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
-                "phpstan/phpstan": "^1.12"
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2.1.39"
             },
             "require-dev": {
                 "php-parallel-lint/php-parallel-lint": "^1.2",
-                "phpstan/phpstan-phpunit": "^1.0",
-                "phpunit/phpunit": "^9.5"
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^9.6"
             },
             "type": "phpstan-extension",
             "extra": {
@@ -9564,29 +9753,32 @@
                 "MIT"
             ],
             "description": "PHPStan rules for detecting usage of deprecated classes, methods, properties, constants and traits.",
+            "keywords": [
+                "static analysis"
+            ],
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-deprecation-rules/issues",
-                "source": "https://github.com/phpstan/phpstan-deprecation-rules/tree/1.2.1"
+                "source": "https://github.com/phpstan/phpstan-deprecation-rules/tree/2.0.4"
             },
-            "time": "2024-09-11T15:52:35+00:00"
+            "time": "2026-02-09T13:21:14+00:00"
         },
         {
             "name": "phpstan/phpstan-doctrine",
-            "version": "1.5.7",
+            "version": "2.0.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-doctrine.git",
-                "reference": "231d3f795ed5ef54c98961fd3958868cbe091207"
+                "reference": "72f4f7a02d6c98d9101e8616e0488bc0a785196d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-doctrine/zipball/231d3f795ed5ef54c98961fd3958868cbe091207",
-                "reference": "231d3f795ed5ef54c98961fd3958868cbe091207",
+                "url": "https://api.github.com/repos/phpstan/phpstan-doctrine/zipball/72f4f7a02d6c98d9101e8616e0488bc0a785196d",
+                "reference": "72f4f7a02d6c98d9101e8616e0488bc0a785196d",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0",
-                "phpstan/phpstan": "^1.12.12"
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2.1.34"
             },
             "conflict": {
                 "doctrine/collections": "<1.0",
@@ -9599,23 +9791,24 @@
                 "cache/array-adapter": "^1.1",
                 "composer/semver": "^3.3.2",
                 "cweagans/composer-patches": "^1.7.3",
-                "doctrine/annotations": "^1.11 || ^2.0",
+                "doctrine/annotations": "^2.0",
                 "doctrine/collections": "^1.6 || ^2.1",
                 "doctrine/common": "^2.7 || ^3.0",
-                "doctrine/dbal": "^2.13.8 || ^3.3.3",
+                "doctrine/dbal": "^3.3.8",
                 "doctrine/lexer": "^2.0 || ^3.0",
-                "doctrine/mongodb-odm": "^1.3 || ^2.4.3",
+                "doctrine/mongodb-odm": "^2.4.3",
                 "doctrine/orm": "^2.16.0",
-                "doctrine/persistence": "^2.2.1 || ^3.2",
+                "doctrine/persistence": "^2.2.1 || ^3.4.3",
                 "gedmo/doctrine-extensions": "^3.8",
                 "nesbot/carbon": "^2.49",
-                "nikic/php-parser": "^4.13.2",
                 "php-parallel-lint/php-parallel-lint": "^1.2",
-                "phpstan/phpstan-phpunit": "^1.3.13",
-                "phpstan/phpstan-strict-rules": "^1.5.1",
+                "phpstan/phpstan-deprecation-rules": "^2.0.2",
+                "phpstan/phpstan-phpunit": "^2.0.8",
+                "phpstan/phpstan-strict-rules": "^2.0",
                 "phpunit/phpunit": "^9.6.20",
                 "ramsey/uuid": "^4.2",
-                "symfony/cache": "^5.4"
+                "symfony/cache": "^5.4",
+                "symfony/uid": "^5.4 || ^6.4 || ^7.3"
             },
             "type": "phpstan-extension",
             "extra": {
@@ -9636,41 +9829,43 @@
                 "MIT"
             ],
             "description": "Doctrine extensions for PHPStan",
+            "keywords": [
+                "static analysis"
+            ],
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-doctrine/issues",
-                "source": "https://github.com/phpstan/phpstan-doctrine/tree/1.5.7"
+                "source": "https://github.com/phpstan/phpstan-doctrine/tree/2.0.20"
             },
-            "time": "2024-12-02T16:47:26+00:00"
+            "time": "2026-03-13T13:44:51+00:00"
         },
         {
             "name": "phpstan/phpstan-symfony",
-            "version": "1.4.16",
+            "version": "2.0.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-symfony.git",
-                "reference": "18df9086a84fc28e9a231ea8e91d5aff1a0a3d6f"
+                "reference": "9b85ab476969b87bbe2253b69e265a9359b2f395"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/18df9086a84fc28e9a231ea8e91d5aff1a0a3d6f",
-                "reference": "18df9086a84fc28e9a231ea8e91d5aff1a0a3d6f",
+                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/9b85ab476969b87bbe2253b69e265a9359b2f395",
+                "reference": "9b85ab476969b87bbe2253b69e265a9359b2f395",
                 "shasum": ""
             },
             "require": {
                 "ext-simplexml": "*",
-                "php": "^7.2 || ^8.0",
-                "phpstan/phpstan": "^1.12"
+                "php": "^7.4 || ^8.0",
+                "phpstan/phpstan": "^2.1.13"
             },
             "conflict": {
                 "symfony/framework-bundle": "<3.0"
             },
             "require-dev": {
-                "nikic/php-parser": "^4.13.0",
                 "php-parallel-lint/php-parallel-lint": "^1.2",
-                "phpstan/phpstan-phpunit": "^1.3.11",
-                "phpstan/phpstan-strict-rules": "^1.5.1",
-                "phpunit/phpunit": "^8.5.29 || ^9.5",
-                "psr/container": "1.0 || 1.1.1",
+                "phpstan/phpstan-phpunit": "^2.0.8",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^9.6",
+                "psr/container": "1.1.2",
                 "symfony/config": "^5.4 || ^6.1",
                 "symfony/console": "^5.4 || ^6.1",
                 "symfony/dependency-injection": "^5.4 || ^6.1",
@@ -9708,11 +9903,14 @@
                 }
             ],
             "description": "Symfony Framework extensions and rules for PHPStan",
+            "keywords": [
+                "static analysis"
+            ],
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-symfony/issues",
-                "source": "https://github.com/phpstan/phpstan-symfony/tree/1.4.16"
+                "source": "https://github.com/phpstan/phpstan-symfony/tree/2.0.15"
             },
-            "time": "2025-09-07T06:55:28+00:00"
+            "time": "2026-02-26T10:15:59+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -10173,21 +10371,21 @@
         },
         {
             "name": "rector/rector",
-            "version": "1.2.10",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "40f9cf38c05296bd32f444121336a521a293fa61"
+                "reference": "000b7050b9e4fe98db2192971e56eb0b302b3feb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/40f9cf38c05296bd32f444121336a521a293fa61",
-                "reference": "40f9cf38c05296bd32f444121336a521a293fa61",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/000b7050b9e4fe98db2192971e56eb0b302b3feb",
+                "reference": "000b7050b9e4fe98db2192971e56eb0b302b3feb",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2|^8.0",
-                "phpstan/phpstan": "^1.12.5"
+                "php": "^7.4|^8.0",
+                "phpstan/phpstan": "^2.1.41"
             },
             "conflict": {
                 "rector/rector-doctrine": "*",
@@ -10212,6 +10410,7 @@
                 "MIT"
             ],
             "description": "Instant Upgrade and Automated Refactoring of any PHP code",
+            "homepage": "https://getrector.com/",
             "keywords": [
                 "automation",
                 "dev",
@@ -10220,7 +10419,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/1.2.10"
+                "source": "https://github.com/rectorphp/rector/tree/2.4.1"
             },
             "funding": [
                 {
@@ -10228,7 +10427,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-11-08T13:59:10+00:00"
+            "time": "2026-04-08T08:43:56+00:00"
         },
         {
             "name": "sebastian/cli-parser",

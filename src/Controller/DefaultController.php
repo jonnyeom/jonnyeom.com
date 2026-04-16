@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Service\MarkdownConverter;
 use League\CommonMark\CommonMarkConverter;
+use League\CommonMark\Output\RenderedContentInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -26,7 +27,7 @@ class DefaultController extends BaseController
         $cache = new FilesystemAdapter();
 
         // Get main page content.
-        $content = $cache->get('markdown_homepage', static function (ItemInterface $item) {
+        $content = $cache->get('markdown_homepage', static function (ItemInterface $item): RenderedContentInterface {
             $converter = new CommonMarkConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/Homepage.md');
             assert(is_string($markdown));
@@ -76,7 +77,7 @@ class DefaultController extends BaseController
     {
         $cache = new FilesystemAdapter();
 
-        $content = $cache->get('markdown_about', static function (ItemInterface $item) {
+        $content = $cache->get('markdown_about', static function (ItemInterface $item): RenderedContentInterface {
             $converter = new CommonMarkConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/About.md');
             assert(is_string($markdown));
@@ -100,7 +101,7 @@ class DefaultController extends BaseController
     {
         $cache = new FilesystemAdapter();
 
-        $content = $cache->get('markdown_medical', static function (ItemInterface $item) {
+        $content = $cache->get('markdown_medical', static function (ItemInterface $item): RenderedContentInterface {
             $converter = new MarkdownConverter();
             $markdown  = file_get_contents(__DIR__ . '/../Content/Medical.md');
             assert(is_string($markdown));

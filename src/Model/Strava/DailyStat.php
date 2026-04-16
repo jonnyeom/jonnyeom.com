@@ -20,10 +20,6 @@ class DailyStat
      */
     private float $distance = 0;
 
-    public function __construct()
-    {
-    }
-
     /** @return Activity[] */
     public function getActivities(): array
     {
@@ -33,7 +29,7 @@ class DailyStat
     /** @return string[] */
     public function getActivitiesIcons(): array
     {
-        return array_filter(array_unique(array_map(fn (array $activity) => $this->getSportIcon($activity['sport_type']), $this->activities)), static fn ($icon) => $icon !== null);
+        return array_filter(array_unique(array_map(fn (array $activity): string|null => $this->getSportIcon($activity['sport_type']), $this->activities)), static fn (string|null $icon): bool => $icon !== null);
     }
 
     /** @param Activity $activity */
