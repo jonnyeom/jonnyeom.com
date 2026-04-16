@@ -11,9 +11,9 @@
                             <span>Home</span>
                         </a>
                     </li>
-                    <li{% if app.request.get('_route') == 'strava_metrics' %} class="is-active"{% endif %}>
+                    <li{% if app.current_route == 'strava_metrics' %} class="is-active"{% endif %}>
                         <a href="{{ path('strava_metrics') }}">Progress</a></li>
-                    <li{% if app.request.get('_route') == 'strava_plan' %} class="is-active"{% endif %}>
+                    <li{% if app.current_route == 'strava_plan' %} class="is-active"{% endif %}>
                         <a href="{{ path('strava_plan') }}">Plan</a></li>
                     <li class="is-info">
                         <a href="{{ path('strava_logout') }}">Logout</a></li>
