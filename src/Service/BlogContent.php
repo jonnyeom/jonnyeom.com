@@ -76,8 +76,6 @@ class BlogContent
                 return $parsedPost;
             });
 
-            assert($post instanceof Post);
-
             $posts[$post->getSlug()] = $post;
         }
 

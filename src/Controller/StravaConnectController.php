@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\Strava\ClientProvider;
-use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -69,7 +68,7 @@ class StravaConnectController extends AbstractController
 
             // Fetch and store the AccessToken.
             $request->getSession()->set('access_token', $accessToken);
-        } catch (IdentityProviderException | Throwable $e) {
+        } catch (Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
             $logger->error($e->getMessage());

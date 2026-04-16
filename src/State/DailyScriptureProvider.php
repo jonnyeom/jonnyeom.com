@@ -19,6 +19,7 @@ use function sprintf;
 use function strlen;
 use function trim;
 
+/** @implements ProviderInterface<DailyScripture> */
 class DailyScriptureProvider implements ProviderInterface
 {
     public function __construct(private readonly DailyScriptureLoader $dsLoader)

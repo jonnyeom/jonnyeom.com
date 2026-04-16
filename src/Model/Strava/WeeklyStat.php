@@ -16,7 +16,10 @@ use Traversable;
 use function round;
 use function sprintf;
 
-/** @phpstan-import-type Activity from DailyStat */
+/**
+ * @phpstan-import-type Activity from DailyStat
+ * @implements IteratorAggregate<string, DailyStat>
+ */
 class WeeklyStat implements IteratorAggregate
 {
     /** @var DailyStat[] $stats */
