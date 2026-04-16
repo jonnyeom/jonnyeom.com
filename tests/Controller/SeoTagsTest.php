@@ -10,7 +10,7 @@ final class SeoTagsTest extends WebTestCase
 {
     public function testDefaultDescriptionAppearsWhenNotOverridden(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/experiments');
 
         $description = $crawler->filter('meta[name="description"]')->attr('content');
@@ -20,7 +20,7 @@ final class SeoTagsTest extends WebTestCase
 
     public function testDefaultTitleAppearsWhenNotOverridden(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/experiments');
 
         $this->assertSame('jonnyeom | Jonathan Eom', $crawler->filter('title')->text());
@@ -28,7 +28,7 @@ final class SeoTagsTest extends WebTestCase
 
     public function testPageTitleOverridesDefault(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/');
 
         $this->assertSame('jonnyeom | Home', $crawler->filter('title')->text());
@@ -36,7 +36,7 @@ final class SeoTagsTest extends WebTestCase
 
     public function testOgImageDefaultIsPresent(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/');
 
         $ogImage = $crawler->filter('meta[property="og:image"]')->attr('content');
@@ -45,7 +45,7 @@ final class SeoTagsTest extends WebTestCase
 
     public function testOgTitleMatchesPageTitle(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/about');
 
         $this->assertSame('jonnyeom | About', $crawler->filter('title')->text());
@@ -54,7 +54,7 @@ final class SeoTagsTest extends WebTestCase
 
     public function testBlogPostSetsDescriptionAndKeywords(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/writing/example-script-to-run-phpcs-on-only-changed-files');
 
         $description = $crawler->filter('meta[name="description"]')->attr('content');
@@ -69,7 +69,7 @@ final class SeoTagsTest extends WebTestCase
 
     public function testBlogPostTitleOverridesDefault(): void
     {
-        $client  = static::createClient();
+        $client  = self::createClient();
         $crawler = $client->request('GET', '/writing/example-script-to-run-phpcs-on-only-changed-files');
 
         $this->assertStringContainsString('PHP CodeSniffer', $crawler->filter('title')->text());

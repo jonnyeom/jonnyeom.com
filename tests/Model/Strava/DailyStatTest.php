@@ -6,6 +6,7 @@ namespace App\Tests\Model\Strava;
 
 use App\Model\Strava\DailyStat;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /** @phpstan-import-type Activity from DailyStat */
@@ -13,12 +14,9 @@ class DailyStatTest extends TestCase
 {
     use UseSampleWeeklyActivities;
 
-    /**
-     * @param Activity $activity
-     *
-     * @dataProvider provideDifferentActivities
-     */
-    public function testDifferentActivities($activity, float $distance, float $miles): void
+    /** @param Activity $activity */
+    #[DataProvider('provideDifferentActivities')]
+    public function testDifferentActivities(array $activity, float $distance, float $miles): void
     {
         $dailyStat = new DailyStat();
         $dailyStat->addActivity($activity);

@@ -37,7 +37,7 @@ class BlogController extends BaseController
 
         $posts = $this->blogContent->getPosts();
 
-        uasort($posts, static fn (Post $postA, Post $postB) => $postB->getDate() <=> $postA->getDate());
+        uasort($posts, static fn (Post $postA, Post $postB): int => $postB->getDate() <=> $postA->getDate());
 
         return $this->render('blog/index.html.twig', ['posts' => $posts]);
     }
@@ -47,7 +47,7 @@ class BlogController extends BaseController
     {
         $post = $this->blogContent->getPost($slug);
 
-        if (! $post) {
+        if (! $post instanceof Post) {
             return $this->redirectToRoute('app_posts');
         }
 

@@ -2,28 +2,25 @@
 
 declare(strict_types=1);
 
-use Rector\Doctrine\Set\DoctrineSetList;
-use Rector\Set\ValueObject\LevelSetList;
-use Rector\Symfony\Set\SymfonySetList;
 use Rector\Config\RectorConfig;
 
-return static function (RectorConfig $rectorConfig): void {
-    $rectorConfig->symfonyContainerXml(__DIR__ . '/var/cache/dev/App_KernelDevDebugContainer.xml');
-    $rectorConfig->symfonyContainerPhp(__DIR__ . '/tests/symfony-container.php');
-
-    $rectorConfig->paths([
+return RectorConfig::configure()
+    ->withSymfonyContainerXml(__DIR__ . '/var/cache/dev/App_KernelDevDebugContainer.xml')
+    ->withSymfonyContainerPhp(__DIR__ . '/tests/symfony-container.php')
+    ->withPaths([
         __DIR__ . '/src',
         __DIR__ . '/tests',
-    ]);
-
-    $rectorConfig->sets([
-        LevelSetList::UP_TO_PHP_84,
-        DoctrineSetList::DOCTRINE_CODE_QUALITY,
-        SymfonySetList::SYMFONY_71,
-        SymfonySetList::SYMFONY_CODE_QUALITY,
-        SymfonySetList::SYMFONY_CONSTRUCTOR_INJECTION,
-        DoctrineSetList::ANNOTATIONS_TO_ATTRIBUTES,
-        SymfonySetList::ANNOTATIONS_TO_ATTRIBUTES,
-    ]);
-};
-
+    ])
+    ->withPhpSets()
+    ->withPreparedSets(
+        deadCode: true,
+        codeQuality: true,
+        typeDeclarations: true,
+    )
+    ->withAttributesSets(symfony: true, doctrine: true, phpunit: true)
+    ->withComposerBased(
+        doctrine: true,
+        phpunit: true,
+        symfony: true,
+        twig: true,
+    );

@@ -51,7 +51,7 @@ class BlogContent
             $fileName = substr($fileName, 0, strlen($fileName) - 3);
             $cid      = 'posts_' . $fileName;
 
-            $post = $cache->get($cid, function (ItemInterface $item) use ($fileName) {
+            $post = $cache->get($cid, function (ItemInterface $item) use ($fileName): Post {
                 // @Todo Parse Yaml as part of Markdown Converter.
                 $postContent = file_get_contents(__DIR__ . '/../Content/Post/' . $fileName . '.md');
                 assert(is_string($postContent));
@@ -60,7 +60,7 @@ class BlogContent
 
                 // @Todo Move this to the Markdown Converter.
                 // Set the Last Updated as the Last Modified time.
-                if ($parsedPost->getLastUpdated()) {
+                if ($parsedPost->getLastUpdated() instanceof DateTime) {
                     $lastUpdated = filemtime(__DIR__ . '/../Content/Post/' . $fileName . '.md');
                     if ($lastUpdated) {
                         $parsedPost->setLastUpdated((new DateTime())->setTimestamp($lastUpdated));

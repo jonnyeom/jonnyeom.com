@@ -25,7 +25,7 @@ class WeeklyStat implements IteratorAggregate
     /** @var DailyStat[] $stats */
     private array $stats;
 
-    private DateTimeInterface $firstDayOfWeek;
+    private readonly DateTimeInterface $firstDayOfWeek;
 
     /**
      * Total weekly relative distance, in meters.

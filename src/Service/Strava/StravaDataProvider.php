@@ -9,6 +9,7 @@ use App\Model\Strava\WeeklyStat;
 use DateTime;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -93,7 +94,7 @@ class StravaDataProvider
             $weeklyStats[$weekKey]->addStravaActivity($item);
         }
 
-        $this->calculateWeeklyMetrics($weeklyStats);
+        static::calculateWeeklyMetrics($weeklyStats);
 
         // Reverse to newest-first, then take the requested slice.
         return array_slice(array_reverse(array_values($weeklyStats)), 0, $limit);
@@ -175,7 +176,7 @@ class StravaDataProvider
 
         $accessToken    = $this->getApiToken();
         $today          = new DateTime();
-        $mondayThisWeek = (int) strtotime('monday this week', $today->getTimestamp());
+        $mondayThisWeek = strtotime('monday this week', $today->getTimestamp());
         $currentWeekKey = $today->format('o.W');
         $athleteId      = (string) $accessToken->getResourceOwnerId();
 
@@ -191,8 +192,8 @@ class StravaDataProvider
         }
 
         usort($activities, static fn (array $a, array $b): int => strcmp(
-            $a['start_date_local'],
-            $b['start_date_local'],
+            (string) $a['start_date_local'],
+            (string) $b['start_date_local'],
         ));
 
         $this->activitiesCache[$neededWeeks] = $activities;
@@ -240,7 +241,7 @@ class StravaDataProvider
 
                 // Bulk-fetch this week plus PREFETCH_WEEKS - 1 older weeks in one API call.
                 $bulkBefore = $weekMonday + 7 * 24 * 3600;
-                $bulkAfter  = (int) strtotime(
+                $bulkAfter  = strtotime(
                     sprintf('-%d weeks', self::PREFETCH_WEEKS - 1),
                     $weekMonday,
                 );
@@ -249,7 +250,7 @@ class StravaDataProvider
 
                 // Pre-warm per-week caches for the older weeks in the bulk range.
                 for ($i = 1; $i < self::PREFETCH_WEEKS; $i++) {
-                    $prewarmMonday     = (int) strtotime(sprintf('-%d weeks', $i), $weekMonday);
+                    $prewarmMonday     = strtotime(sprintf('-%d weeks', $i), $weekMonday);
                     $prewarmNext       = $prewarmMonday + 7 * 24 * 3600;
                     $prewarmWeekKey    = (new DateTime('@' . $prewarmMonday))->format('o.W');
                     $prewarmActivities = $this->filterActivitiesByWindow($allActivities, $prewarmMonday, $prewarmNext);
@@ -300,7 +301,7 @@ class StravaDataProvider
         return array_values(array_filter(
             $activities,
             static function (array $activity) use ($after, $before): bool {
-                $ts = (int) strtotime($activity['start_date_local']);
+                $ts = (int) strtotime((string) $activity['start_date_local']);
 
                 return $ts > $after && $ts < $before;
             },
@@ -365,7 +366,7 @@ class StravaDataProvider
     private function getApiToken(): AccessToken
     {
         $request = $this->requestStack->getCurrentRequest();
-        assert($request !== null);
+        assert($request instanceof Request);
 
         // Load the access token from the session, and refresh if required
         $accessToken = $request->getSession()->get('access_token');
