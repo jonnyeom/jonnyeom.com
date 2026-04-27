@@ -21,7 +21,7 @@
         "doctrine/dbal": "^3.10.5",
         "doctrine/doctrine-bundle": "^2.18.2",
         "doctrine/doctrine-migrations-bundle": "^3.7.0",
-        "doctrine/orm": "^3.5.8",
+        "doctrine/orm": "^3.6.3",
         "league/commonmark": "^2.8.2",
         "nelmio/cors-bundle": "^2.6.1",
         "pentatrion/vite-bundle": "^8.2.4",
