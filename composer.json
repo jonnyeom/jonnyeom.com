@@ -18,7 +18,7 @@
         "ext-intl": "*",
         "api-platform/core": "^3.4.17",
         "basvandorst/stravaphp": "^2.0.0",
-        "doctrine/dbal": "^3.10.5",
+        "doctrine/dbal": "^4.4.3",
         "doctrine/doctrine-bundle": "^2.18.2",
         "doctrine/doctrine-migrations-bundle": "^3.7.0",
         "doctrine/orm": "^3.5.8",
