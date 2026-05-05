@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "56e23e738e58db94b02b97e8e22c0fba",
+    "content-hash": "97f82e3435e0322b5c45fc6ddb16c83d",
     "packages": [
         {
             "name": "api-platform/core",
@@ -9661,11 +9661,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.50",
+            "version": "2.1.52",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/d452086fb4cf648c6b2d8cf3b639351f79e4f3e2",
-                "reference": "d452086fb4cf648c6b2d8cf3b639351f79e4f3e2",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/08a34f8db7ca4daabff74a474fe13c0e56e2b4e5",
+                "reference": "08a34f8db7ca4daabff74a474fe13c0e56e2b4e5",
                 "shasum": ""
             },
             "require": {
@@ -9710,7 +9710,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-17T13:10:32+00:00"
+            "time": "2026-04-28T12:17:53+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
