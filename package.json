@@ -16,8 +16,8 @@
         "url": "https://github.com/jonnyeom/jonnyeom/issues"
     },
     "dependencies": {
-        "ag-grid-community": "^34.3.1",
-        "ag-grid-react": "^33.3.2",
+        "ag-grid-community": "^35.2.1",
+        "ag-grid-react": "^35.2.1",
         "bulma": "^1.0.4",
         "highlight.js": "^11.11.1"
     },
