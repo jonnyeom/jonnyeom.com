@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -29,9 +29,9 @@ jobs:
           extensions: curl
           tools: composer, cs2pr
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22.17.1'
           cache: 'pnpm'
@@ -39,7 +39,7 @@ jobs:
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
       - name: Cache php dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -47,7 +47,7 @@ jobs:
       - name: Install php dependencies
         run: "composer install --no-progress --prefer-dist --classmap-authoritative --ansi"
       - name: Cache vendor for jobs
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: ${{ github.sha }}-vendor
@@ -56,7 +56,7 @@ jobs:
       - name: Build bundle
         run: pnpm build
       - name: Cache build for jobs
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: public/build
           key: ${{ github.sha }}-build
@@ -66,11 +66,11 @@ jobs:
     runs-on: "ubuntu-24.04"
     steps:
       - name: Checkout
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Build Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile
@@ -86,7 +86,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -95,7 +95,7 @@ jobs:
           extensions: curl
           tools: composer, cs2pr
       - name: Retrieve cached vendor folder
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: ${{ github.sha }}-vendor
@@ -110,7 +110,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -120,7 +120,7 @@ jobs:
           coverage: none
           ini-values: memory_limit=-1
       - name: Retrieve cached vendor folder
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: ${{ github.sha }}-vendor
@@ -139,7 +139,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v6"
       - name: Setup PHP
         uses: "shivammathur/setup-php@v2"
         with:
@@ -148,12 +148,12 @@ jobs:
           ini-values: memory_limit=-1
           tools: composer
       - name: Retrieve cached vendor folder
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: ${{ github.sha }}-vendor
       - name: Retrieve cached build folder
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: public/build
           key: ${{ github.sha }}-build
