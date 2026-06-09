@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: jonnyeom-com
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile
+    port: 10000
+    preDeployCommand: "php bin/console doctrine:migrations:migrate --no-interaction"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jonnyeom-db
+          property: connectionString
+
+databases:
+  - name: jonnyeom-db
+    plan: free
+    databaseName: jonnyeom
+    user: jonnyeom
