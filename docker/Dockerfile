@@ -1,4 +1,4 @@
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # System deps + PHP extensions
 # postgresql-dev is only needed to compile pdo_pgsql; remove it after, keep runtime libpq
