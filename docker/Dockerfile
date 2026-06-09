@@ -19,15 +19,16 @@ WORKDIR /var/www/html
 # PHP dependencies (layer-cached before copying full app)
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-progress \
-    --prefer-dist --classmap-authoritative --no-scripts
+    --prefer-dist --no-scripts
 
 # Node dependencies (layer-cached before copying full app)
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
-# Copy full app, run post-install scripts, build frontend assets
+# Copy full app, regenerate classmap with src/ present, run post-install scripts
 COPY . .
-RUN composer run-script post-install-cmd --no-interaction
+RUN composer dump-autoload --classmap-authoritative \
+    && composer run-script post-install-cmd --no-interaction
 RUN pnpm build
 
 # Nginx + PHP config
