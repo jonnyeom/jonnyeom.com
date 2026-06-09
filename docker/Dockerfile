@@ -12,7 +12,7 @@ RUN apk add --no-cache nginx nodejs npm icu-dev curl \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # pnpm via corepack (version pinned by packageManager field in package.json)
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 
 WORKDIR /var/www/html
 
