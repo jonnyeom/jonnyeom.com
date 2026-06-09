@@ -35,7 +35,7 @@ importers:
         version: file:vendor/symfony/ux-react/assets(@hotwired/stimulus@3.2.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@vitejs/plugin-react':
         specifier: 4.7.0
-        version: 4.7.0(vite@7.0.8(@types/node@25.5.0)(sass@1.98.0))
+        version: 4.7.0(vite@7.0.8(@types/node@25.5.0)(sass@1.100.0))
       imagemin-cli:
         specifier: 8.0.0
         version: 8.0.0
@@ -49,14 +49,14 @@ importers:
         specifier: 18.3.1
         version: 18.3.1(react@18.3.1)
       sass:
-        specifier: 1.98.0
-        version: 1.98.0
+        specifier: 1.100.0
+        version: 1.100.0
       vite:
         specifier: 7.0.8
-        version: 7.0.8(@types/node@25.5.0)(sass@1.98.0)
+        version: 7.0.8(@types/node@25.5.0)(sass@1.100.0)
       vite-plugin-symfony:
         specifier: 8.2.4
-        version: 8.2.4(vite@7.0.8(@types/node@25.5.0)(sass@1.98.0))
+        version: 8.2.4(vite@7.0.8(@types/node@25.5.0)(sass@1.100.0))
 
 packages:
 
@@ -801,9 +801,9 @@ packages:
     resolution: {integrity: sha512-lB0j9teu8JtDPDHRfU8pNH33w4wMu5bOaKoT4PxH+AKugBrIfpiJMTTKIm0TErNeJPkeQEgvH31YpccTwOKPRg==}
     engines: {node: '>=18'}
 
-  chokidar@4.0.3:
-    resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
-    engines: {node: '>= 14.16.0'}
+  chokidar@5.0.0:
+    resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
+    engines: {node: '>= 20.19.0'}
 
   cli-cursor@5.0.0:
     resolution: {integrity: sha512-aCj4O5wKyszjMmDT4tZj93kxyydN/K5zPWSCe6/0AV/AA1pqe5ZBIw0a2ZfPQV7lL5/yb5HsUreJ6UFAF1tEQw==}
@@ -1896,9 +1896,9 @@ packages:
   readable-stream@2.3.8:
     resolution: {integrity: sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==}
 
-  readdirp@4.1.2:
-    resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
-    engines: {node: '>= 14.18.0'}
+  readdirp@5.0.0:
+    resolution: {integrity: sha512-9u/XQ1pvrQtYyMpZe7DXKv2p5CNvyVwzUB6uhLAnQwHMSgKMBR62lc7AHljaeteeHXn11XTAaLLUVZYVZyuRBQ==}
+    engines: {node: '>= 20.19.0'}
 
   redent@1.0.0:
     resolution: {integrity: sha512-qtW5hKzGQZqKoh6JNSD+4lfitfPKGz42e6QwiRmPM5mmKtR0N41AbJRYu0xJi7nhOJ4WDgRkKvAk6tw4WIwR4g==}
@@ -1951,9 +1951,9 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
-  sass@1.98.0:
-    resolution: {integrity: sha512-+4N/u9dZ4PrgzGgPlKnaaRQx64RO0JBKs9sDhQ2pLgN6JQZ25uPQZKQYaBJU48Kd5BxgXoJ4e09Dq7nMcOUW3A==}
-    engines: {node: '>=14.0.0'}
+  sass@1.100.0:
+    resolution: {integrity: sha512-B5j0rYMlinhhOo9tjQebMVVn0TfyXAF+wB3b2ggZUuJ/is/Y+7+JGjirAMxHZ9Z3hIP98NPfamlAkBHa1lAaXQ==}
+    engines: {node: '>=20.19.0'}
     hasBin: true
 
   sax@1.5.0:
@@ -2244,7 +2244,7 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   validate-npm-package-license@3.0.4:
@@ -2765,7 +2765,7 @@ snapshots:
 
   '@types/webpack-env@1.18.8': {}
 
-  '@vitejs/plugin-react@4.7.0(vite@7.0.8(@types/node@25.5.0)(sass@1.98.0))':
+  '@vitejs/plugin-react@4.7.0(vite@7.0.8(@types/node@25.5.0)(sass@1.100.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -2773,7 +2773,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 7.0.8(@types/node@25.5.0)(sass@1.98.0)
+      vite: 7.0.8(@types/node@25.5.0)(sass@1.100.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -2979,9 +2979,9 @@ snapshots:
 
   change-file-extension@0.1.1: {}
 
-  chokidar@4.0.3:
+  chokidar@5.0.0:
     dependencies:
-      readdirp: 4.1.2
+      readdirp: 5.0.0
 
   cli-cursor@5.0.0:
     dependencies:
@@ -4199,7 +4199,7 @@ snapshots:
       string_decoder: 1.1.1
       util-deprecate: 1.0.2
 
-  readdirp@4.1.2: {}
+  readdirp@5.0.0: {}
 
   redent@1.0.0:
     dependencies:
@@ -4278,9 +4278,9 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  sass@1.98.0:
+  sass@1.100.0:
     dependencies:
-      chokidar: 4.0.3
+      chokidar: 5.0.0
       immutable: 5.1.5
       source-map-js: 1.2.1
     optionalDependencies:
@@ -4579,17 +4579,17 @@ snapshots:
       spdx-expression-parse: 3.0.1
     optional: true
 
-  vite-plugin-symfony@8.2.4(vite@7.0.8(@types/node@25.5.0)(sass@1.98.0)):
+  vite-plugin-symfony@8.2.4(vite@7.0.8(@types/node@25.5.0)(sass@1.100.0)):
     dependencies:
       debug: 4.4.3
       fast-glob: 3.3.3
       picocolors: 1.1.1
       sirv: 3.0.2
-      vite: 7.0.8(@types/node@25.5.0)(sass@1.98.0)
+      vite: 7.0.8(@types/node@25.5.0)(sass@1.100.0)
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.0.8(@types/node@25.5.0)(sass@1.98.0):
+  vite@7.0.8(@types/node@25.5.0)(sass@1.100.0):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.3)
@@ -4600,7 +4600,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.5.0
       fsevents: 2.3.3
-      sass: 1.98.0
+      sass: 1.100.0
 
   web-worker@1.5.0: {}
 
