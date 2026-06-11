@@ -71,16 +71,8 @@
             ]
         },
         {
-            "description": "Don't upgrade phpunit/phpunit to 10.x until we do it ourselves",
-            "matchPackageNames": [
-                "phpunit/phpunit"
-            ],
-            "matchCurrentVersion": "<10.0.0",
-            "allowedVersions": "<10.0.0"
-        },
-        {
-            "description": "Don't upgrade symfony to 7.x until we do it ourselves",
-            "allowedVersions": "<7.0.0",
+            "description": "Don't upgrade symfony to 8.x until we do it ourselves",
+            "allowedVersions": "<8.0.0",
             "matchPackageNames": [
                 "symfony/{/,}**"
             ]

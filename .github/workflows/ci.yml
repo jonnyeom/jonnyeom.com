@@ -33,7 +33,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22.17.1'
+          node-version: '22.22.3'
           cache: 'pnpm'
       - name: Get composer cache directory
         id: composer-cache
