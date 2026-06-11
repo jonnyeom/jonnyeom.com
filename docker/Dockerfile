@@ -22,7 +22,7 @@ RUN composer install --no-dev --optimize-autoloader --no-progress \
     --prefer-dist --no-scripts
 
 # Node dependencies (layer-cached before copying full app)
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # Copy full app, regenerate classmap with src/ present, run post-install scripts
