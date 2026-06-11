@@ -1,0 +1,7 @@
+allowBuilds:
+  '@parcel/watcher': false
+  esbuild: false
+  gifsicle: false
+  jpegtran-bin: false
+  optipng-bin: false
+  pngquant-bin: false
