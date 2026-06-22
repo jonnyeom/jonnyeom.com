@@ -20,7 +20,7 @@
         "api-platform/core": "^3.4.17",
         "basvandorst/stravaphp": "^2.0.0",
         "doctrine/dbal": "^3.10.5",
-        "doctrine/doctrine-bundle": "^2.18.2",
+        "doctrine/doctrine-bundle": "^2.18.3",
         "doctrine/doctrine-migrations-bundle": "^3.7.0",
         "doctrine/orm": "^3.6.7",
         "league/commonmark": "^2.8.2",
