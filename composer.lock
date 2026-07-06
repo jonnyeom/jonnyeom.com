@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "50280b6128adbf96d017d41fc2d55f1f",
+    "content-hash": "5a80328b40b1eb7a5332da25f8d8ec60",
     "packages": [
         {
             "name": "api-platform/core",
@@ -9801,16 +9801,16 @@
         },
         {
             "name": "phpstan/phpstan-symfony",
-            "version": "2.0.19",
+            "version": "2.0.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-symfony.git",
-                "reference": "546071ed7f80a89ec30909346eb7cc741800740a"
+                "reference": "53f1a6462dbe71fad36ce054caf5e1b725b740fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/546071ed7f80a89ec30909346eb7cc741800740a",
-                "reference": "546071ed7f80a89ec30909346eb7cc741800740a",
+                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/53f1a6462dbe71fad36ce054caf5e1b725b740fd",
+                "reference": "53f1a6462dbe71fad36ce054caf5e1b725b740fd",
                 "shasum": ""
             },
             "require": {
@@ -9869,9 +9869,9 @@
             ],
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-symfony/issues",
-                "source": "https://github.com/phpstan/phpstan-symfony/tree/2.0.19"
+                "source": "https://github.com/phpstan/phpstan-symfony/tree/2.0.20"
             },
-            "time": "2026-05-29T12:52:44+00:00"
+            "time": "2026-06-16T09:17:35+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -10332,21 +10332,21 @@
         },
         {
             "name": "rector/rector",
-            "version": "2.4.5",
+            "version": "2.4.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "cbd86024be5014d3c14d9f0b3f7aae8ecbffd62c"
+                "reference": "9b9e5c76618e4d359f65b54ca2eabcad3d1761ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/cbd86024be5014d3c14d9f0b3f7aae8ecbffd62c",
-                "reference": "cbd86024be5014d3c14d9f0b3f7aae8ecbffd62c",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/9b9e5c76618e4d359f65b54ca2eabcad3d1761ee",
+                "reference": "9b9e5c76618e4d359f65b54ca2eabcad3d1761ee",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.4|^8.0",
-                "phpstan/phpstan": "^2.1.56"
+                "phpstan/phpstan": "^2.2.2"
             },
             "conflict": {
                 "rector/rector-doctrine": "*",
@@ -10380,7 +10380,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/2.4.5"
+                "source": "https://github.com/rectorphp/rector/tree/2.4.6"
             },
             "funding": [
                 {
@@ -10388,7 +10388,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-05-26T21:03:22+00:00"
+            "time": "2026-06-17T11:56:28+00:00"
         },
         {
             "name": "sebastian/cli-parser",
