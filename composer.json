@@ -49,7 +49,7 @@
         "symfony/stimulus-bundle": "^2.36.0",
         "symfony/translation": "^7.4.14",
         "symfony/twig-bundle": "^7.4.14",
-        "symfony/ux-live-component": "^3.0",
+        "symfony/ux-live-component": "^3.4.0",
         "symfony/ux-react": "^2.36.0",
         "symfony/validator": "^7.4.14",
         "symfony/web-link": "^7.4.8",

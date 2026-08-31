@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7334a0f2d9c25a3f639f2cc0e3ed6e72",
+    "content-hash": "d5308140887a81b4bab751813156a027",
     "packages": [
         {
             "name": "api-platform/core",
@@ -8248,16 +8248,16 @@
         },
         {
             "name": "symfony/ux-live-component",
-            "version": "v3.1.0",
+            "version": "v3.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/ux-live-component.git",
-                "reference": "9ad6223e00922c17e26ce111c3ced31a9c2e7210"
+                "reference": "bb7a955e68dbedbbd4c24ab0b6acab1ca22d8720"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ux-live-component/zipball/9ad6223e00922c17e26ce111c3ced31a9c2e7210",
-                "reference": "9ad6223e00922c17e26ce111c3ced31a9c2e7210",
+                "url": "https://api.github.com/repos/symfony/ux-live-component/zipball/bb7a955e68dbedbbd4c24ab0b6acab1ca22d8720",
+                "reference": "bb7a955e68dbedbbd4c24ab0b6acab1ca22d8720",
                 "shasum": ""
             },
             "require": {
@@ -8325,7 +8325,7 @@
                 "twig"
             ],
             "support": {
-                "source": "https://github.com/symfony/ux-live-component/tree/v3.1.0"
+                "source": "https://github.com/symfony/ux-live-component/tree/v3.4.0"
             },
             "funding": [
                 {
@@ -8345,7 +8345,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-29T07:08:56+00:00"
+            "time": "2026-07-25T17:54:47+00:00"
         },
         {
             "name": "symfony/ux-react",
