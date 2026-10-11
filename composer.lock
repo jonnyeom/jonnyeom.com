@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a3da05877a2f41bf20ab7230844bb3c",
+    "content-hash": "555a290f4e8a2ec0b09fbe84e4bdc9ce",
     "packages": [
         {
             "name": "api-platform/core",
@@ -612,16 +612,16 @@
         },
         {
             "name": "doctrine/doctrine-bundle",
-            "version": "2.18.5",
+            "version": "2.19.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/DoctrineBundle.git",
-                "reference": "9f8cf33f87e561ffe550747bdc756fd04cc2cb49"
+                "reference": "72b53688c30451a7c65addd50b2167d31459724a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/DoctrineBundle/zipball/9f8cf33f87e561ffe550747bdc756fd04cc2cb49",
-                "reference": "9f8cf33f87e561ffe550747bdc756fd04cc2cb49",
+                "url": "https://api.github.com/repos/doctrine/DoctrineBundle/zipball/72b53688c30451a7c65addd50b2167d31459724a",
+                "reference": "72b53688c30451a7c65addd50b2167d31459724a",
                 "shasum": ""
             },
             "require": {
@@ -643,7 +643,7 @@
                 "doctrine/cache": "< 1.11",
                 "doctrine/orm": "<2.17 || >=4.0",
                 "symfony/var-exporter": "< 6.4.1 || 7.0.0",
-                "twig/twig": "<2.13 || >=3.0 <3.0.4"
+                "twig/twig": "<2.13 || >=3.0 <3.0.4 || >=5"
             },
             "require-dev": {
                 "doctrine/annotations": "^1 || ^2",
@@ -671,7 +671,7 @@
                 "symfony/var-exporter": "^6.4.1 || ^7.0.1",
                 "symfony/web-profiler-bundle": "^6.4 || ^7.0",
                 "symfony/yaml": "^6.4 || ^7.0",
-                "twig/twig": "^2.14.7 || ^3.0.4"
+                "twig/twig": "^2.14.7 || ^3.0.4 || ^4"
             },
             "suggest": {
                 "doctrine/orm": "The Doctrine ORM integration is optional in the bundle.",
@@ -716,7 +716,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/DoctrineBundle/issues",
-                "source": "https://github.com/doctrine/DoctrineBundle/tree/2.18.5"
+                "source": "https://github.com/doctrine/DoctrineBundle/tree/2.19.1"
             },
             "funding": [
                 {
@@ -732,7 +732,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-23T11:05:48+00:00"
+            "time": "2026-09-08T11:48:41+00:00"
         },
         {
             "name": "doctrine/doctrine-migrations-bundle",
@@ -12185,7 +12185,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.4.25",
+        "php": "^8.4.26",
         "ext-intl": "*"
     },
     "platform-dev": {},
