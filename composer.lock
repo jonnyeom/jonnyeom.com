@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a3da05877a2f41bf20ab7230844bb3c",
+    "content-hash": "9c4e9863ce81388efd9bdde76da0d396",
     "packages": [
         {
             "name": "api-platform/core",
@@ -9613,11 +9613,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.2.9",
+            "version": "2.3.1",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/13d6b4f347bad222da436580c8304fa6f83e6bd0",
-                "reference": "13d6b4f347bad222da436580c8304fa6f83e6bd0",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/6155239b488e95d26d1ebd95c6b4bb294d7f09db",
+                "reference": "6155239b488e95d26d1ebd95c6b4bb294d7f09db",
                 "shasum": ""
             },
             "require": {
@@ -9673,7 +9673,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-22T07:38:16+00:00"
+            "time": "2026-10-08T21:09:11+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
@@ -9805,29 +9805,29 @@
         },
         {
             "name": "phpstan/phpstan-symfony",
-            "version": "2.0.20",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan-symfony.git",
-                "reference": "53f1a6462dbe71fad36ce054caf5e1b725b740fd"
+                "reference": "1981b94f0dd3a5bb42268f6a7a0e8954ac76dc2e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/53f1a6462dbe71fad36ce054caf5e1b725b740fd",
-                "reference": "53f1a6462dbe71fad36ce054caf5e1b725b740fd",
+                "url": "https://api.github.com/repos/phpstan/phpstan-symfony/zipball/1981b94f0dd3a5bb42268f6a7a0e8954ac76dc2e",
+                "reference": "1981b94f0dd3a5bb42268f6a7a0e8954ac76dc2e",
                 "shasum": ""
             },
             "require": {
                 "ext-simplexml": "*",
                 "php": "^7.4 || ^8.0",
-                "phpstan/phpstan": "^2.1.13"
+                "phpstan/phpstan": "^2.3"
             },
             "conflict": {
                 "symfony/framework-bundle": "<3.0"
             },
             "require-dev": {
                 "php-parallel-lint/php-parallel-lint": "^1.2",
-                "phpstan/phpstan-phpunit": "^2.0.8",
+                "phpstan/phpstan-phpunit": "^2.0.13",
                 "phpstan/phpstan-strict-rules": "^2.0",
                 "phpunit/phpunit": "^9.6",
                 "psr/container": "1.1.2",
@@ -9873,9 +9873,9 @@
             ],
             "support": {
                 "issues": "https://github.com/phpstan/phpstan-symfony/issues",
-                "source": "https://github.com/phpstan/phpstan-symfony/tree/2.0.20"
+                "source": "https://github.com/phpstan/phpstan-symfony/tree/2.1.0"
             },
-            "time": "2026-06-16T09:17:35+00:00"
+            "time": "2026-10-03T15:54:38+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -10320,30 +10320,27 @@
         },
         {
             "name": "rector/rector",
-            "version": "2.4.6",
+            "version": "2.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "9b9e5c76618e4d359f65b54ca2eabcad3d1761ee"
+                "reference": "4d6a39b7fff302cac0ce90cd959a53c2f6a32776"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/9b9e5c76618e4d359f65b54ca2eabcad3d1761ee",
-                "reference": "9b9e5c76618e4d359f65b54ca2eabcad3d1761ee",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/4d6a39b7fff302cac0ce90cd959a53c2f6a32776",
+                "reference": "4d6a39b7fff302cac0ce90cd959a53c2f6a32776",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.4|^8.0",
-                "phpstan/phpstan": "^2.2.2"
+                "phpstan/phpstan": "^2.3.0"
             },
             "conflict": {
                 "rector/rector-doctrine": "*",
                 "rector/rector-downgrade-php": "*",
                 "rector/rector-phpunit": "*",
                 "rector/rector-symfony": "*"
-            },
-            "suggest": {
-                "ext-dom": "To manipulate phpunit.xml via the custom-rule command"
             },
             "bin": [
                 "bin/rector"
@@ -10368,7 +10365,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/2.4.6"
+                "source": "https://github.com/rectorphp/rector/tree/2.7.0"
             },
             "funding": [
                 {
@@ -10376,7 +10373,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-17T11:56:28+00:00"
+            "time": "2026-10-06T08:46:45+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -12185,7 +12182,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.4.25",
+        "php": "^8.4.26",
         "ext-intl": "*"
     },
     "platform-dev": {},
