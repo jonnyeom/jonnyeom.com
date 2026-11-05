@@ -24,14 +24,12 @@
     {% block stylesheets %}
         <link rel="icon"
               href="https://images.emojiterra.com/google/noto-emoji/unicode-15/color/svg/1f341.svg">
-        {{ vite_entry_link_tags('app') }}
+        {{ reprise_entry_link_tags('app') }}
         <script src="https://kit.fontawesome.com/2d80e56da0.js" crossorigin="anonymous"></script>
     {% endblock %}
 
     {% block javascripts %}
-        {{ vite_entry_script_tags('app', {
-            dependency: 'react'
-        }) }}
+        {{ reprise_entry_script_tags('app') }}
     {% endblock %}
 </head>
 <body>
