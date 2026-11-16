@@ -1,12 +1,12 @@
 import { defineConfig } from "vite";
-import symfonyPlugin from "vite-plugin-symfony";
+import Symfony from "@symfony/reprise/vite";
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
     plugins: [
         react(),
-        symfonyPlugin({
-            stimulus: true
+        Symfony({
+            stimulus: "assets/controllers.json"
         }),
     ],
     build: {

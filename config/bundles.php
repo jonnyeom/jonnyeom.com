@@ -15,7 +15,7 @@ return [
     Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
     Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle::class => ['all' => true],
     Symfony\UX\StimulusBundle\StimulusBundle::class => ['all' => true],
-    Pentatrion\ViteBundle\PentatrionViteBundle::class => ['all' => true],
+    Symfony\Reprise\RepriseBundle::class => ['all' => true],
     Symfony\UX\React\ReactBundle::class => ['all' => true],
     Rami\SeoBundle\SeoBundle::class => ['all' => true],
     Symfony\UX\TwigComponent\TwigComponentBundle::class => ['all' => true],

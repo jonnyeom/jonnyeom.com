@@ -43,7 +43,7 @@ jonnyeom.db
 ###> phpstan/phpstan ###
 phpstan.neon
 ###< phpstan/phpstan ###
-###> pentatrion/vite-bundle ###
+###> symfony/reprise ###
 /node_modules/
 /public/build/
-###< pentatrion/vite-bundle ###
+###< symfony/reprise ###

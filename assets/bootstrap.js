@@ -1,16 +1,11 @@
-import { startStimulusApp, registerControllers } from "vite-plugin-symfony/stimulus/helpers"
-import { registerReactControllerComponents } from "vite-plugin-symfony/stimulus/helpers/react"
+import { startStimulusApp } from '@symfony/reprise/stimulus';
+import { registerReactControllerComponents } from '@symfony/ux-react';
 
-registerReactControllerComponents(import.meta.glob('./react/controllers/**/*.js(x)\?'));
+const reactControllers = import.meta.glob('./react/controllers/**/*.{jsx,tsx}', { eager: true });
 
-const app = startStimulusApp();
-registerControllers(
-    app,
-    import.meta.glob(
-        "./controllers/*_controller.js",
-        {
-            query: "?stimulus",
-            eager: true,
-        },
-    ),
-);
+// Adapt Vite's glob imports to the context expected by Symfony UX React.
+const reactContext = (path) => reactControllers[`./react/controllers/${path.slice(2)}`];
+reactContext.keys = () => Object.keys(reactControllers).map((path) => path.replace('./react/controllers/', './'));
+registerReactControllerComponents(reactContext);
+
+startStimulusApp();
