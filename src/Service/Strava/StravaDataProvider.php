@@ -9,10 +9,12 @@ use App\Model\Strava\WeeklyStat;
 use DateTime;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Throwable;
 
 use function array_filter;
 use function array_key_exists;
@@ -50,6 +52,9 @@ class StravaDataProvider
         private readonly RequestStack $requestStack,
         private readonly ClientProvider $clientProvider,
         private readonly CacheInterface $cache,
+        private readonly AthleteGuard $athleteGuard,
+        private readonly WeeklyStatRecorder $weeklyStatRecorder,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -97,7 +102,11 @@ class StravaDataProvider
         static::calculateWeeklyMetrics($weeklyStats);
 
         // Reverse to newest-first, then take the requested slice.
-        return array_slice(array_reverse(array_values($weeklyStats)), 0, $limit);
+        $pagedStats = array_slice(array_reverse(array_values($weeklyStats)), 0, $limit);
+
+        $this->storeWeeklyStats($pagedStats);
+
+        return $pagedStats;
     }
 
     /**
@@ -178,7 +187,7 @@ class StravaDataProvider
         $today          = new DateTime();
         $mondayThisWeek = strtotime('monday this week', $today->getTimestamp());
         $currentWeekKey = $today->format('o.W');
-        $athleteId      = (string) $accessToken->getResourceOwnerId();
+        $athleteId      = $this->athleteGuard->getAllowedAthleteId();
 
         $neededWeekKeys = $this->buildNeededWeekKeys($neededWeeks, $mondayThisWeek);
 
@@ -360,6 +369,20 @@ class StravaDataProvider
     }
 
     /**
+     * Persists the calculated weekly stats. A storage failure is logged but never breaks the page.
+     *
+     * @param WeeklyStat[] $weeklyStats
+     */
+    private function storeWeeklyStats(array $weeklyStats): void
+    {
+        try {
+            $this->weeklyStatRecorder->record($this->athleteGuard->getAllowedAthleteId(), $weeklyStats);
+        } catch (Throwable $e) {
+            $this->logger->error('Failed to store Strava weekly stats: ' . $e->getMessage(), ['exception' => $e]);
+        }
+    }
+
+    /**
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
@@ -368,9 +391,19 @@ class StravaDataProvider
         $request = $this->requestStack->getCurrentRequest();
         assert($request instanceof Request);
 
+        $session = $request->getSession();
+
         // Load the access token from the session, and refresh if required
-        $accessToken = $request->getSession()->get('access_token');
+        $accessToken = $session->get('access_token');
         if (! $accessToken) {
+            throw new AccessTokenMissing();
+        }
+
+        // Only the configured athlete (STRAVA_ATHLETE_ID) may use the integration.
+        if (! $this->athleteGuard->isAllowed($session->get(AthleteGuard::SESSION_KEY))) {
+            $session->remove('access_token');
+            $session->remove(AthleteGuard::SESSION_KEY);
+
             throw new AccessTokenMissing();
         }
 
