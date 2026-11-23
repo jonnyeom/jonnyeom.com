@@ -78,7 +78,7 @@ final class StravaDataProviderTest extends TestCase
         $this->clientProvider = $this->createMock(ClientProvider::class);
         $this->clientProvider->method('getAPIClient')->willReturn($this->stravaClient);
 
-        $this->recorder   = $this->createMock(WeeklyStatRecorder::class);
+        $this->recorder     = $this->createMock(WeeklyStatRecorder::class);
         $this->repository   = $this->createMock(StravaWeeklyStatRepository::class);
         $this->tokenManager = $this->createMock(StravaTokenManager::class);
 
