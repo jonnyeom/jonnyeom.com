@@ -84,10 +84,7 @@ class StravaConnectController extends AbstractController
         // Only the site owner's Strava account (STRAVA_ATHLETE_ID) may connect.
         $athleteId = AthleteGuard::resolveAthleteId($accessToken);
         if (! $this->athleteGuard->isAllowed($athleteId)) {
-            $logger->warning('Rejected Strava connection from non-allowed athlete.', [
-                'athlete_id' => $athleteId,
-                'allowed_athlete_configured' => $this->athleteGuard->isConfigured(),
-            ]);
+            $logger->warning('Rejected Strava connection from non-allowed athlete.', ['athlete_id' => $athleteId]);
 
             $this->addFlash('error', 'This Strava account is not allowed to connect to this site.');
 

@@ -26,7 +26,6 @@ final class AthleteGuardTest extends TestCase
     {
         $guard = new AthleteGuard('  ');
 
-        $this->assertFalse($guard->isConfigured());
         $this->assertFalse($guard->isAllowed(''));
         $this->assertFalse($guard->isAllowed('12345'));
     }

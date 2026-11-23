@@ -30,14 +30,9 @@ final readonly class AthleteGuard
         $this->allowedAthleteId = trim($allowedAthleteId);
     }
 
-    public function isConfigured(): bool
-    {
-        return $this->allowedAthleteId !== '';
-    }
-
     public function isAllowed(mixed $athleteId): bool
     {
-        if (! $this->isConfigured() || ! (is_int($athleteId) || is_string($athleteId))) {
+        if ($this->allowedAthleteId === '' || ! (is_int($athleteId) || is_string($athleteId))) {
             return false;
         }
 
