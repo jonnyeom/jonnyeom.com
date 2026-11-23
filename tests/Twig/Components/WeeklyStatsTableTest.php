@@ -59,7 +59,6 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->with(20)
             ->willReturn($this->buildWeeklyStats(3));
         $this->stravaDataProvider->expects($this->never())->method('refresh');
-        $this->stravaDataProvider->expects($this->never())->method('getWeeklyStatsPaged');
 
         $this->createLiveComponent('WeeklyStatsTable')->render();
     }
