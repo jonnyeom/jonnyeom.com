@@ -14,7 +14,10 @@ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
+use function json_encode;
+use function str_contains;
 use function time;
 
 final class StravaTokenManagerTest extends TestCase
@@ -30,6 +33,9 @@ final class StravaTokenManagerTest extends TestCase
     /** @var MockObject&ClientProvider */
     private MockObject $clientProvider;
 
+    /** @var MockObject&LoggerInterface */
+    private MockObject $logger;
+
     private StravaTokenManager $manager;
 
     protected function setUp(): void
@@ -37,8 +43,9 @@ final class StravaTokenManagerTest extends TestCase
         $this->entityManager  = $this->createMock(EntityManagerInterface::class);
         $this->repository     = $this->createMock(StravaTokenRepository::class);
         $this->clientProvider = $this->createMock(ClientProvider::class);
+        $this->logger         = $this->createMock(LoggerInterface::class);
 
-        $this->manager = new StravaTokenManager($this->entityManager, $this->repository, $this->clientProvider);
+        $this->manager = new StravaTokenManager($this->entityManager, $this->repository, $this->clientProvider, $this->logger);
     }
 
     public function testStoreCreatesATokenForANewAthlete(): void
@@ -102,6 +109,19 @@ final class StravaTokenManagerTest extends TestCase
             ->with('refresh-me')
             ->willReturn($this->token('fresh', 'rotated', time() + 21600));
         $this->entityManager->expects($this->once())->method('flush');
+        $this->logger
+            ->expects($this->once())
+            ->method('info')
+            ->with('Strava token refreshed.', $this->callback(
+                /** @param array<string, mixed> $context */
+                static function (array $context): bool {
+                    $logged = (string) json_encode($context);
+
+                    return $context['athlete_id'] === self::ATHLETE_ID
+                        && ! str_contains($logged, 'fresh')
+                        && ! str_contains($logged, 'rotated');
+                },
+            ));
 
         $token = $this->manager->refresh(self::ATHLETE_ID);
 
@@ -120,14 +140,25 @@ final class StravaTokenManagerTest extends TestCase
         $this->manager->refresh(self::ATHLETE_ID);
     }
 
-    public function testRejectedRefreshKeepsTheStoredToken(): void
+    public function testRejectedRefreshIsLoggedAndKeepsTheStoredToken(): void
     {
         $stored = new StravaToken(self::ATHLETE_ID, $this->token('access', 'refresh-me', time() - 60));
         $this->repository->method('findForAthlete')->willReturn($stored);
+        $responseBody = ['message' => 'Bad Request', 'errors' => [['resource' => 'RefreshToken', 'code' => 'invalid']]];
         $this->clientProvider
             ->method('refreshAccessToken')
-            ->willThrowException(new IdentityProviderException('Bad Request', 400, []));
+            ->willThrowException(new IdentityProviderException('Bad Request', 400, $responseBody));
         $this->entityManager->expects($this->never())->method('flush');
+        $this->logger
+            ->expects($this->once())
+            ->method('error')
+            ->with('Strava token refresh failed.', $this->callback(
+                /** @param array<string, mixed> $context */
+                static fn (array $context): bool => $context['athlete_id'] === self::ATHLETE_ID
+                    && $context['error'] === 'Bad Request'
+                    && $context['response'] === $responseBody
+                    && ! str_contains((string) json_encode($context), 'refresh-me'),
+            ));
 
         try {
             $this->manager->refresh(self::ATHLETE_ID);

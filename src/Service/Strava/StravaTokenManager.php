@@ -11,6 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use League\OAuth2\Client\Token\AccessTokenInterface;
+use Psr\Log\LoggerInterface;
+
+use function date;
 
 /**
  * Stores the athlete's Strava token in the database and refreshes it.
@@ -21,6 +24,7 @@ class StravaTokenManager
         private readonly EntityManagerInterface $entityManager,
         private readonly StravaTokenRepository $repository,
         private readonly ClientProvider $clientProvider,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -60,8 +64,27 @@ class StravaTokenManager
     {
         $stored = $this->getStoredToken($athleteId);
 
-        $stored->update($this->clientProvider->refreshAccessToken($stored->getRefreshToken()));
+        try {
+            $refreshed = $this->clientProvider->refreshAccessToken($stored->getRefreshToken());
+        } catch (IdentityProviderException $e) {
+            // Logged here so both the stats page and app:strava:refresh-token leave a trace.
+            // Strava's error body does not contain the tokens; never log the tokens themselves.
+            $this->logger->error('Strava token refresh failed.', [
+                'athlete_id' => $athleteId,
+                'error' => $e->getMessage(),
+                'response' => $e->getResponseBody(),
+            ]);
+
+            throw $e;
+        }
+
+        $stored->update($refreshed);
         $this->entityManager->flush();
+
+        $this->logger->info('Strava token refreshed.', [
+            'athlete_id' => $athleteId,
+            'expires_at' => date('c', $stored->getExpiresAt()),
+        ]);
 
         return $stored->toAccessToken();
     }

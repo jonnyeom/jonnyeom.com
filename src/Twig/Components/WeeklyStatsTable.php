@@ -8,6 +8,7 @@ use App\Exception\Strava\AccessTokenMissing;
 use App\Model\Strava\WeeklyStat;
 use App\Service\Strava\StravaDataProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
@@ -37,8 +38,10 @@ class WeeklyStatsTable extends AbstractController
 
     private bool $refreshed = false;
 
-    public function __construct(private readonly StravaDataProvider $stravaDataProvider)
-    {
+    public function __construct(
+        private readonly StravaDataProvider $stravaDataProvider,
+        private readonly LoggerInterface $logger,
+    ) {
     }
 
     #[LiveAction]
@@ -110,6 +113,11 @@ class WeeklyStatsTable extends AbstractController
 
     private function handleError(Throwable $e): void
     {
+        // Not connected is expected; token refresh failures are logged by StravaTokenManager.
+        if (! $e instanceof AccessTokenMissing && ! $e instanceof IdentityProviderException) {
+            $this->logger->error('Strava stats error: ' . $e->getMessage(), ['exception' => $e]);
+        }
+
         $this->error = match (true) {
             $e instanceof AccessTokenMissing => 'No access token. Please connect to Strava.',
             $e instanceof IdentityProviderException => 'Strava access error: ' . $e->getMessage(),
