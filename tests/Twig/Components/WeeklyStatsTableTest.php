@@ -12,8 +12,10 @@ use DateTime;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use PHPUnit\Framework\MockObject\MockObject;
 use RuntimeException;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
+use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 use function sprintf;
 
@@ -38,7 +40,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
 
         $this->stravaDataProvider
             ->expects($this->once())
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->with(20)  // INITIAL_VISIBLE_WEEKS
             ->willReturn($weeklyStats);
 
@@ -47,6 +49,41 @@ final class WeeklyStatsTableTest extends KernelTestCase
 
         $this->assertStringContainsString('Load more', (string) $rendered);
         $this->assertStringNotContainsString('is-danger', (string) $rendered);
+    }
+
+    public function testPageLoadReadsFromDatabaseAndDoesNotCallStrava(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('getStoredWeeklyStats')
+            ->with(20)
+            ->willReturn($this->buildWeeklyStats(3));
+        $this->stravaDataProvider->expects($this->never())->method('refresh');
+
+        $this->createLiveComponent('WeeklyStatsTable')->render();
+    }
+
+    public function testEmptyDatabaseAsksToRefresh(): void
+    {
+        $this->stravaDataProvider
+            ->method('getStoredWeeklyStats')
+            ->willReturn([]);
+
+        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
+
+        $this->assertStringContainsString('No stored data yet', $rendered);
+        $this->assertStringNotContainsString('is-danger', $rendered);
+    }
+
+    public function testFewerStoredWeeksThanRequestedShowsHint(): void
+    {
+        $this->stravaDataProvider
+            ->method('getStoredWeeklyStats')
+            ->willReturn($this->buildWeeklyStats(3));
+
+        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
+
+        $this->assertStringContainsString('Showing all stored weeks', $rendered);
     }
 
     public function testLoadMoreIncreasesLimit(): void
@@ -62,10 +99,63 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertSame(40, $component->visibleWeeks);
     }
 
+    public function testRefreshDropsCacheThenReloadsStats(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('refresh')
+            ->with(20);
+        $this->stravaDataProvider
+            ->method('getStoredWeeklyStats')
+            ->willReturn($this->buildWeeklyStats(3));
+
+        $component = $this->createComponentWithMockedProvider();
+        $rendered  = (string) $component->render();
+
+        $this->assertStringContainsString('Refresh', $rendered);
+        $this->assertStringNotContainsString('Updated with fresh Strava data', $rendered);
+
+        $rendered = (string) $component->call('refresh')->render();
+
+        $this->assertStringContainsString('Updated with fresh Strava data', $rendered);
+        $this->assertStringNotContainsString('is-danger', $rendered);
+    }
+
+    public function testRefreshUsesCurrentlyVisibleWeeks(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('refresh')
+            ->with(30);
+        $this->stravaDataProvider
+            ->method('getStoredWeeklyStats')
+            ->willReturn($this->buildWeeklyStats(3));
+
+        $this->createComponentWithMockedProvider()
+            ->call('loadMore')
+            ->call('refresh')
+            ->render();
+    }
+
+    public function testRefreshErrorIsShown(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('refresh')
+            ->willThrowException(new AccessTokenMissing());
+
+        $rendered = (string) $this->createComponentWithMockedProvider()
+            ->call('refresh')
+            ->render();
+
+        $this->assertStringContainsString('No access token', $rendered);
+        $this->assertStringNotContainsString('Updated with fresh Strava data', $rendered);
+    }
+
     public function testAccessTokenMissingShowsError(): void
     {
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willThrowException(new AccessTokenMissing());
 
         $component = $this->createLiveComponent('WeeklyStatsTable');
@@ -78,7 +168,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
     public function testIdentityProviderExceptionShowsError(): void
     {
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willThrowException(new IdentityProviderException('token expired', 401, []));
 
         $component = $this->createLiveComponent('WeeklyStatsTable');
@@ -92,7 +182,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
     public function testGenericExceptionShowsError(): void
     {
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willThrowException(new RuntimeException('something went wrong'));
 
         $component = $this->createLiveComponent('WeeklyStatsTable');
@@ -101,6 +191,19 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringContainsString('Application error', (string) $rendered);
         $this->assertStringContainsString('something went wrong', (string) $rendered);
         $this->assertStringContainsString('is-danger', (string) $rendered);
+    }
+
+    /**
+     * Live actions (call()) go through a real HTTP request. By default the test client reboots the
+     * kernel before each request, which would drop the mocked StravaDataProvider from the container.
+     */
+    private function createComponentWithMockedProvider(): TestLiveComponent
+    {
+        $client = self::getContainer()->get('test.client');
+        self::assertInstanceOf(KernelBrowser::class, $client);
+        $client->disableReboot();
+
+        return $this->createLiveComponent('WeeklyStatsTable', [], $client);
     }
 
     /**

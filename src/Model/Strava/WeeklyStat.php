@@ -13,6 +13,9 @@ use Exception;
 use IteratorAggregate;
 use Traversable;
 
+use function array_map;
+use function array_sum;
+use function count;
 use function round;
 use function sprintf;
 
@@ -113,6 +116,47 @@ class WeeklyStat implements IteratorAggregate
     public function getDate(): string
     {
         return $this->firstDayOfWeek->format('n.d');
+    }
+
+    public function getFirstDayOfWeek(): DateTimeImmutable
+    {
+        return DateTimeImmutable::createFromInterface($this->firstDayOfWeek);
+    }
+
+    /**
+     * Relative distance per day, in meters, keyed by day (Mon..Sun).
+     *
+     * @return array<string, float>
+     */
+    public function getDailyDistances(): array
+    {
+        return array_map(static fn (DailyStat $stat): float => $stat->getDistance(), $this->stats);
+    }
+
+    /**
+     * All activities of the week, reduced to the fields needed to rebuild the stats.
+     *
+     * @return array<int, Activity>
+     */
+    public function getActivities(): array
+    {
+        $activities = [];
+        foreach ($this->stats as $dailyStat) {
+            foreach ($dailyStat->getActivities() as $activity) {
+                $activities[] = [
+                    'sport_type' => $activity['sport_type'],
+                    'distance' => (float) $activity['distance'],
+                    'start_date_local' => $activity['start_date_local'],
+                ];
+            }
+        }
+
+        return $activities;
+    }
+
+    public function getActivityCount(): int
+    {
+        return array_sum(array_map(static fn (DailyStat $stat): int => count($stat->getActivities()), $this->stats));
     }
 
     /** @return ArrayIterator<string, DailyStat> */

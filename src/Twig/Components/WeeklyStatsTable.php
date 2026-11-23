@@ -15,6 +15,8 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Throwable;
 
+use function count;
+
 #[AsLiveComponent]
 class WeeklyStatsTable extends AbstractController
 {
@@ -33,6 +35,8 @@ class WeeklyStatsTable extends AbstractController
 
     private bool $loaded = false;
 
+    private bool $refreshed = false;
+
     public function __construct(private readonly StravaDataProvider $stravaDataProvider)
     {
     }
@@ -43,12 +47,42 @@ class WeeklyStatsTable extends AbstractController
         $this->visibleWeeks += self::LOAD_MORE_SIZE;
     }
 
+    /**
+     * The only action that calls Strava: fetches fresh activities for the visible weeks and
+     * stores the recalculated stats. The re-render then reads them from the database.
+     */
+    #[LiveAction]
+    public function refresh(): void
+    {
+        try {
+            $this->stravaDataProvider->refresh($this->visibleWeeks);
+            $this->refreshed = true;
+        } catch (Throwable $e) {
+            $this->handleError($e);
+        }
+    }
+
+    public function isRefreshed(): bool
+    {
+        $this->load();
+
+        return $this->refreshed && $this->error === null;
+    }
+
     /** @return array<int, WeeklyStat> */
     public function getWeeklyStats(): array
     {
         $this->load();
 
         return $this->weeklyStatsCache ?? [];
+    }
+
+    /**
+     * True when fewer weeks are stored than requested (e.g. after "Load more" past the stored history).
+     */
+    public function hasMissingWeeks(): bool
+    {
+        return $this->error === null && count($this->getWeeklyStats()) < $this->visibleWeeks;
     }
 
     public function getError(): string|null
@@ -67,16 +101,22 @@ class WeeklyStatsTable extends AbstractController
         $this->loaded = true;
 
         try {
-            $this->weeklyStatsCache = $this->stravaDataProvider->getWeeklyStatsPaged($this->visibleWeeks);
-        } catch (AccessTokenMissing) {
-            $this->error            = 'No access token. Please connect to Strava.';
-            $this->weeklyStatsCache = [];
-        } catch (IdentityProviderException $e) {
-            $this->error            = 'Strava access error: ' . $e->getMessage();
-            $this->weeklyStatsCache = [];
+            // Read from the database only; Strava is called on refresh().
+            $this->weeklyStatsCache = $this->stravaDataProvider->getStoredWeeklyStats($this->visibleWeeks);
         } catch (Throwable $e) {
-            $this->error            = 'Application error: ' . $e->getMessage();
-            $this->weeklyStatsCache = [];
+            $this->handleError($e);
         }
+    }
+
+    private function handleError(Throwable $e): void
+    {
+        $this->error = match (true) {
+            $e instanceof AccessTokenMissing => 'No access token. Please connect to Strava.',
+            $e instanceof IdentityProviderException => 'Strava access error: ' . $e->getMessage(),
+            default => 'Application error: ' . $e->getMessage(),
+        };
+
+        $this->weeklyStatsCache = [];
+        $this->loaded           = true;
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\ClientProvider;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,8 +16,10 @@ use Throwable;
 
 class StravaConnectController extends AbstractController
 {
-    public function __construct(private readonly ClientProvider $clientProvider)
-    {
+    public function __construct(
+        private readonly ClientProvider $clientProvider,
+        private readonly AthleteGuard $athleteGuard,
+    ) {
     }
 
     #[Route('/strava/connect/entry', name: 'strava_connect_entry')]
@@ -65,9 +68,6 @@ class StravaConnectController extends AbstractController
 
         try {
             $accessToken = $this->clientProvider->getAccessToken($code);
-
-            // Fetch and store the AccessToken.
-            $request->getSession()->set('access_token', $accessToken);
         } catch (Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
@@ -81,13 +81,28 @@ class StravaConnectController extends AbstractController
             return $this->redirectToRoute('strava_logout');
         }
 
+        // Only the site owner's Strava account (STRAVA_ATHLETE_ID) may connect.
+        $athleteId = AthleteGuard::resolveAthleteId($accessToken);
+        if (! $this->athleteGuard->isAllowed($athleteId)) {
+            $logger->warning('Rejected Strava connection from non-allowed athlete.', ['athlete_id' => $athleteId]);
+
+            $this->addFlash('error', 'This Strava account is not allowed to connect to this site.');
+
+            return $this->redirectToRoute('strava_connect_entry');
+        }
+
+        // Store the verified AccessToken and athlete.
+        $request->getSession()->set('access_token', $accessToken);
+        $request->getSession()->set(AthleteGuard::SESSION_KEY, $athleteId);
+
         return $this->redirectToRoute('strava_metrics');
     }
 
     #[Route('/strava/logout', name: 'strava_logout')]
     public function logoutAction(Request $request): Response
     {
-        $request->getSession()->set('access_token', null);
+        $request->getSession()->remove('access_token');
+        $request->getSession()->remove(AthleteGuard::SESSION_KEY);
 
         return $this->redirectToRoute('strava_metrics');
     }

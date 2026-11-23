@@ -137,6 +137,23 @@ jobs:
     needs: build
     strategy:
       fail-fast: false
+    services:
+      database:
+        image: postgres:15.5-alpine
+        env:
+          # The test env appends "_test" to the database name (see config/packages/doctrine.yaml).
+          POSTGRES_DB: app_test
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: ChangeMe
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql://app:ChangeMe@127.0.0.1:5432/app?serverVersion=15.5&charset=utf8"
     steps:
       - name: Checkout
         uses: "actions/checkout@v6"
@@ -144,7 +161,7 @@ jobs:
         uses: "shivammathur/setup-php@v2"
         with:
           php-version: 8.4
-          extensions: curl
+          extensions: curl, pdo_pgsql
           ini-values: memory_limit=-1
           tools: composer
       - name: Retrieve cached vendor folder
@@ -152,6 +169,8 @@ jobs:
         with:
           path: vendor
           key: ${{ github.sha }}-vendor
+      - name: Run database migrations
+        run: bin/console doctrine:migrations:migrate --env=test --no-interaction --allow-no-migration
       - name: Retrieve cached build folder
         uses: actions/cache@v5
         with:

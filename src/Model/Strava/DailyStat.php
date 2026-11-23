@@ -13,7 +13,7 @@ use function round;
 class DailyStat
 {
     /** @var array<int, Activity> $activities */
-    private array $activities;
+    private array $activities = [];
 
     /**
      * Total daily relative distance, in meters.
