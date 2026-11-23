@@ -133,6 +133,27 @@ class WeeklyStat implements IteratorAggregate
         return array_map(static fn (DailyStat $stat): float => $stat->getDistance(), $this->stats);
     }
 
+    /**
+     * All activities of the week, reduced to the fields needed to rebuild the stats.
+     *
+     * @return array<int, Activity>
+     */
+    public function getActivities(): array
+    {
+        $activities = [];
+        foreach ($this->stats as $dailyStat) {
+            foreach ($dailyStat->getActivities() as $activity) {
+                $activities[] = [
+                    'sport_type' => $activity['sport_type'],
+                    'distance' => (float) $activity['distance'],
+                    'start_date_local' => $activity['start_date_local'],
+                ];
+            }
+        }
+
+        return $activities;
+    }
+
     public function getActivityCount(): int
     {
         return array_sum(array_map(static fn (DailyStat $stat): int => count($stat->getActivities()), $this->stats));

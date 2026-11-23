@@ -25,6 +25,7 @@ final class StravaWeeklyStatTest extends TestCase
         self::assertSame(0.0, $stat->getFiveWeekAverage());
         self::assertSame([], $stat->getDailyDistances());
         self::assertSame(0, $stat->getActivityCount());
+        self::assertSame([], $stat->getActivities());
         self::assertGreaterThanOrEqual($before, $stat->getUpdatedAt());
     }
 
@@ -55,6 +56,32 @@ final class StravaWeeklyStatTest extends TestCase
         self::assertSame(['Mon' => 1000.0, 'Tue' => 1000.0], $stat->getDailyDistances());
         self::assertSame(2, $stat->getActivityCount());
         self::assertGreaterThanOrEqual($firstUpdatedAt, $stat->getUpdatedAt());
+    }
+
+    public function testToWeeklyStatRebuildsTheDisplayModelFromStoredActivities(): void
+    {
+        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat->update(9000.0, 7000.0, [], 2, [
+            ['sport_type' => 'Run', 'distance' => 5000.0, 'start_date_local' => '2026-11-16T08:00:00Z'],
+            ['sport_type' => 'Swim', 'distance' => 1000.0, 'start_date_local' => '2026-11-18T07:00:00Z'],
+        ]);
+
+        $weeklyStat = $stat->toWeeklyStat();
+
+        self::assertSame('2026-11-16', $weeklyStat->getFirstDayOfWeek()->format('Y-m-d'));
+        self::assertSame(9000.0, $weeklyStat->getTotalDistance()); // 5000 + 1000 * 4 (swim weighting)
+        self::assertSame(7000.0, $weeklyStat->getFiveWeekAverage());
+        self::assertSame(2, $weeklyStat->getActivityCount());
+        self::assertSame(5000.0, $weeklyStat->getDailyDistances()['Mon']);
+        self::assertSame(4000.0, $weeklyStat->getDailyDistances()['Wed']);
+    }
+
+    public function testToWeeklyStatWithoutActivitiesIsAnEmptyWeek(): void
+    {
+        $weeklyStat = (new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16')))->toWeeklyStat();
+
+        self::assertSame(0.0, $weeklyStat->getTotalDistance());
+        self::assertSame(0, $weeklyStat->getActivityCount());
     }
 
     public function testTotalMilesConvertsMetersAndRoundsToOneDecimal(): void

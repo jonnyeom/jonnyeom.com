@@ -40,7 +40,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
 
         $this->stravaDataProvider
             ->expects($this->once())
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->with(20)  // INITIAL_VISIBLE_WEEKS
             ->willReturn($weeklyStats);
 
@@ -49,6 +49,42 @@ final class WeeklyStatsTableTest extends KernelTestCase
 
         $this->assertStringContainsString('Load more', (string) $rendered);
         $this->assertStringNotContainsString('is-danger', (string) $rendered);
+    }
+
+    public function testPageLoadReadsFromDatabaseAndDoesNotCallStrava(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('getStoredWeeklyStats')
+            ->with(20)
+            ->willReturn($this->buildWeeklyStats(3));
+        $this->stravaDataProvider->expects($this->never())->method('refresh');
+        $this->stravaDataProvider->expects($this->never())->method('getWeeklyStatsPaged');
+
+        $this->createLiveComponent('WeeklyStatsTable')->render();
+    }
+
+    public function testEmptyDatabaseAsksToRefresh(): void
+    {
+        $this->stravaDataProvider
+            ->method('getStoredWeeklyStats')
+            ->willReturn([]);
+
+        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
+
+        $this->assertStringContainsString('No stored data yet', $rendered);
+        $this->assertStringNotContainsString('is-danger', $rendered);
+    }
+
+    public function testFewerStoredWeeksThanRequestedShowsHint(): void
+    {
+        $this->stravaDataProvider
+            ->method('getStoredWeeklyStats')
+            ->willReturn($this->buildWeeklyStats(3));
+
+        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
+
+        $this->assertStringContainsString('Showing all stored weeks', $rendered);
     }
 
     public function testLoadMoreIncreasesLimit(): void
@@ -71,7 +107,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->method('refresh')
             ->with(20);
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willReturn($this->buildWeeklyStats(3));
 
         $component = $this->createComponentWithMockedProvider();
@@ -93,7 +129,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->method('refresh')
             ->with(30);
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willReturn($this->buildWeeklyStats(3));
 
         $this->createComponentWithMockedProvider()
@@ -120,7 +156,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
     public function testAccessTokenMissingShowsError(): void
     {
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willThrowException(new AccessTokenMissing());
 
         $component = $this->createLiveComponent('WeeklyStatsTable');
@@ -133,7 +169,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
     public function testIdentityProviderExceptionShowsError(): void
     {
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willThrowException(new IdentityProviderException('token expired', 401, []));
 
         $component = $this->createLiveComponent('WeeklyStatsTable');
@@ -147,7 +183,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
     public function testGenericExceptionShowsError(): void
     {
         $this->stravaDataProvider
-            ->method('getWeeklyStatsPaged')
+            ->method('getStoredWeeklyStats')
             ->willThrowException(new RuntimeException('something went wrong'));
 
         $component = $this->createLiveComponent('WeeklyStatsTable');

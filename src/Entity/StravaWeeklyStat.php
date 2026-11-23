@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Model\Strava\DailyStat;
+use App\Model\Strava\WeeklyStat;
 use App\Repository\StravaWeeklyStatRepository;
 use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
@@ -13,6 +15,8 @@ use function round;
 
 /**
  * Calculated weekly Strava metrics, persisted per athlete and ISO week.
+ *
+ * @phpstan-import-type Activity from DailyStat
  */
 #[ORM\Entity(repositoryClass: StravaWeeklyStatRepository::class)]
 #[ORM\Table(name: 'strava_weekly_stat')]
@@ -43,6 +47,15 @@ class StravaWeeklyStat
     #[ORM\Column(type: Types::INTEGER)]
     private int $activityCount = 0;
 
+    /**
+     * The week's activities (sport type, distance, local start date), so the stats page can be
+     * rendered from the database without calling Strava.
+     *
+     * @var array<int, Activity>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $activities = [];
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeImmutable $updatedAt;
 
@@ -55,14 +68,38 @@ class StravaWeeklyStat
         $this->updatedAt = new DateTimeImmutable();
     }
 
-    /** @param array<string, float> $dailyDistances */
-    public function update(float $totalDistance, float $fiveWeekAverage, array $dailyDistances, int $activityCount): void
-    {
+    /**
+     * @param array<string, float> $dailyDistances
+     * @param array<int, Activity> $activities
+     */
+    public function update(
+        float $totalDistance,
+        float $fiveWeekAverage,
+        array $dailyDistances,
+        int $activityCount,
+        array $activities = [],
+    ): void {
         $this->totalDistance   = $totalDistance;
         $this->fiveWeekAverage = $fiveWeekAverage;
         $this->dailyDistances  = $dailyDistances;
         $this->activityCount   = $activityCount;
+        $this->activities      = $activities;
         $this->updatedAt       = new DateTimeImmutable();
+    }
+
+    /**
+     * Rebuilds the display model from the stored data (no Strava call).
+     */
+    public function toWeeklyStat(): WeeklyStat
+    {
+        $weeklyStat = new WeeklyStat($this->weekStart->format('Y-m-d'));
+        foreach ($this->activities as $activity) {
+            $weeklyStat->addStravaActivity($activity);
+        }
+
+        $weeklyStat->setFiveWeekAverage($this->fiveWeekAverage);
+
+        return $weeklyStat;
     }
 
     public function getId(): int|null
@@ -104,6 +141,12 @@ class StravaWeeklyStat
     public function getActivityCount(): int
     {
         return $this->activityCount;
+    }
+
+    /** @return array<int, Activity> */
+    public function getActivities(): array
+    {
+        return $this->activities;
     }
 
     public function getUpdatedAt(): DateTimeImmutable

@@ -15,6 +15,8 @@ use Symfony\UX\LiveComponent\Attribute\LiveProp;
 use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Throwable;
 
+use function count;
+
 #[AsLiveComponent]
 class WeeklyStatsTable extends AbstractController
 {
@@ -46,8 +48,8 @@ class WeeklyStatsTable extends AbstractController
     }
 
     /**
-     * Drops cached Strava data for the visible weeks; the re-render then fetches fresh
-     * activities from Strava and stores the recalculated stats.
+     * The only action that calls Strava: fetches fresh activities for the visible weeks and
+     * stores the recalculated stats. The re-render then reads them from the database.
      */
     #[LiveAction]
     public function refresh(): void
@@ -75,6 +77,14 @@ class WeeklyStatsTable extends AbstractController
         return $this->weeklyStatsCache ?? [];
     }
 
+    /**
+     * True when fewer weeks are stored than requested (e.g. after "Load more" past the stored history).
+     */
+    public function hasMissingWeeks(): bool
+    {
+        return $this->error === null && count($this->getWeeklyStats()) < $this->visibleWeeks;
+    }
+
     public function getError(): string|null
     {
         $this->load();
@@ -91,7 +101,8 @@ class WeeklyStatsTable extends AbstractController
         $this->loaded = true;
 
         try {
-            $this->weeklyStatsCache = $this->stravaDataProvider->getWeeklyStatsPaged($this->visibleWeeks);
+            // Read from the database only; Strava is called on refresh().
+            $this->weeklyStatsCache = $this->stravaDataProvider->getStoredWeeklyStats($this->visibleWeeks);
         } catch (Throwable $e) {
             $this->handleError($e);
         }

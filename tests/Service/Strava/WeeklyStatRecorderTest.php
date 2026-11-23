@@ -66,6 +66,16 @@ final class WeeklyStatRecorderTest extends KernelTestCase
         self::assertEquals(5000.0, $stat->getDailyDistances()['Mon']);
         self::assertEquals(0.0, $stat->getDailyDistances()['Tue']);
 
+        self::assertCount(1, $stat->getActivities());
+        self::assertSame('Run', $stat->getActivities()[0]['sport_type']);
+        self::assertSame('2026-11-16T08:00:00Z', $stat->getActivities()[0]['start_date_local']);
+
+        // The page is rendered from what's stored: rebuilding gives the same stats.
+        $rebuilt = $stat->toWeeklyStat();
+        self::assertEquals(5000.0, $rebuilt->getTotalDistance());
+        self::assertSame(6500.0, $rebuilt->getFiveWeekAverage());
+        self::assertSame(1, $rebuilt->getActivityCount());
+
         $stat = $this->findWeek(self::ATHLETE_ID, '2026-11-09');
         self::assertSame(8000.0, $stat->getTotalDistance());
         self::assertEquals(8000.0, $stat->getDailyDistances()['Wed']);

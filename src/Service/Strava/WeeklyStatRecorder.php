@@ -48,6 +48,7 @@ class WeeklyStatRecorder
                 $weeklyStat->getFiveWeekAverage(),
                 $weeklyStat->getDailyDistances(),
                 $weeklyStat->getActivityCount(),
+                $weeklyStat->getActivities(),
             );
         }
 

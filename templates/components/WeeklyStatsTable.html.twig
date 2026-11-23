@@ -18,6 +18,12 @@
                 <span>Refresh</span>
             </button>
         </div>
+
+        {% if weeklyStats is empty %}
+            <div class="notification is-info is-light">
+                No stored data yet. Click <b>Refresh</b> to load your activities from Strava.
+            </div>
+        {% endif %}
         <div class="table-container">
             <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered is-fullwidth">
                 <thead>
@@ -97,6 +103,11 @@
         </div>
 
         <div class="has-text-centered py-4">
+            {% if weeklyStats is not empty and this.missingWeeks %}
+                <p class="is-size-7 has-text-grey mb-2">
+                    Showing all stored weeks. Click <b>Refresh</b> to fetch older weeks from Strava.
+                </p>
+            {% endif %}
             <button
                 data-action="live#action"
                 data-live-action-param="loadMore"
