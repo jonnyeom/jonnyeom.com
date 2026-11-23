@@ -91,7 +91,7 @@ class StravaDataProvider
      *
      * @return array<int, WeeklyStat> the stored weeks, newest first
      *
-     * @throws AccessTokenMissing when no token is stored (connect at /strava first)
+     * @throws AccessTokenMissing When no token is stored (connect at /strava first).
      * @throws IdentityProviderException
      */
     public function refreshStoredStats(int $limit): array
