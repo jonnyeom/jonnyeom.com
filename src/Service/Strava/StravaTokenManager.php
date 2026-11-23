@@ -67,7 +67,7 @@ class StravaTokenManager
         try {
             $refreshed = $this->clientProvider->refreshAccessToken($stored->getRefreshToken());
         } catch (IdentityProviderException $e) {
-            // Logged here so both the stats page and app:strava:refresh-token leave a trace.
+            // Logged here so both the stats page and app:strava:refresh-stats leave a trace.
             // Strava's error body does not contain the tokens; never log the tokens themselves.
             $this->logger->error('Strava token refresh failed.', [
                 'athlete_id' => $athleteId,

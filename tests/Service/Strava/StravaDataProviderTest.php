@@ -314,6 +314,43 @@ final class StravaDataProviderTest extends TestCase
         self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
     }
 
+    public function testRefreshStoredStatsWorksWithoutABrowserSession(): void
+    {
+        // Console: nothing in the session, the token comes from the database.
+        $this->tokenManager
+            ->expects($this->once())
+            ->method('getValidToken')
+            ->with(self::ALLOWED_ATHLETE_ID)
+            ->willReturn($this->validToken('database-token'));
+        $this->clientProvider
+            ->expects($this->atLeastOnce())
+            ->method('getAPIClient')
+            ->with('database-token')
+            ->willReturn($this->stravaClient);
+        $this->stubActivities([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
+        $this->recorder
+            ->expects($this->once())
+            ->method('record')
+            ->with(self::ALLOWED_ATHLETE_ID, $this->anything());
+
+        $stats = $this->provider->refreshStoredStats(1);
+
+        self::assertCount(1, $stats);
+        self::assertSame(5000.0, $stats[0]->getTotalDistance());
+        self::assertSame([], $this->session->all());
+    }
+
+    public function testRefreshStoredStatsWithoutStoredTokenThrows(): void
+    {
+        $this->tokenManager->method('getValidToken')->willThrowException(new AccessTokenMissing());
+        $this->clientProvider->expects($this->never())->method('getAPIClient');
+        $this->recorder->expects($this->never())->method('record');
+
+        $this->expectException(AccessTokenMissing::class);
+
+        $this->provider->refreshStoredStats(1);
+    }
+
     public function testConfirmConnectionForAllowedAthlete(): void
     {
         $this->connectAllowedAthlete();

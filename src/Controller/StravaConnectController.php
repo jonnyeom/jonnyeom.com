@@ -93,7 +93,7 @@ class StravaConnectController extends AbstractController
             return $this->redirectToRoute('strava_connect_entry');
         }
 
-        // The token is only stored in the database (shared with app:strava:refresh-token);
+        // The token is only stored in the database (also used by app:strava:refresh-stats);
         // the session just remembers that the allowed athlete is connected.
         $this->tokenManager->store($this->athleteGuard->getAllowedAthleteId(), $accessToken);
         $this->athleteGuard->connect($request->getSession());

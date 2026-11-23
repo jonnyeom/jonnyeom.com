@@ -33,7 +33,8 @@ use function usort;
 /**
  * Reads the weekly stats from the database, and refreshes them from Strava on demand.
  *
- * The database is the source of truth for the stats page: Strava is only called by refresh().
+ * The database is the source of truth for the stats page: Strava is only called by refresh()
+ * (the Refresh button) and refreshStoredStats() (the app:strava:refresh-stats command).
  */
 class StravaDataProvider
 {
@@ -72,10 +73,7 @@ class StravaDataProvider
     }
 
     /**
-     * Fetches the newest $limit weeks (plus HISTORY_WEEKS for the 5-week average) from Strava,
-     * recalculates the stats and stores them in the database.
-     *
-     * This is the only method that calls Strava.
+     * Refreshes the stats from the stats page: only for the allowed athlete's browser session.
      *
      * @return array<int, WeeklyStat> the stored weeks, newest first
      *
@@ -84,21 +82,23 @@ class StravaDataProvider
      */
     public function refresh(int $limit): array
     {
-        // Only the allowed, connected athlete may refresh.
-        $accessToken = $this->getApiToken();
+        return $this->fetchAndStoreWeeklyStats($this->getApiToken(), $limit);
+    }
 
-        $mondayThisWeek = (int) strtotime('monday this week', (new DateTime())->getTimestamp());
-        $oldestMonday   = (int) strtotime(sprintf('-%d weeks', $limit + self::HISTORY_WEEKS - 1), $mondayThisWeek);
+    /**
+     * Refreshes the stats without a browser session, for the app:strava:refresh-stats command.
+     * Uses the token stored in the database for the allowed athlete (STRAVA_ATHLETE_ID).
+     *
+     * @return array<int, WeeklyStat> the stored weeks, newest first
+     *
+     * @throws AccessTokenMissing when no token is stored (connect at /strava first)
+     * @throws IdentityProviderException
+     */
+    public function refreshStoredStats(int $limit): array
+    {
+        $accessToken = $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
 
-        // Strava's "after" is exclusive, so start one second before the oldest Monday.
-        $activities = $this->fetchActivities((string) ($oldestMonday - 1), $accessToken);
-
-        $weeklyStats = $this->calculateWeeklyStats($activities, $limit);
-
-        // The database is what the page shows, so a failed save must surface here.
-        $this->weeklyStatRecorder->record($this->athleteGuard->getAllowedAthleteId(), $weeklyStats);
-
-        return $weeklyStats;
+        return $this->fetchAndStoreWeeklyStats($accessToken, $limit);
     }
 
     /**
@@ -156,6 +156,28 @@ class StravaDataProvider
 
             $weeklyStat->setFiveWeekAverage($fiveWeekTotal);
         }
+    }
+
+    /**
+     * Fetches the newest $limit weeks (plus HISTORY_WEEKS for the 5-week average) from Strava,
+     * recalculates the stats and stores them in the database. The only place that calls Strava.
+     *
+     * @return array<int, WeeklyStat> the stored weeks, newest first
+     */
+    private function fetchAndStoreWeeklyStats(AccessToken $accessToken, int $limit): array
+    {
+        $mondayThisWeek = (int) strtotime('monday this week', (new DateTime())->getTimestamp());
+        $oldestMonday   = (int) strtotime(sprintf('-%d weeks', $limit + self::HISTORY_WEEKS - 1), $mondayThisWeek);
+
+        // Strava's "after" is exclusive, so start one second before the oldest Monday.
+        $activities = $this->fetchActivities((string) ($oldestMonday - 1), $accessToken);
+
+        $weeklyStats = $this->calculateWeeklyStats($activities, $limit);
+
+        // The database is what the page shows, so a failed save must surface here.
+        $this->weeklyStatRecorder->record($this->athleteGuard->getAllowedAthleteId(), $weeklyStats);
+
+        return $weeklyStats;
     }
 
     /**
@@ -286,7 +308,7 @@ class StravaDataProvider
     /**
      * Returns a valid Strava token for the connected athlete.
      *
-     * The token only lives in the database (also refreshed by app:strava:refresh-token): Strava
+     * The token only lives in the database (also used by app:strava:refresh-stats): Strava
      * rotates refresh tokens, so a single copy is kept.
      *
      * @throws AccessTokenMissing
