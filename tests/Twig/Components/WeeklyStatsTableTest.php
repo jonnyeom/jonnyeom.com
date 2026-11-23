@@ -12,8 +12,10 @@ use DateTime;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use PHPUnit\Framework\MockObject\MockObject;
 use RuntimeException;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
+use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
 use function sprintf;
 
@@ -72,7 +74,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->method('getWeeklyStatsPaged')
             ->willReturn($this->buildWeeklyStats(3));
 
-        $component = $this->createLiveComponent('WeeklyStatsTable');
+        $component = $this->createComponentWithMockedProvider();
         $rendered  = (string) $component->render();
 
         $this->assertStringContainsString('Refresh', $rendered);
@@ -94,7 +96,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->method('getWeeklyStatsPaged')
             ->willReturn($this->buildWeeklyStats(3));
 
-        $this->createLiveComponent('WeeklyStatsTable')
+        $this->createComponentWithMockedProvider()
             ->call('loadMore')
             ->call('refresh')
             ->render();
@@ -103,10 +105,11 @@ final class WeeklyStatsTableTest extends KernelTestCase
     public function testRefreshErrorIsShown(): void
     {
         $this->stravaDataProvider
+            ->expects($this->once())
             ->method('refresh')
             ->willThrowException(new AccessTokenMissing());
 
-        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')
+        $rendered = (string) $this->createComponentWithMockedProvider()
             ->call('refresh')
             ->render();
 
@@ -153,6 +156,19 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringContainsString('Application error', (string) $rendered);
         $this->assertStringContainsString('something went wrong', (string) $rendered);
         $this->assertStringContainsString('is-danger', (string) $rendered);
+    }
+
+    /**
+     * Live actions (call()) go through a real HTTP request. By default the test client reboots the
+     * kernel before each request, which would drop the mocked StravaDataProvider from the container.
+     */
+    private function createComponentWithMockedProvider(): TestLiveComponent
+    {
+        $client = self::getContainer()->get('test.client');
+        self::assertInstanceOf(KernelBrowser::class, $client);
+        $client->disableReboot();
+
+        return $this->createLiveComponent('WeeklyStatsTable', [], $client);
     }
 
     /**
