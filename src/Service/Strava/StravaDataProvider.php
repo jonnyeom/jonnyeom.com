@@ -48,6 +48,7 @@ class StravaDataProvider
         private readonly AthleteGuard $athleteGuard,
         private readonly WeeklyStatRecorder $weeklyStatRecorder,
         private readonly StravaWeeklyStatRepository $weeklyStatRepository,
+        private readonly StravaTokenManager $tokenManager,
     ) {
     }
 
@@ -287,21 +288,24 @@ class StravaDataProvider
     }
 
     /**
+     * Returns a valid Strava token for the connected athlete.
+     *
+     * The token is read from the database rather than the session: Strava rotates refresh tokens,
+     * so the database copy (also refreshed by app:strava:refresh-token) is the only one kept current.
+     *
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
     private function getApiToken(): AccessToken
     {
-        $accessToken = $this->assertConnectedAthlete();
+        $sessionToken = $this->assertConnectedAthlete();
+        $athleteId    = $this->athleteGuard->getAllowedAthleteId();
 
-        if ($accessToken->hasExpired()) {
-            $accessToken = $this->clientProvider->refreshAccessToken($accessToken->getRefreshToken());
-            assert($accessToken instanceof AccessToken);
-
-            // Update the stored access token for next time
-            $this->requestStack->getSession()->set('access_token', $accessToken);
+        // Sessions connected before tokens were stored in the database.
+        if (! $this->tokenManager->hasToken($athleteId)) {
+            $this->tokenManager->store($athleteId, $sessionToken);
         }
 
-        return $accessToken;
+        return $this->tokenManager->getValidToken($athleteId);
     }
 }

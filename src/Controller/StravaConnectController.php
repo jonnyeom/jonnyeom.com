@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\ClientProvider;
+use App\Service\Strava\StravaTokenManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -19,6 +20,7 @@ class StravaConnectController extends AbstractController
     public function __construct(
         private readonly ClientProvider $clientProvider,
         private readonly AthleteGuard $athleteGuard,
+        private readonly StravaTokenManager $tokenManager,
     ) {
     }
 
@@ -91,7 +93,10 @@ class StravaConnectController extends AbstractController
             return $this->redirectToRoute('strava_connect_entry');
         }
 
-        // Store the verified AccessToken and athlete.
+        // Store the verified token in the database (shared with the console command, see
+        // app:strava:refresh-token), and mark the session as connected.
+        $this->tokenManager->store($this->athleteGuard->getAllowedAthleteId(), $accessToken);
+
         $request->getSession()->set('access_token', $accessToken);
         $request->getSession()->set(AthleteGuard::SESSION_KEY, $athleteId);
 

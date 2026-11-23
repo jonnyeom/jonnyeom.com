@@ -11,6 +11,7 @@ use App\Repository\StravaWeeklyStatRepository;
 use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\ClientProvider;
 use App\Service\Strava\StravaDataProvider;
+use App\Service\Strava\StravaTokenManager;
 use App\Service\Strava\WeeklyStatRecorder;
 use DateTimeImmutable;
 use League\OAuth2\Client\Token\AccessToken;
@@ -51,6 +52,9 @@ final class StravaDataProviderTest extends TestCase
     /** @var MockObject&StravaWeeklyStatRepository */
     private MockObject $repository;
 
+    /** @var MockObject&StravaTokenManager */
+    private MockObject $tokenManager;
+
     private StravaDataProvider $provider;
 
     private string $originalTimezone;
@@ -75,7 +79,8 @@ final class StravaDataProviderTest extends TestCase
         $this->clientProvider->method('getAPIClient')->willReturn($this->stravaClient);
 
         $this->recorder   = $this->createMock(WeeklyStatRecorder::class);
-        $this->repository = $this->createMock(StravaWeeklyStatRepository::class);
+        $this->repository   = $this->createMock(StravaWeeklyStatRepository::class);
+        $this->tokenManager = $this->createMock(StravaTokenManager::class);
 
         $this->provider = new StravaDataProvider(
             $requestStack,
@@ -83,6 +88,7 @@ final class StravaDataProviderTest extends TestCase
             new AthleteGuard(self::ALLOWED_ATHLETE_ID),
             $this->recorder,
             $this->repository,
+            $this->tokenManager,
         );
     }
 
@@ -109,6 +115,8 @@ final class StravaDataProviderTest extends TestCase
             ->willReturn([$stored]);
         $this->clientProvider->expects($this->never())->method('getAPIClient');
         $this->clientProvider->expects($this->never())->method('refreshAccessToken');
+        $this->tokenManager->expects($this->never())->method('getValidToken');
+        $this->tokenManager->expects($this->never())->method('refresh');
         $this->recorder->expects($this->never())->method('record');
 
         $stats = $this->provider->getStoredWeeklyStats(20);
@@ -273,28 +281,44 @@ final class StravaDataProviderTest extends TestCase
         $this->provider->refresh(1);
     }
 
-    public function testRefreshRenewsAnExpiredTokenAndUsesTheNewOne(): void
+    public function testRefreshUsesTheTokenStoredInTheDatabase(): void
     {
-        $refreshed = $this->validToken('fresh-token');
-
-        $this->session->set('access_token', $this->expiredToken());
+        // The session still holds the token from when you connected; Strava may have rotated it since.
+        $this->session->set('access_token', $this->validToken('session-token'));
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
 
-        $this->clientProvider
+        $this->tokenManager->method('hasToken')->with(self::ALLOWED_ATHLETE_ID)->willReturn(true);
+        $this->tokenManager->expects($this->never())->method('store');
+        $this->tokenManager
             ->expects($this->once())
-            ->method('refreshAccessToken')
-            ->with('refresh-me')
-            ->willReturn($refreshed);
+            ->method('getValidToken')
+            ->with(self::ALLOWED_ATHLETE_ID)
+            ->willReturn($this->validToken('database-token'));
         $this->clientProvider
             ->expects($this->atLeastOnce())
             ->method('getAPIClient')
-            ->with('fresh-token')
+            ->with('database-token')
             ->willReturn($this->stravaClient);
         $this->stubActivities([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
 
         $this->provider->refresh(1);
+    }
 
-        self::assertSame($refreshed, $this->session->get('access_token'));
+    public function testRefreshStoresATokenThatOnlyExistsInTheSession(): void
+    {
+        $sessionToken = $this->validToken('session-token');
+        $this->session->set('access_token', $sessionToken);
+        $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
+
+        $this->tokenManager->method('hasToken')->willReturn(false);
+        $this->tokenManager
+            ->expects($this->once())
+            ->method('store')
+            ->with(self::ALLOWED_ATHLETE_ID, $sessionToken);
+        $this->tokenManager->method('getValidToken')->willReturn($sessionToken);
+        $this->stubActivities([]);
+
+        $this->provider->refresh(1);
     }
 
     public function testConfirmConnectionForAllowedAthlete(): void
@@ -308,6 +332,9 @@ final class StravaDataProviderTest extends TestCase
     {
         $this->session->set('access_token', $this->validToken());
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
+
+        $this->tokenManager->method('hasToken')->willReturn(true);
+        $this->tokenManager->method('getValidToken')->willReturn($this->validToken());
     }
 
     private function setSessionAthlete(string|null $athleteId): void
