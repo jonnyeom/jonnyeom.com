@@ -27,8 +27,8 @@ class StravaConnectController extends AbstractController
     #[Route('/strava/connect/entry', name: 'strava_connect_entry')]
     public function connectEntry(Request $request): Response
     {
-        // If we already have an access token, no need to get another one.
-        if ($request->getSession()->get('access_token')) {
+        // Already connected as the allowed athlete: no need to connect again.
+        if ($this->athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_metrics');
         }
 
@@ -38,8 +38,8 @@ class StravaConnectController extends AbstractController
     #[Route('/strava/connect', name: 'strava_connect_start')]
     public function connectAction(Request $request): Response
     {
-        // If we already have an access token, no need to get another one.
-        if ($request->getSession()->get('access_token')) {
+        // Already connected as the allowed athlete: no need to connect again.
+        if ($this->athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_metrics');
         }
 
@@ -59,8 +59,8 @@ class StravaConnectController extends AbstractController
 
         // @Todo: Add state?
 
-        // If we already have an access token, no need to get another one.
-        if ($request->getSession()->get('access_token')) {
+        // Already connected as the allowed athlete: no need to connect again.
+        if ($this->athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_metrics');
         }
 
@@ -93,12 +93,10 @@ class StravaConnectController extends AbstractController
             return $this->redirectToRoute('strava_connect_entry');
         }
 
-        // Store the verified token in the database (shared with the console command, see
-        // app:strava:refresh-token), and mark the session as connected.
+        // The token is only stored in the database (shared with app:strava:refresh-token);
+        // the session just remembers that the allowed athlete is connected.
         $this->tokenManager->store($this->athleteGuard->getAllowedAthleteId(), $accessToken);
-
-        $request->getSession()->set('access_token', $accessToken);
-        $request->getSession()->set(AthleteGuard::SESSION_KEY, $athleteId);
+        $this->athleteGuard->connect($request->getSession());
 
         return $this->redirectToRoute('strava_metrics');
     }
@@ -106,8 +104,7 @@ class StravaConnectController extends AbstractController
     #[Route('/strava/logout', name: 'strava_logout')]
     public function logoutAction(Request $request): Response
     {
-        $request->getSession()->remove('access_token');
-        $request->getSession()->remove(AthleteGuard::SESSION_KEY);
+        $this->athleteGuard->disconnect($request->getSession());
 
         return $this->redirectToRoute('strava_metrics');
     }

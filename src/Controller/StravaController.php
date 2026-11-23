@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Strava\AthleteGuard;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -11,9 +12,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class StravaController extends BaseController
 {
     #[Route('/strava', name: 'strava_metrics')]
-    public function stravaMetrics(Request $request): Response
+    public function stravaMetrics(Request $request, AthleteGuard $athleteGuard): Response
     {
-        if (! $request->getSession()->get('access_token')) {
+        if (! $athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_connect_entry');
         }
 

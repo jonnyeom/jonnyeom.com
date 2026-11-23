@@ -139,19 +139,6 @@ final class StravaTokenManagerTest extends TestCase
         self::assertSame('refresh-me', $stored->getRefreshToken());
     }
 
-    public function testHasToken(): void
-    {
-        $this->repository
-            ->method('findForAthlete')
-            ->willReturnMap([
-                [self::ATHLETE_ID, new StravaToken(self::ATHLETE_ID, $this->token('a', 'r', time() + 60))],
-                ['99999', null],
-            ]);
-
-        self::assertTrue($this->manager->hasToken(self::ATHLETE_ID));
-        self::assertFalse($this->manager->hasToken('99999'));
-    }
-
     private function token(string $access, string $refresh, int $expires): AccessToken
     {
         return new AccessToken(['access_token' => $access, 'refresh_token' => $refresh, 'expires' => $expires]);

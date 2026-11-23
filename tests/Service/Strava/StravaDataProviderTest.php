@@ -99,8 +99,6 @@ final class StravaDataProviderTest extends TestCase
 
     public function testStoredStatsAreReadFromTheDatabaseWithoutCallingStrava(): void
     {
-        // Even an expired token must not trigger a call to Strava when only reading.
-        $this->session->set('access_token', $this->expiredToken());
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
 
         $stored = new StravaWeeklyStat(self::ALLOWED_ATHLETE_ID, new DateTimeImmutable('2026-11-16'));
@@ -128,7 +126,7 @@ final class StravaDataProviderTest extends TestCase
         self::assertSame(1, $stats[0]->getActivityCount());
     }
 
-    public function testStoredStatsThrowWhenNoAccessTokenInSession(): void
+    public function testStoredStatsThrowWhenNotConnected(): void
     {
         $this->repository->expects($this->never())->method('findLatestForAthlete');
 
@@ -146,11 +144,11 @@ final class StravaDataProviderTest extends TestCase
 
         $this->assertThrowsAccessTokenMissing(fn () => $this->provider->getStoredWeeklyStats(20));
 
-        self::assertFalse($this->session->has('access_token'));
         self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
+        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
     }
 
-    public function testRefreshThrowsWhenNoAccessTokenInSession(): void
+    public function testRefreshThrowsWhenNotConnected(): void
     {
         $this->clientProvider->expects($this->never())->method('getAPIClient');
         $this->recorder->expects($this->never())->method('record');
@@ -171,8 +169,8 @@ final class StravaDataProviderTest extends TestCase
 
         $this->assertThrowsAccessTokenMissing(fn () => $this->provider->refresh(2));
 
-        self::assertFalse($this->session->has('access_token'));
         self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
+        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
     }
 
     /** @return array<string, array{string|null}> */
@@ -180,7 +178,7 @@ final class StravaDataProviderTest extends TestCase
     {
         return [
             'another athlete' => ['99999'],
-            'session without a verified athlete' => [null],
+            'legacy session with only a token' => [null],
         ];
     }
 
@@ -283,12 +281,8 @@ final class StravaDataProviderTest extends TestCase
 
     public function testRefreshUsesTheTokenStoredInTheDatabase(): void
     {
-        // The session still holds the token from when you connected; Strava may have rotated it since.
-        $this->session->set('access_token', $this->validToken('session-token'));
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
 
-        $this->tokenManager->method('hasToken')->with(self::ALLOWED_ATHLETE_ID)->willReturn(true);
-        $this->tokenManager->expects($this->never())->method('store');
         $this->tokenManager
             ->expects($this->once())
             ->method('getValidToken')
@@ -302,23 +296,22 @@ final class StravaDataProviderTest extends TestCase
         $this->stubActivities([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
 
         $this->provider->refresh(1);
+
+        // The token is never put in the session.
+        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
     }
 
-    public function testRefreshStoresATokenThatOnlyExistsInTheSession(): void
+    public function testRefreshWithoutStoredTokenDisconnectsSoYouCanReconnect(): void
     {
-        $sessionToken = $this->validToken('session-token');
-        $this->session->set('access_token', $sessionToken);
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
 
-        $this->tokenManager->method('hasToken')->willReturn(false);
-        $this->tokenManager
-            ->expects($this->once())
-            ->method('store')
-            ->with(self::ALLOWED_ATHLETE_ID, $sessionToken);
-        $this->tokenManager->method('getValidToken')->willReturn($sessionToken);
-        $this->stubActivities([]);
+        $this->tokenManager->method('getValidToken')->willThrowException(new AccessTokenMissing());
+        $this->clientProvider->expects($this->never())->method('getAPIClient');
+        $this->recorder->expects($this->never())->method('record');
 
-        $this->provider->refresh(1);
+        $this->assertThrowsAccessTokenMissing(fn () => $this->provider->refresh(1));
+
+        self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
     }
 
     public function testConfirmConnectionForAllowedAthlete(): void
@@ -330,17 +323,17 @@ final class StravaDataProviderTest extends TestCase
 
     private function connectAllowedAthlete(): void
     {
-        $this->session->set('access_token', $this->validToken());
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
 
-        $this->tokenManager->method('hasToken')->willReturn(true);
         $this->tokenManager->method('getValidToken')->willReturn($this->validToken());
     }
 
+    /** A null athlete is a session from before #379, which only held the Strava token. */
     private function setSessionAthlete(string|null $athleteId): void
     {
-        $this->session->set('access_token', $this->validToken());
         if ($athleteId === null) {
+            $this->session->set(AthleteGuard::LEGACY_TOKEN_SESSION_KEY, $this->validToken());
+
             return;
         }
 
@@ -363,15 +356,6 @@ final class StravaDataProviderTest extends TestCase
             'access_token' => $token,
             'refresh_token' => 'refresh-token',
             'expires' => time() + 3600,
-        ]);
-    }
-
-    private function expiredToken(): AccessToken
-    {
-        return new AccessToken([
-            'access_token' => 'expired-token',
-            'refresh_token' => 'refresh-me',
-            'expires' => time() - 60,
         ]);
     }
 

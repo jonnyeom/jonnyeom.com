@@ -13,6 +13,7 @@ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 use function array_key_exists;
 use function array_map;
@@ -262,50 +263,46 @@ class StravaDataProvider
      *
      * @throws AccessTokenMissing
      */
-    private function assertConnectedAthlete(): AccessToken
+    private function assertConnectedAthlete(): void
+    {
+        $session = $this->getSession();
+
+        // Only the configured athlete (STRAVA_ATHLETE_ID) may use the integration.
+        if (! $this->athleteGuard->isConnected($session)) {
+            $this->athleteGuard->disconnect($session);
+
+            throw new AccessTokenMissing();
+        }
+    }
+
+    private function getSession(): SessionInterface
     {
         $request = $this->requestStack->getCurrentRequest();
         assert($request instanceof Request);
 
-        $session = $request->getSession();
-
-        $accessToken = $session->get('access_token');
-        if (! $accessToken) {
-            throw new AccessTokenMissing();
-        }
-
-        // Only the configured athlete (STRAVA_ATHLETE_ID) may use the integration.
-        if (! $this->athleteGuard->isAllowed($session->get(AthleteGuard::SESSION_KEY))) {
-            $session->remove('access_token');
-            $session->remove(AthleteGuard::SESSION_KEY);
-
-            throw new AccessTokenMissing();
-        }
-
-        assert($accessToken instanceof AccessToken);
-
-        return $accessToken;
+        return $request->getSession();
     }
 
     /**
      * Returns a valid Strava token for the connected athlete.
      *
-     * The token is read from the database rather than the session: Strava rotates refresh tokens,
-     * so the database copy (also refreshed by app:strava:refresh-token) is the only one kept current.
+     * The token only lives in the database (also refreshed by app:strava:refresh-token): Strava
+     * rotates refresh tokens, so a single copy is kept.
      *
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
     private function getApiToken(): AccessToken
     {
-        $sessionToken = $this->assertConnectedAthlete();
-        $athleteId    = $this->athleteGuard->getAllowedAthleteId();
+        $this->assertConnectedAthlete();
 
-        // Sessions connected before tokens were stored in the database.
-        if (! $this->tokenManager->hasToken($athleteId)) {
-            $this->tokenManager->store($athleteId, $sessionToken);
+        try {
+            return $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
+        } catch (AccessTokenMissing $e) {
+            // Connected, but no token is stored: disconnect so the connect page offers a new login.
+            $this->athleteGuard->disconnect($this->getSession());
+
+            throw $e;
         }
-
-        return $this->tokenManager->getValidToken($athleteId);
     }
 }

@@ -36,11 +36,6 @@ class StravaTokenManager
         $this->entityManager->flush();
     }
 
-    public function hasToken(string $athleteId): bool
-    {
-        return $this->repository->findForAthlete($athleteId) instanceof StravaToken;
-    }
-
     /**
      * Returns a usable access token, refreshing it first if it has expired.
      *

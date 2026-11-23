@@ -6,6 +6,7 @@ namespace App\Service\Strava;
 
 use League\OAuth2\Client\Token\AccessTokenInterface;
 use League\OAuth2\Client\Token\ResourceOwnerAccessTokenInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 use function hash_equals;
 use function is_array;
@@ -21,7 +22,14 @@ use function trim;
  */
 final readonly class AthleteGuard
 {
+    /**
+     * The session only stores the verified athlete ID; the Strava token itself lives in the
+     * database (see StravaTokenManager).
+     */
     public const string SESSION_KEY = 'strava_athlete_id';
+
+    /** Session key used before the token moved to the database; only ever removed now. */
+    public const string LEGACY_TOKEN_SESSION_KEY = 'access_token';
 
     private string $allowedAthleteId;
 
@@ -37,6 +45,24 @@ final readonly class AthleteGuard
         }
 
         return hash_equals($this->allowedAthleteId, trim((string) $athleteId));
+    }
+
+    /** Whether the session belongs to the allowed athlete (who completed the Strava login). */
+    public function isConnected(SessionInterface $session): bool
+    {
+        return $this->isAllowed($session->get(self::SESSION_KEY));
+    }
+
+    public function connect(SessionInterface $session): void
+    {
+        $session->set(self::SESSION_KEY, $this->allowedAthleteId);
+        $session->remove(self::LEGACY_TOKEN_SESSION_KEY);
+    }
+
+    public function disconnect(SessionInterface $session): void
+    {
+        $session->remove(self::SESSION_KEY);
+        $session->remove(self::LEGACY_TOKEN_SESSION_KEY);
     }
 
     public function getAllowedAthleteId(): string
