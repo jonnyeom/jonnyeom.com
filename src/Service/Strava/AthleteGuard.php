@@ -59,7 +59,7 @@ final readonly class AthleteGuard
     {
         if ($accessToken instanceof ResourceOwnerAccessTokenInterface) {
             $ownerId = $accessToken->getResourceOwnerId();
-            if ((is_string($ownerId) && $ownerId !== '') || is_int($ownerId)) {
+            if ($ownerId !== null && $ownerId !== '') {
                 return (string) $ownerId;
             }
         }
