@@ -22,6 +22,21 @@ class WeeklyStatRecorder
     ) {
     }
 
+    /**
+     * Replaces all stored weeks of the athlete with $weeklyStats, in one transaction.
+     *
+     * @param WeeklyStat[] $weeklyStats
+     */
+    public function replaceAll(string $athleteId, array $weeklyStats): void
+    {
+        $this->entityManager->wrapInTransaction(function () use ($athleteId, $weeklyStats): void {
+            $this->repository->deleteForAthlete($athleteId);
+            $this->entityManager->clear();
+
+            $this->record($athleteId, $weeklyStats);
+        });
+    }
+
     /** @param WeeklyStat[] $weeklyStats */
     public function record(string $athleteId, array $weeklyStats): void
     {

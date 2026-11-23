@@ -166,6 +166,51 @@ final class WeeklyStatRecorderTest extends KernelTestCase
         self::assertSame('2026-11-09', $latest[1]->getWeekStart()->format('Y-m-d'));
     }
 
+    public function testReplaceAllDeletesTheAthletesOldWeeksOnly(): void
+    {
+        $this->recorder->record(self::ATHLETE_ID, [
+            $this->weeklyStat('2026-11-02', [], 0.0),
+            $this->weeklyStat('2026-11-09', [['Run', 1000.0, '2026-11-09T08:00:00Z']], 1000.0),
+        ]);
+        $this->recorder->record('67890', [$this->weeklyStat('2026-11-09', [], 0.0)]);
+        $this->entityManager->clear();
+
+        $this->recorder->replaceAll(self::ATHLETE_ID, [
+            $this->weeklyStat('2026-11-09', [['Run', 9000.0, '2026-11-09T08:00:00Z']], 9000.0),
+            $this->weeklyStat('2026-11-16', [], 4500.0),
+        ]);
+        $this->entityManager->clear();
+
+        $weeks = $this->repository->findLatestForAthlete(self::ATHLETE_ID, 10);
+        self::assertCount(2, $weeks);
+        self::assertSame('2026-11-16', $weeks[0]->getWeekStart()->format('Y-m-d'));
+        self::assertSame('2026-11-09', $weeks[1]->getWeekStart()->format('Y-m-d'));
+        self::assertSame(9000.0, $weeks[1]->getTotalDistance());
+
+        // Other athletes are untouched.
+        self::assertCount(1, $this->repository->findLatestForAthlete('67890', 10));
+    }
+
+    public function testFindBeforeWeekReturnsTheWeeksRightBeforeNewestFirst(): void
+    {
+        $this->recorder->record(self::ATHLETE_ID, [
+            $this->weeklyStat('2026-10-19', [], 0.0),
+            $this->weeklyStat('2026-10-26', [], 0.0),
+            $this->weeklyStat('2026-11-02', [], 0.0),
+            $this->weeklyStat('2026-11-09', [], 0.0),
+            $this->weeklyStat('2026-11-16', [], 0.0),
+        ]);
+        $this->recorder->record('67890', [$this->weeklyStat('2026-11-09', [], 0.0)]);
+        $this->entityManager->clear();
+
+        $before = $this->repository->findBeforeWeek(self::ATHLETE_ID, new DateTimeImmutable('2026-11-16'), 3);
+
+        self::assertCount(3, $before);
+        self::assertSame('2026-11-09', $before[0]->getWeekStart()->format('Y-m-d'));
+        self::assertSame('2026-11-02', $before[1]->getWeekStart()->format('Y-m-d'));
+        self::assertSame('2026-10-26', $before[2]->getWeekStart()->format('Y-m-d'));
+    }
+
     private function findWeek(string $athleteId, string $weekStart): StravaWeeklyStat
     {
         $stat = $this->repository->findByAthleteAndWeeks($athleteId, [$weekStart])[$weekStart] ?? null;

@@ -11,6 +11,7 @@ use App\Repository\StravaWeeklyStatRepository;
 use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\ClientProvider;
 use App\Service\Strava\StravaDataProvider;
+use App\Service\Strava\StravaTokenManager;
 use App\Service\Strava\WeeklyStatRecorder;
 use DateTimeImmutable;
 use League\OAuth2\Client\Token\AccessToken;
@@ -37,6 +38,8 @@ final class StravaDataProviderTest extends TestCase
 {
     private const string ALLOWED_ATHLETE_ID = '12345';
 
+    private const int WEEK = 7 * 86400;
+
     private Session $session;
 
     /** @var MockObject&ClientProvider */
@@ -50,6 +53,9 @@ final class StravaDataProviderTest extends TestCase
 
     /** @var MockObject&StravaWeeklyStatRepository */
     private MockObject $repository;
+
+    /** @var MockObject&StravaTokenManager */
+    private MockObject $tokenManager;
 
     private StravaDataProvider $provider;
 
@@ -74,8 +80,9 @@ final class StravaDataProviderTest extends TestCase
         $this->clientProvider = $this->createMock(ClientProvider::class);
         $this->clientProvider->method('getAPIClient')->willReturn($this->stravaClient);
 
-        $this->recorder   = $this->createMock(WeeklyStatRecorder::class);
-        $this->repository = $this->createMock(StravaWeeklyStatRepository::class);
+        $this->recorder     = $this->createMock(WeeklyStatRecorder::class);
+        $this->repository   = $this->createMock(StravaWeeklyStatRepository::class);
+        $this->tokenManager = $this->createMock(StravaTokenManager::class);
 
         $this->provider = new StravaDataProvider(
             $requestStack,
@@ -83,6 +90,7 @@ final class StravaDataProviderTest extends TestCase
             new AthleteGuard(self::ALLOWED_ATHLETE_ID),
             $this->recorder,
             $this->repository,
+            $this->tokenManager,
         );
     }
 
@@ -93,8 +101,6 @@ final class StravaDataProviderTest extends TestCase
 
     public function testStoredStatsAreReadFromTheDatabaseWithoutCallingStrava(): void
     {
-        // Even an expired token must not trigger a call to Strava when only reading.
-        $this->session->set('access_token', $this->expiredToken());
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
 
         $stored = new StravaWeeklyStat(self::ALLOWED_ATHLETE_ID, new DateTimeImmutable('2026-11-16'));
@@ -108,7 +114,7 @@ final class StravaDataProviderTest extends TestCase
             ->with(self::ALLOWED_ATHLETE_ID, 20)
             ->willReturn([$stored]);
         $this->clientProvider->expects($this->never())->method('getAPIClient');
-        $this->clientProvider->expects($this->never())->method('refreshAccessToken');
+        $this->tokenManager->expects($this->never())->method('getValidToken');
         $this->recorder->expects($this->never())->method('record');
 
         $stats = $this->provider->getStoredWeeklyStats(20);
@@ -120,7 +126,7 @@ final class StravaDataProviderTest extends TestCase
         self::assertSame(1, $stats[0]->getActivityCount());
     }
 
-    public function testStoredStatsThrowWhenNoAccessTokenInSession(): void
+    public function testStoredStatsThrowWhenNotConnected(): void
     {
         $this->repository->expects($this->never())->method('findLatestForAthlete');
 
@@ -138,33 +144,36 @@ final class StravaDataProviderTest extends TestCase
 
         $this->assertThrowsAccessTokenMissing(fn () => $this->provider->getStoredWeeklyStats(20));
 
-        self::assertFalse($this->session->has('access_token'));
         self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
+        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
     }
 
-    public function testRefreshThrowsWhenNoAccessTokenInSession(): void
+    #[DataProvider('stravaActions')]
+    public function testStravaActionsThrowWhenNotConnected(string $action): void
     {
         $this->clientProvider->expects($this->never())->method('getAPIClient');
         $this->recorder->expects($this->never())->method('record');
+        $this->recorder->expects($this->never())->method('replaceAll');
 
         $this->expectException(AccessTokenMissing::class);
 
-        $this->provider->refresh(2);
+        $this->provider->{$action}();
     }
 
-    #[DataProvider('disallowedAthletes')]
-    public function testRefreshRejectsDisallowedAthleteAndClearsSession(string|null $sessionAthleteId): void
+    #[DataProvider('stravaActionsForDisallowedAthletes')]
+    public function testStravaActionsRejectDisallowedAthleteAndClearSession(string $action, string|null $sessionAthleteId): void
     {
         $this->setSessionAthlete($sessionAthleteId);
 
         $this->clientProvider->expects($this->never())->method('getAPIClient');
         $this->stravaClient->expects($this->never())->method('getAthleteActivities');
         $this->recorder->expects($this->never())->method('record');
+        $this->recorder->expects($this->never())->method('replaceAll');
 
-        $this->assertThrowsAccessTokenMissing(fn () => $this->provider->refresh(2));
+        $this->assertThrowsAccessTokenMissing(fn () => $this->provider->{$action}());
 
-        self::assertFalse($this->session->has('access_token'));
         self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
+        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
     }
 
     /** @return array<string, array{string|null}> */
@@ -172,17 +181,59 @@ final class StravaDataProviderTest extends TestCase
     {
         return [
             'another athlete' => ['99999'],
-            'session without a verified athlete' => [null],
+            'legacy session with only a token' => [null],
         ];
     }
 
-    public function testRefreshCalculatesAndStoresWeeklyStats(): void
+    /** @return array<string, array{string}> */
+    public static function stravaActions(): array
+    {
+        return ['refresh' => ['refresh'], 'reset' => ['reset']];
+    }
+
+    /** @return array<string, array{string, string|null}> */
+    public static function stravaActionsForDisallowedAthletes(): array
+    {
+        $cases = [];
+        foreach (self::stravaActions() as $name => [$action]) {
+            foreach (self::disallowedAthletes() as $case => [$athleteId]) {
+                $cases[$name . ', ' . $case] = [$action, $athleteId];
+            }
+        }
+
+        return $cases;
+    }
+
+    public function testRefreshOnlyFetchesFromTheLatestStoredWeek(): void
     {
         $this->connectAllowedAthlete();
-        $this->stubActivities([
-            $this->activity('Run', 8000.0, $this->mondayThisWeek - 7 * 86400 + 3600), // Last week.
-            $this->activity('Run', 5000.0, $this->mondayThisWeek + 3600),             // This week.
-        ]);
+        $lastMonday = $this->mondayThisWeek - self::WEEK;
+
+        // Last week was stored before its Sunday run; this week has a new run.
+        $this->repository
+            ->method('findLatestForAthlete')
+            ->with(self::ALLOWED_ATHLETE_ID, 1)
+            ->willReturn([$this->storedWeek($lastMonday, 3000.0)]);
+        $this->repository
+            ->expects($this->once())
+            ->method('findBeforeWeek')
+            ->with(self::ALLOWED_ATHLETE_ID, $this->isInstanceOf(DateTimeImmutable::class), 4)
+            ->willReturn([ // Newest first, like the repository.
+                $this->storedWeek($lastMonday - self::WEEK, 10000.0),
+                $this->storedWeek($lastMonday - 2 * self::WEEK, 10000.0),
+                $this->storedWeek($lastMonday - 3 * self::WEEK, 10000.0),
+                $this->storedWeek($lastMonday - 4 * self::WEEK, 10000.0),
+            ]);
+
+        $this->stravaClient
+            ->expects($this->once())
+            ->method('getAthleteActivities')
+            ->with(null, (string) ($lastMonday - 1), 1, 200)
+            ->willReturn([
+                $this->activity('Run', 3000.0, $lastMonday + 3600),
+                $this->activity('Run', 5000.0, $lastMonday + 6 * 86400 + 3600), // Sunday.
+                $this->activity('Run', 6000.0, $this->mondayThisWeek + 3600),
+            ]);
 
         /** @var WeeklyStat[]|null $stored */
         $stored = null;
@@ -196,41 +247,113 @@ final class StravaDataProviderTest extends TestCase
                     $stored = $stats;
                 },
             );
+        $this->recorder->expects($this->never())->method('replaceAll');
 
-        $stats = $this->provider->refresh(2);
+        $stats = $this->provider->refresh();
 
+        // Only last week (completed with its Sunday run) and this week, newest first.
         self::assertCount(2, $stats);
-
-        // Newest week first.
         self::assertSame(gmdate('Y-m-d', $this->mondayThisWeek), $stats[0]->getFirstDayOfWeek()->format('Y-m-d'));
-        self::assertSame(5000.0, $stats[0]->getTotalDistance());
-        self::assertSame(1, $stats[0]->getActivityCount());
-        self::assertSame(6500.0, $stats[0]->getFiveWeekAverage()); // (8000 + 5000) / 2
-
-        self::assertSame(gmdate('Y-m-d', $this->mondayThisWeek - 7 * 86400), $stats[1]->getFirstDayOfWeek()->format('Y-m-d'));
+        self::assertSame(6000.0, $stats[0]->getTotalDistance());
+        self::assertSame(gmdate('Y-m-d', $lastMonday), $stats[1]->getFirstDayOfWeek()->format('Y-m-d'));
         self::assertSame(8000.0, $stats[1]->getTotalDistance());
 
-        // Exactly the returned stats are stored.
+        // 5-week averages use the stored weeks before them.
+        self::assertEqualsWithDelta(9600.0, $stats[1]->getFiveWeekAverage(), 0.001); // (4 * 10000 + 8000) / 5
+        self::assertEqualsWithDelta(8800.0, $stats[0]->getFiveWeekAverage(), 0.001); // (3 * 10000 + 8000 + 6000) / 5
+
         self::assertSame($stats, $stored);
     }
 
-    public function testRefreshFetchesOnlyTheNeededWeeksInOneRequest(): void
+    public function testRefreshWhenThisWeekIsStoredOnlyRefreshesThisWeek(): void
     {
         $this->connectAllowedAthlete();
 
-        // 2 visible weeks + 4 weeks of history for the 5-week average = from the Monday 5 weeks ago.
-        $expectedAfter = (string) ((int) strtotime('-5 weeks', $this->mondayThisWeek) - 1);
+        $this->repository->method('findLatestForAthlete')->willReturn([$this->storedWeek($this->mondayThisWeek, 1000.0)]);
+        $this->repository->method('findBeforeWeek')->willReturn([]);
+        $this->stravaClient
+            ->expects($this->once())
+            ->method('getAthleteActivities')
+            ->with(null, (string) ($this->mondayThisWeek - 1), 1, 200)
+            ->willReturn([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
+
+        $stats = $this->provider->refresh();
+
+        self::assertCount(1, $stats);
+        self::assertSame(5000.0, $stats[0]->getTotalDistance());
+        self::assertSame(5000.0, $stats[0]->getFiveWeekAverage());
+    }
+
+    public function testRefreshWithNothingStoredLoadsTheWholeHistory(): void
+    {
+        $this->connectAllowedAthlete();
+        $this->repository->method('findLatestForAthlete')->willReturn([]);
+        $this->repository->expects($this->never())->method('findBeforeWeek');
 
         $this->stravaClient
             ->expects($this->once())
             ->method('getAthleteActivities')
-            ->with(null, $expectedAfter, 1, 200)
-            ->willReturn([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
+            ->with(null, '0', 1, 200)
+            ->willReturn([
+                $this->activity('Run', 5000.0, $this->mondayThisWeek + 3600),
+                $this->activity('Run', 8000.0, $this->mondayThisWeek - 2 * self::WEEK + 3600),
+            ]);
 
-        $this->provider->refresh(2);
+        $this->recorder->expects($this->never())->method('record');
+        $this->recorder
+            ->expects($this->once())
+            ->method('replaceAll')
+            ->with(self::ALLOWED_ATHLETE_ID, $this->countOf(3));
+
+        $stats = $this->provider->refresh();
+
+        // From the first activity's week to this week, including the empty week in between.
+        self::assertCount(3, $stats);
+        self::assertSame(5000.0, $stats[0]->getTotalDistance());
+        self::assertSame(0.0, $stats[1]->getTotalDistance());
+        self::assertSame(8000.0, $stats[2]->getTotalDistance());
+        self::assertEqualsWithDelta((8000.0 + 0.0 + 5000.0) / 3, $stats[0]->getFiveWeekAverage(), 0.001);
     }
 
-    public function testRefreshFollowsStravaPagination(): void
+    public function testResetReloadsTheWholeHistoryAndReplacesTheStoredWeeks(): void
+    {
+        $this->connectAllowedAthlete();
+
+        // Reset ignores what is stored.
+        $this->repository->expects($this->never())->method('findLatestForAthlete');
+
+        $this->stravaClient
+            ->expects($this->once())
+            ->method('getAthleteActivities')
+            ->with(null, '0', 1, 200)
+            ->willReturn([
+                $this->activity('Run', 8000.0, $this->mondayThisWeek - self::WEEK + 3600),
+                $this->activity('Run', 5000.0, $this->mondayThisWeek + 3600),
+            ]);
+
+        /** @var WeeklyStat[]|null $replaced */
+        $replaced = null;
+        $this->recorder
+            ->expects($this->once())
+            ->method('replaceAll')
+            ->willReturnCallback(
+                /** @param WeeklyStat[] $stats */
+                static function (string $athleteId, array $stats) use (&$replaced): void {
+                    $replaced = $stats;
+                },
+            );
+        $this->recorder->expects($this->never())->method('record');
+
+        $stats = $this->provider->reset();
+
+        self::assertCount(2, $stats);
+        self::assertSame(5000.0, $stats[0]->getTotalDistance());
+        self::assertSame(6500.0, $stats[0]->getFiveWeekAverage());
+        self::assertSame(8000.0, $stats[1]->getTotalDistance());
+        self::assertSame($stats, $replaced);
+    }
+
+    public function testResetFollowsStravaPagination(): void
     {
         $this->connectAllowedAthlete();
 
@@ -242,27 +365,29 @@ final class StravaDataProviderTest extends TestCase
             ->method('getAthleteActivities')
             ->willReturnCallback(static fn (string|null $before, string|null $after, int $page): array => $page === 1 ? $fullPage : $lastPage);
 
-        $stats = $this->provider->refresh(1);
+        $stats = $this->provider->reset();
 
         self::assertSame(201, $stats[0]->getActivityCount());
     }
 
-    public function testRefreshWithoutActivitiesStoresNothing(): void
+    public function testResetWithoutActivitiesClearsTheStoredWeeks(): void
     {
         $this->connectAllowedAthlete();
         $this->stubActivities([]);
 
         $this->recorder
             ->expects($this->once())
-            ->method('record')
+            ->method('replaceAll')
             ->with(self::ALLOWED_ATHLETE_ID, []);
 
-        self::assertSame([], $this->provider->refresh(2));
+        self::assertSame([], $this->provider->reset());
     }
 
     public function testRefreshFailsWhenStoringFails(): void
     {
         $this->connectAllowedAthlete();
+        $this->repository->method('findLatestForAthlete')->willReturn([$this->storedWeek($this->mondayThisWeek, 0.0)]);
+        $this->repository->method('findBeforeWeek')->willReturn([]);
         $this->stubActivities([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
 
         $this->recorder->method('record')->willThrowException(new RuntimeException('database is down'));
@@ -270,31 +395,82 @@ final class StravaDataProviderTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('database is down');
 
-        $this->provider->refresh(1);
+        $this->provider->refresh();
     }
 
-    public function testRefreshRenewsAnExpiredTokenAndUsesTheNewOne(): void
+    public function testRefreshUsesTheTokenStoredInTheDatabase(): void
     {
-        $refreshed = $this->validToken('fresh-token');
-
-        $this->session->set('access_token', $this->expiredToken());
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
+        $this->repository->method('findLatestForAthlete')->willReturn([]);
 
-        $this->clientProvider
+        $this->tokenManager
             ->expects($this->once())
-            ->method('refreshAccessToken')
-            ->with('refresh-me')
-            ->willReturn($refreshed);
+            ->method('getValidToken')
+            ->with(self::ALLOWED_ATHLETE_ID)
+            ->willReturn($this->validToken('database-token'));
         $this->clientProvider
             ->expects($this->atLeastOnce())
             ->method('getAPIClient')
-            ->with('fresh-token')
+            ->with('database-token')
             ->willReturn($this->stravaClient);
         $this->stubActivities([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
 
-        $this->provider->refresh(1);
+        $this->provider->refresh();
 
-        self::assertSame($refreshed, $this->session->get('access_token'));
+        // The token is never put in the session.
+        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
+    }
+
+    public function testRefreshWithoutStoredTokenDisconnectsSoYouCanReconnect(): void
+    {
+        $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
+
+        $this->tokenManager->method('getValidToken')->willThrowException(new AccessTokenMissing());
+        $this->clientProvider->expects($this->never())->method('getAPIClient');
+        $this->recorder->expects($this->never())->method('record');
+
+        $this->assertThrowsAccessTokenMissing(fn () => $this->provider->refresh());
+
+        self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
+    }
+
+    public function testRefreshLatestStatsWorksWithoutABrowserSession(): void
+    {
+        // Console: nothing in the session, the token comes from the database.
+        $this->tokenManager
+            ->expects($this->once())
+            ->method('getValidToken')
+            ->with(self::ALLOWED_ATHLETE_ID)
+            ->willReturn($this->validToken('database-token'));
+        $this->clientProvider
+            ->expects($this->atLeastOnce())
+            ->method('getAPIClient')
+            ->with('database-token')
+            ->willReturn($this->stravaClient);
+        $this->repository->method('findLatestForAthlete')->willReturn([$this->storedWeek($this->mondayThisWeek, 0.0)]);
+        $this->repository->method('findBeforeWeek')->willReturn([]);
+        $this->stubActivities([$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)]);
+        $this->recorder
+            ->expects($this->once())
+            ->method('record')
+            ->with(self::ALLOWED_ATHLETE_ID, $this->countOf(1));
+
+        $stats = $this->provider->refreshLatestStats();
+
+        self::assertCount(1, $stats);
+        self::assertSame(5000.0, $stats[0]->getTotalDistance());
+        self::assertSame([], $this->session->all());
+    }
+
+    public function testRefreshLatestStatsWithoutStoredTokenThrows(): void
+    {
+        $this->tokenManager->method('getValidToken')->willThrowException(new AccessTokenMissing());
+        $this->clientProvider->expects($this->never())->method('getAPIClient');
+        $this->recorder->expects($this->never())->method('record');
+
+        $this->expectException(AccessTokenMissing::class);
+
+        $this->provider->refreshLatestStats();
     }
 
     public function testConfirmConnectionForAllowedAthlete(): void
@@ -306,14 +482,17 @@ final class StravaDataProviderTest extends TestCase
 
     private function connectAllowedAthlete(): void
     {
-        $this->session->set('access_token', $this->validToken());
         $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
+
+        $this->tokenManager->method('getValidToken')->willReturn($this->validToken());
     }
 
+    /** A null athlete is a session from before #379, which only held the Strava token. */
     private function setSessionAthlete(string|null $athleteId): void
     {
-        $this->session->set('access_token', $this->validToken());
         if ($athleteId === null) {
+            $this->session->set(AthleteGuard::LEGACY_TOKEN_SESSION_KEY, $this->validToken());
+
             return;
         }
 
@@ -330,21 +509,20 @@ final class StravaDataProviderTest extends TestCase
         }
     }
 
+    private function storedWeek(int $monday, float $runDistance): StravaWeeklyStat
+    {
+        $stat = new StravaWeeklyStat(self::ALLOWED_ATHLETE_ID, new DateTimeImmutable(gmdate('Y-m-d', $monday)));
+        $stat->update($runDistance, 0.0, [], 1, [$this->activity('Run', $runDistance, $monday + 3600)]);
+
+        return $stat;
+    }
+
     private function validToken(string $token = 'valid-token'): AccessToken
     {
         return new AccessToken([
             'access_token' => $token,
             'refresh_token' => 'refresh-token',
             'expires' => time() + 3600,
-        ]);
-    }
-
-    private function expiredToken(): AccessToken
-    {
-        return new AccessToken([
-            'access_token' => 'expired-token',
-            'refresh_token' => 'refresh-me',
-            'expires' => time() - 60,
         ]);
     }
 
