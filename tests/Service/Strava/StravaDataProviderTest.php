@@ -226,6 +226,40 @@ final class StravaDataProviderTest extends TestCase
         self::assertSame($refreshed, $this->session->get('access_token'));
     }
 
+    public function testRefreshFetchesFreshDataInsteadOfCachedData(): void
+    {
+        $this->connectAllowedAthlete();
+
+        $activities = [$this->activity('Run', 5000.0, $this->mondayThisWeek + 3600)];
+        $this->stravaClient
+            ->method('getAthleteActivities')
+            ->willReturnCallback(static function () use (&$activities): array {
+                return $activities;
+            });
+
+        self::assertSame(5000.0, $this->provider->getWeeklyStatsPaged(1)[0]->getTotalDistance());
+
+        // A new activity is recorded on Strava.
+        $activities[] = $this->activity('Run', 3000.0, $this->mondayThisWeek + 7200);
+
+        // Without a refresh, the cached data is served.
+        self::assertSame(5000.0, $this->provider->getWeeklyStatsPaged(1)[0]->getTotalDistance());
+
+        $this->provider->refresh(1);
+
+        self::assertSame(8000.0, $this->provider->getWeeklyStatsPaged(1)[0]->getTotalDistance());
+    }
+
+    public function testRefreshRequiresAllowedAthlete(): void
+    {
+        $this->session->set('access_token', $this->validToken());
+        $this->session->set(AthleteGuard::SESSION_KEY, '99999');
+
+        $this->expectException(AccessTokenMissing::class);
+
+        $this->provider->refresh(1);
+    }
+
     public function testConfirmConnectionForAllowedAthlete(): void
     {
         $this->connectAllowedAthlete();

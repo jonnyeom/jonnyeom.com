@@ -62,6 +62,58 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertSame(40, $component->visibleWeeks);
     }
 
+    public function testRefreshDropsCacheThenReloadsStats(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('refresh')
+            ->with(20);
+        $this->stravaDataProvider
+            ->method('getWeeklyStatsPaged')
+            ->willReturn($this->buildWeeklyStats(3));
+
+        $component = $this->createLiveComponent('WeeklyStatsTable');
+        $rendered  = (string) $component->render();
+
+        $this->assertStringContainsString('Refresh', $rendered);
+        $this->assertStringNotContainsString('Updated with fresh Strava data', $rendered);
+
+        $rendered = (string) $component->call('refresh')->render();
+
+        $this->assertStringContainsString('Updated with fresh Strava data', $rendered);
+        $this->assertStringNotContainsString('is-danger', $rendered);
+    }
+
+    public function testRefreshUsesCurrentlyVisibleWeeks(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('refresh')
+            ->with(30);
+        $this->stravaDataProvider
+            ->method('getWeeklyStatsPaged')
+            ->willReturn($this->buildWeeklyStats(3));
+
+        $this->createLiveComponent('WeeklyStatsTable')
+            ->call('loadMore')
+            ->call('refresh')
+            ->render();
+    }
+
+    public function testRefreshErrorIsShown(): void
+    {
+        $this->stravaDataProvider
+            ->method('refresh')
+            ->willThrowException(new AccessTokenMissing());
+
+        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')
+            ->call('refresh')
+            ->render();
+
+        $this->assertStringContainsString('No access token', $rendered);
+        $this->assertStringNotContainsString('Updated with fresh Strava data', $rendered);
+    }
+
     public function testAccessTokenMissingShowsError(): void
     {
         $this->stravaDataProvider

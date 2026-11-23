@@ -33,6 +33,8 @@ class WeeklyStatsTable extends AbstractController
 
     private bool $loaded = false;
 
+    private bool $refreshed = false;
+
     public function __construct(private readonly StravaDataProvider $stravaDataProvider)
     {
     }
@@ -41,6 +43,28 @@ class WeeklyStatsTable extends AbstractController
     public function loadMore(): void
     {
         $this->visibleWeeks += self::LOAD_MORE_SIZE;
+    }
+
+    /**
+     * Drops cached Strava data for the visible weeks; the re-render then fetches fresh
+     * activities from Strava and stores the recalculated stats.
+     */
+    #[LiveAction]
+    public function refresh(): void
+    {
+        try {
+            $this->stravaDataProvider->refresh($this->visibleWeeks);
+            $this->refreshed = true;
+        } catch (Throwable $e) {
+            $this->handleError($e);
+        }
+    }
+
+    public function isRefreshed(): bool
+    {
+        $this->load();
+
+        return $this->refreshed && $this->error === null;
     }
 
     /** @return array<int, WeeklyStat> */
@@ -68,15 +92,20 @@ class WeeklyStatsTable extends AbstractController
 
         try {
             $this->weeklyStatsCache = $this->stravaDataProvider->getWeeklyStatsPaged($this->visibleWeeks);
-        } catch (AccessTokenMissing) {
-            $this->error            = 'No access token. Please connect to Strava.';
-            $this->weeklyStatsCache = [];
-        } catch (IdentityProviderException $e) {
-            $this->error            = 'Strava access error: ' . $e->getMessage();
-            $this->weeklyStatsCache = [];
         } catch (Throwable $e) {
-            $this->error            = 'Application error: ' . $e->getMessage();
-            $this->weeklyStatsCache = [];
+            $this->handleError($e);
         }
+    }
+
+    private function handleError(Throwable $e): void
+    {
+        $this->error = match (true) {
+            $e instanceof AccessTokenMissing => 'No access token. Please connect to Strava.',
+            $e instanceof IdentityProviderException => 'Strava access error: ' . $e->getMessage(),
+            default => 'Application error: ' . $e->getMessage(),
+        };
+
+        $this->weeklyStatsCache = [];
+        $this->loaded           = true;
     }
 }

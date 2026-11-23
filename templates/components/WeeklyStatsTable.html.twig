@@ -3,6 +3,21 @@
         <div class="notification is-danger">{{ this.error }}</div>
     {% else %}
         {% set weeklyStats = this.weeklyStats %}
+        <div class="is-flex is-align-items-center is-justify-content-flex-end mb-3">
+            {% if this.refreshed %}
+                <span class="has-text-success is-size-7 mr-3">Updated with fresh Strava data</span>
+            {% endif %}
+            <button
+                data-action="live#action"
+                data-live-action-param="refresh"
+                data-loading="action(refresh)|addClass(is-loading)"
+                class="button is-small"
+                title="Fetch fresh data from Strava"
+            >
+                <span class="icon"><i class="fas fa-arrows-rotate"></i></span>
+                <span>Refresh</span>
+            </button>
+        </div>
         <div class="table-container">
             <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered is-fullwidth">
                 <thead>

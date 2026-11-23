@@ -18,6 +18,7 @@ use Throwable;
 
 use function array_filter;
 use function array_key_exists;
+use function array_keys;
 use function array_merge;
 use function array_reverse;
 use function array_slice;
@@ -107,6 +108,30 @@ class StravaDataProvider
         $this->storeWeeklyStats($pagedStats);
 
         return $pagedStats;
+    }
+
+    /**
+     * Drops the cached Strava activities behind the newest $limit weeks (plus the 4 weeks of
+     * history used for the 5-week average), so the next getWeeklyStatsPaged() call fetches
+     * fresh data from Strava and stores the recalculated stats.
+     *
+     * @throws AccessTokenMissing
+     * @throws IdentityProviderException
+     */
+    public function refresh(int $limit): void
+    {
+        // Only the allowed, connected athlete may purge the cache.
+        $this->getApiToken();
+
+        $athleteId      = $this->athleteGuard->getAllowedAthleteId();
+        $mondayThisWeek = (int) strtotime('monday this week', (new DateTime())->getTimestamp());
+
+        foreach (array_keys($this->buildNeededWeekKeys($limit + 4, $mondayThisWeek)) as $weekKey) {
+            $this->cache->delete('strava_current_' . $athleteId . '_' . $weekKey);
+            $this->cache->delete('strava_week_' . $athleteId . '_' . $weekKey);
+        }
+
+        $this->activitiesCache = [];
     }
 
     /**
