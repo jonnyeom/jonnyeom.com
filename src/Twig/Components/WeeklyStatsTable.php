@@ -17,6 +17,7 @@ use Symfony\UX\LiveComponent\DefaultActionTrait;
 use Throwable;
 
 use function count;
+use function sprintf;
 
 #[AsLiveComponent]
 class WeeklyStatsTable extends AbstractController
@@ -36,7 +37,8 @@ class WeeklyStatsTable extends AbstractController
 
     private bool $loaded = false;
 
-    private bool $refreshed = false;
+    /** Confirmation shown after a successful refresh or reset. */
+    private string|null $notice = null;
 
     public function __construct(
         private readonly StravaDataProvider $stravaDataProvider,
@@ -51,25 +53,39 @@ class WeeklyStatsTable extends AbstractController
     }
 
     /**
-     * The only action that calls Strava: fetches fresh activities for the visible weeks and
-     * stores the recalculated stats. The re-render then reads them from the database.
+     * Fetches the latest week(s) from Strava and stores them. The re-render then reads the
+     * stats from the database.
      */
     #[LiveAction]
     public function refresh(): void
     {
         try {
-            $this->stravaDataProvider->refresh($this->visibleWeeks);
-            $this->refreshed = true;
+            $this->stravaDataProvider->refresh();
+            $this->notice = 'Updated the latest week with fresh Strava data';
         } catch (Throwable $e) {
             $this->handleError($e);
         }
     }
 
-    public function isRefreshed(): bool
+    /**
+     * Deletes the stored weeks and reloads the whole history from Strava.
+     */
+    #[LiveAction]
+    public function reset(): void
+    {
+        try {
+            $weeks        = count($this->stravaDataProvider->reset());
+            $this->notice = sprintf('Reloaded all %d weeks from Strava', $weeks);
+        } catch (Throwable $e) {
+            $this->handleError($e);
+        }
+    }
+
+    public function getNotice(): string|null
     {
         $this->load();
 
-        return $this->refreshed && $this->error === null;
+        return $this->error === null ? $this->notice : null;
     }
 
     /** @return array<int, WeeklyStat> */

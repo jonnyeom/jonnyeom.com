@@ -100,12 +100,13 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertSame(40, $component->visibleWeeks);
     }
 
-    public function testRefreshDropsCacheThenReloadsStats(): void
+    public function testRefreshUpdatesTheLatestWeekThenReloadsFromTheDatabase(): void
     {
         $this->stravaDataProvider
             ->expects($this->once())
             ->method('refresh')
-            ->with(20);
+            ->willReturn([]);
+        $this->stravaDataProvider->expects($this->never())->method('reset');
         $this->stravaDataProvider
             ->method('getStoredWeeklyStats')
             ->willReturn($this->buildWeeklyStats(3));
@@ -114,28 +115,32 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $rendered  = (string) $component->render();
 
         $this->assertStringContainsString('Refresh', $rendered);
-        $this->assertStringNotContainsString('Updated with fresh Strava data', $rendered);
+        $this->assertStringContainsString('Reset', $rendered);
+        $this->assertStringNotContainsString('Updated the latest week', $rendered);
 
         $rendered = (string) $component->call('refresh')->render();
 
-        $this->assertStringContainsString('Updated with fresh Strava data', $rendered);
+        $this->assertStringContainsString('Updated the latest week with fresh Strava data', $rendered);
         $this->assertStringNotContainsString('is-danger', $rendered);
     }
 
-    public function testRefreshUsesCurrentlyVisibleWeeks(): void
+    public function testResetReloadsTheWholeHistory(): void
     {
         $this->stravaDataProvider
             ->expects($this->once())
-            ->method('refresh')
-            ->with(30);
+            ->method('reset')
+            ->willReturn($this->buildWeeklyStats(52));
+        $this->stravaDataProvider->expects($this->never())->method('refresh');
         $this->stravaDataProvider
             ->method('getStoredWeeklyStats')
-            ->willReturn($this->buildWeeklyStats(3));
+            ->willReturn($this->buildWeeklyStats(20));
 
-        $this->createComponentWithMockedProvider()
-            ->call('loadMore')
-            ->call('refresh')
+        $rendered = (string) $this->createComponentWithMockedProvider()
+            ->call('reset')
             ->render();
+
+        $this->assertStringContainsString('Reloaded all 52 weeks from Strava', $rendered);
+        $this->assertStringNotContainsString('is-danger', $rendered);
     }
 
     public function testRefreshErrorIsShown(): void
@@ -150,7 +155,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->render();
 
         $this->assertStringContainsString('No access token', $rendered);
-        $this->assertStringNotContainsString('Updated with fresh Strava data', $rendered);
+        $this->assertStringNotContainsString('Updated the latest week', $rendered);
     }
 
     public function testUnexpectedErrorIsLogged(): void

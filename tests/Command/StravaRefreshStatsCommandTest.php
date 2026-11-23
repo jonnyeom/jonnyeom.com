@@ -25,7 +25,7 @@ final class StravaRefreshStatsCommandTest extends TestCase
         $this->stravaDataProvider = $this->createMock(StravaDataProvider::class);
     }
 
-    public function testRefreshesTwentyWeeksByDefault(): void
+    public function testRefreshesTheLatestWeek(): void
     {
         $thisWeek = new WeeklyStat('2026-11-23');
         $thisWeek->addStravaActivity(['sport_type' => 'Run', 'distance' => 16093.4, 'start_date_local' => '2026-11-23T08:00:00Z']);
@@ -33,46 +33,20 @@ final class StravaRefreshStatsCommandTest extends TestCase
 
         $this->stravaDataProvider
             ->expects($this->once())
-            ->method('refreshStoredStats')
-            ->with(20)
+            ->method('refreshLatestStats')
             ->willReturn([$thisWeek, new WeeklyStat('2026-11-16')]);
 
         $tester = $this->runCommand('12345');
 
         self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-        self::assertStringContainsString('Refreshed 2 weeks of Strava stats for athlete 12345', $tester->getDisplay());
+        self::assertStringContainsString('Refreshed 2 week(s) of Strava stats for athlete 12345', $tester->getDisplay());
         self::assertStringContainsString('This week: 10 mi', $tester->getDisplay());
         self::assertStringContainsString('5-week average 5 mi', $tester->getDisplay());
     }
 
-    public function testWeeksOption(): void
-    {
-        $this->stravaDataProvider
-            ->expects($this->once())
-            ->method('refreshStoredStats')
-            ->with(52)
-            ->willReturn([new WeeklyStat('2026-11-23')]);
-
-        $tester = $this->runCommand('12345', ['--weeks' => '52']);
-
-        self::assertSame(Command::SUCCESS, $tester->getStatusCode());
-    }
-
-    public function testRejectsInvalidWeeks(): void
-    {
-        $this->stravaDataProvider->expects($this->never())->method('refreshStoredStats');
-
-        foreach (['0', '-3', 'abc'] as $weeks) {
-            $tester = $this->runCommand('12345', ['--weeks' => $weeks]);
-
-            self::assertSame(Command::INVALID, $tester->getStatusCode(), $weeks);
-            self::assertStringContainsString('--weeks must be a positive number', $tester->getDisplay());
-        }
-    }
-
     public function testNoActivities(): void
     {
-        $this->stravaDataProvider->method('refreshStoredStats')->willReturn([]);
+        $this->stravaDataProvider->method('refreshLatestStats')->willReturn([]);
 
         $tester = $this->runCommand('12345');
 
@@ -82,7 +56,7 @@ final class StravaRefreshStatsCommandTest extends TestCase
 
     public function testFailsWithoutAthleteId(): void
     {
-        $this->stravaDataProvider->expects($this->never())->method('refreshStoredStats');
+        $this->stravaDataProvider->expects($this->never())->method('refreshLatestStats');
 
         $tester = $this->runCommand('');
 
@@ -92,7 +66,7 @@ final class StravaRefreshStatsCommandTest extends TestCase
 
     public function testFailsWhenNoTokenIsStored(): void
     {
-        $this->stravaDataProvider->method('refreshStoredStats')->willThrowException(new AccessTokenMissing());
+        $this->stravaDataProvider->method('refreshLatestStats')->willThrowException(new AccessTokenMissing());
 
         $tester = $this->runCommand('12345');
 
@@ -103,7 +77,7 @@ final class StravaRefreshStatsCommandTest extends TestCase
     public function testFailsWhenStravaRejectsTheToken(): void
     {
         $this->stravaDataProvider
-            ->method('refreshStoredStats')
+            ->method('refreshLatestStats')
             ->willThrowException(new IdentityProviderException('Bad Request', 400, []));
 
         $tester = $this->runCommand('12345');

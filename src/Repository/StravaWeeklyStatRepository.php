@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\StravaWeeklyStat;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\Persistence\ManagerRegistry;
@@ -43,6 +44,37 @@ class StravaWeeklyStatRepository extends ServiceEntityRepository
         }
 
         return $byWeek;
+    }
+
+    /**
+     * The $limit stored weeks right before $weekStart.
+     *
+     * @return StravaWeeklyStat[] newest first
+     */
+    public function findBeforeWeek(string $athleteId, DateTimeImmutable $weekStart, int $limit): array
+    {
+        /** @var StravaWeeklyStat[] $results */
+        $results = $this->createQueryBuilder('s')
+            ->andWhere('s.athleteId = :athleteId')
+            ->andWhere('s.weekStart < :weekStart')
+            ->setParameter('athleteId', $athleteId)
+            ->setParameter('weekStart', $weekStart->format('Y-m-d'))
+            ->orderBy('s.weekStart', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $results;
+    }
+
+    public function deleteForAthlete(string $athleteId): void
+    {
+        $this->createQueryBuilder('s')
+            ->delete()
+            ->andWhere('s.athleteId = :athleteId')
+            ->setParameter('athleteId', $athleteId)
+            ->getQuery()
+            ->execute();
     }
 
     /** @return StravaWeeklyStat[] newest first */

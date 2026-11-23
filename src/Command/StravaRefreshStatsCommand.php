@@ -11,46 +11,28 @@ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 use function count;
-use function filter_var;
 use function round;
 use function sprintf;
 
-use const FILTER_VALIDATE_INT;
-
 /**
- * Does what the Refresh button on /strava does, without a browser: fetches the activities from
- * Strava, recalculates the weekly stats and stores them.
+ * Does what the Refresh button on /strava does, without a browser: fetches the latest week(s)
+ * from Strava, recalculates their stats and stores them.
  */
 #[AsCommand(
     name: 'app:strava:refresh-stats',
-    description: 'Fetches activities from Strava and refreshes the stored weekly stats of the allowed athlete.',
+    description: 'Refreshes the latest week of Strava stats for the allowed athlete.',
 )]
 final class StravaRefreshStatsCommand extends Command
 {
-    /** Same as the number of weeks the stats page shows initially. */
-    private const int DEFAULT_WEEKS = 20;
-
     public function __construct(
         private readonly StravaDataProvider $stravaDataProvider,
         private readonly AthleteGuard $athleteGuard,
     ) {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this->addOption(
-            'weeks',
-            null,
-            InputOption::VALUE_REQUIRED,
-            'Number of most recent weeks to refresh (4 extra weeks are fetched for the 5-week average).',
-            (string) self::DEFAULT_WEEKS,
-        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -64,15 +46,8 @@ final class StravaRefreshStatsCommand extends Command
             return Command::FAILURE;
         }
 
-        $weeks = filter_var($input->getOption('weeks'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-        if ($weeks === false) {
-            $io->error('--weeks must be a positive number.');
-
-            return Command::INVALID;
-        }
-
         try {
-            $weeklyStats = $this->stravaDataProvider->refreshStoredStats($weeks);
+            $weeklyStats = $this->stravaDataProvider->refreshLatestStats();
         } catch (AccessTokenMissing) {
             $io->error(sprintf('No Strava token is stored for athlete %s. Connect to Strava at /strava first.', $athleteId));
 
@@ -84,13 +59,13 @@ final class StravaRefreshStatsCommand extends Command
         }
 
         if ($weeklyStats === []) {
-            $io->success('Strava returned no activities for this period; nothing to store.');
+            $io->success('Strava returned no activities; nothing to store.');
 
             return Command::SUCCESS;
         }
 
         $io->success(sprintf(
-            'Refreshed %d weeks of Strava stats for athlete %s. This week: %s mi (5-week average %s mi).',
+            'Refreshed %d week(s) of Strava stats for athlete %s. This week: %s mi (5-week average %s mi).',
             count($weeklyStats),
             $athleteId,
             $weeklyStats[0]->getTotalMiles(),
