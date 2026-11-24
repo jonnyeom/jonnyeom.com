@@ -163,3 +163,10 @@ h6:hover .heading-permalink,
 .ag-row.strava-plan-current-week {
   background-color: rgba(57, 135, 229, 0.14);
 }
+
+// Plan page: the selected week's action bar stays visible while scrolling the weeks.
+.strava-plan-actions {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}

@@ -192,62 +192,75 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context })
 };
 
 /**
- * Popup of a week (tap / click the week): copy the week, paste a copied week onto it, notes, clear.
- * It acts through the context; the cell value itself is never edited.
+ * Bar above the grid acting on the selected week (tap / click a week to select it): copy it, paste
+ * the copied week onto it, clear it, notes. Always shown when editable, so selecting a week doesn't
+ * move the grid. Sticky, so it stays reachable while scrolling through the weeks.
  */
-const WeekMenu = ({ data, stopEditing, context }) => {
-    const { copied, copyWeek, pasteWeek, saveWeek, compact } = context;
-    const [notes, setNotes] = useState(data.notes ?? '');
-    const isSource = copied?.weekStart === data.weekStart;
+const WeekActionBar = ({ week, copied, compact, onCopy, onPaste, onClear, onSaveNotes, onClose }) => {
+    const [notesOpen, setNotesOpen] = useState(false);
+    const [notes, setNotes] = useState('');
 
-    useGridCellEditor({ isPopup: () => true });
+    useEffect(() => {
+        setNotesOpen(false);
+        setNotes(week?.notes ?? '');
+    }, [week?.weekStart, week?.notes]);
 
-    const close = () => stopEditing(true);
-    const run = (action) => () => {
-        close();
-        action();
-    };
+    const isSource = copied && week && copied.weekStart === week.weekStart;
+    const button = (label, icon, onClick, disabled, extra = '') => (
+        <button type="button" className={`button is-small mb-0${extra}`} onClick={onClick} disabled={disabled}>
+            <span className="icon"><i className={`fas fa-${icon}`} /></span>
+            <span>{label}</span>
+        </button>
+    );
 
     return (
-        <div className="box p-3 mb-0" style={{ width: '16rem', maxWidth: 'calc(100vw - 2rem)' }}>
-            <p className="has-text-weight-semibold mb-2">Week of {weekLabel(data.weekStart)}</p>
-            <div className="buttons mb-2">
-                <button type="button" className="button is-small mb-0" onClick={run(() => copyWeek(data))} disabled={!hasPlan(data)}>
-                    <span className="icon"><i className="fas fa-copy" /></span>
-                    <span>Copy</span>
-                </button>
-                <button type="button" className="button is-small mb-0" onClick={run(() => pasteWeek(data))} disabled={!copied || isSource}>
-                    <span className="icon"><i className="fas fa-paste" /></span>
-                    <span>{copied && !isSource ? `Paste ${weekLabel(copied.weekStart)}` : 'Paste'}</span>
-                </button>
-                <button
-                    type="button"
-                    className="button is-small mb-0"
-                    onClick={run(() => window.confirm(`Clear the plan of ${weekLabel(data.weekStart)}?`) && saveWeek(data.weekStart, {}, data.notes))}
-                    disabled={!hasPlan(data)}
-                >
-                    <span className="icon"><i className="fas fa-eraser" /></span>
-                    <span>Clear</span>
-                </button>
+        <div className="strava-plan-actions box px-3 py-2 mb-3">
+            <div className="is-flex is-align-items-center is-flex-wrap-wrap" style={{ gap: '0.5rem' }}>
+                <span className="has-text-weight-semibold mr-auto">
+                    {week ? `Week of ${weekLabel(week.weekStart)}` : (
+                        <span className="has-text-grey has-text-weight-normal is-size-7">
+                            {compact ? 'Tap' : 'Click'} a week to select it
+                            {copied ? ` (copied: ${weekLabel(copied.weekStart)})` : ''}
+                        </span>
+                    )}
+                </span>
+                <div className="buttons are-small mb-0 is-flex-wrap-nowrap" style={{ gap: '0.25rem' }}>
+                    {button('Copy', 'copy', () => onCopy(week), !week || !hasPlan(week), isSource ? ' is-link is-light' : '')}
+                    {button(copied && !isSource ? `Paste ${weekLabel(copied.weekStart)}` : 'Paste', 'paste', () => onPaste(week), !week || !copied || isSource)}
+                    {button(compact ? '' : 'Clear', 'eraser', () => onClear(week), !week || !hasPlan(week))}
+                    {button(compact ? '' : 'Notes', 'note-sticky', () => setNotesOpen((open) => !open), !week, notesOpen ? ' is-link is-light' : '')}
+                    {week && (
+                        <button type="button" className="delete is-medium ml-1" aria-label="Unselect the week" onClick={onClose} />
+                    )}
+                </div>
             </div>
-            <textarea
-                className={`textarea${inputSize(compact)} mb-2`}
-                rows={3}
-                maxLength={2000}
-                placeholder="Notes (e.g. long run Saturday, recovery week)"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-            />
-            <div className="buttons is-right mb-0">
-                <button type="button" className="button is-small mb-0" onClick={close}>Cancel</button>
-                <button
-                    type="button"
-                    className="button is-small is-link mb-0"
-                    onClick={run(() => notes !== (data.notes ?? '') && saveWeek(data.weekStart, data.days, notes))}
-                >
-                    Done
-                </button>
-            </div>
+            {week && notesOpen && (
+                <div className="mt-2">
+                    <textarea
+                        className={`textarea${inputSize(compact)} mb-2`}
+                        rows={3}
+                        maxLength={2000}
+                        placeholder="Notes (e.g. long run Saturday, recovery week)"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                    />
+                    <div className="buttons is-right mb-0">
+                        <button type="button" className="button is-small mb-0" onClick={() => setNotesOpen(false)}>Cancel</button>
+                        <button
+                            type="button"
+                            className="button is-small is-link mb-0"
+                            onClick={() => {
+                                setNotesOpen(false);
+                                if (notes !== (week.notes ?? '')) {
+                                    onSaveNotes(week, notes);
+                                }
+                            }}
+                        >
+                            Save notes
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -258,6 +271,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
     const [copied, setCopied] = useState(null);
+    const [selectedWeek, setSelectedWeek] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notice, setNotice] = useState(null);
@@ -361,10 +375,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             cellClass: compact ? 'has-text-weight-bold px-2' : 'has-text-weight-bold',
             headerClass: compact ? 'px-2' : undefined,
             cellRenderer: WeekCellRenderer,
-            editable,
-            cellEditor: WeekMenu,
-            cellEditorPopup: true,
-            cellEditorPopupPosition: 'under',
+            cellStyle: editable ? { cursor: 'pointer' } : undefined,
         },
         ...DAYS.map((day) => ({
             headerName: day,
@@ -435,6 +446,20 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         }]),
     ], [editable, compact]);
 
+    // Tapping the week toggles its selection; planning a day also selects its week.
+    const onCellClicked = useCallback(({ colDef, data }) => {
+        if (!editable) {
+            return;
+        }
+        setSelectedWeek((current) => (colDef.field === 'weekStart' && current === data.weekStart ? null : data.weekStart));
+    }, [editable]);
+
+    const clearWeek = useCallback((week) => {
+        if (window.confirm(`Clear the plan of ${weekLabel(week.weekStart)}?`)) {
+            saveWeek(week.weekStart, {}, week.notes);
+        }
+    }, [saveWeek]);
+
     const onCellValueChanged = useCallback(({ data }) => {
         saveWeek(data.weekStart, data.days, data.notes);
     }, [saveWeek]);
@@ -457,9 +482,10 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     const rows = useMemo(() => [...weeks].reverse(), [weeks]);
     const chartWeeks = useMemo(() => weeks.map((week) => ({ ...week, planMiles: round1(weekTotal(week.days)) })), [weeks]);
     const context = useMemo(
-        () => ({ copied, copyWeek, pasteWeek, saveWeek, compact }),
-        [copied, copyWeek, pasteWeek, saveWeek, compact],
+        () => ({ compact }),
+        [compact],
     );
+    const selected = weeks.find((week) => week.weekStart === selectedWeek) ?? null;
 
     // Day and week cells read `compact` from the context.
     useEffect(() => {
@@ -482,8 +508,8 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 <span className="is-size-7 has-text-grey">
                     {notice ?? (editable
                         ? (compact
-                            ? 'Tap a day to plan it. Tap a week to copy, paste or add notes.'
-                            : 'Click a day to plan it. Click a week to copy, paste or add notes (or Ctrl/⌘+C, Ctrl/⌘+V).')
+                            ? 'Tap a day to plan it.'
+                            : 'Click a day to plan it. Ctrl/⌘+C and Ctrl/⌘+V copy and paste the focused week.')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
                 {!editable && <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>}
@@ -493,6 +519,23 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                     Later weeks
                 </button>
             </div>
+            {editable && (
+                <WeekActionBar
+                    week={selected}
+                    copied={copied}
+                    compact={compact}
+                    onCopy={copyWeek}
+                    onPaste={pasteWeek}
+                    onClear={clearWeek}
+                    onSaveNotes={(week, notes) => saveWeek(week.weekStart, week.days, notes)}
+                    onClose={() => setSelectedWeek(null)}
+                />
+            )}
+            {/* Highlights the selected row without redrawing the grid (which would close an open editor). */}
+            {selected && (
+                <style>{`.strava-plan-grid .ag-row[row-id="${selected.weekStart}"] { background-color: rgba(57, 135, 229, 0.28); }`}</style>
+            )}
+            <div className="strava-plan-grid">
             <AgGridReact
                 ref={gridRef}
                 theme={theme}
@@ -510,7 +553,9 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 tooltipShowDelay={300}
                 onCellValueChanged={onCellValueChanged}
                 onCellKeyDown={onCellKeyDown}
+                onCellClicked={onCellClicked}
             />
+            </div>
             <div className="has-text-centered py-4">
                 <button type="button" className="button" onClick={() => loadMore('earlier')} disabled={loading}>
                     Load more
