@@ -452,23 +452,23 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                 </button>
             </div>
             {selection.length > 0 && (
-                <WeekActionBar
-                    key={selectedWeeks.join(',')}
-                    selection={selection}
-                    copied={copied}
-                    compact={compact}
-                    onCopy={copyWeek}
-                    onPaste={pasteWeeks}
-                    onClear={clearWeeks}
-                    onSaveNotes={(week, notes) => updateWeek(week.weekStart, () => ({ notes }))}
-                    onClose={() => setSelectedWeeks([])}
-                />
-            )}
-            {/* Highlights the selected rows without redrawing the grid (which would close an open editor). */}
-            {selection.length > 0 && (
-                <style>
-                    {`${selection.map((week) => `.strava-plan-grid .ag-row[row-id="${week.weekStart}"]`).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
-                </style>
+                <>
+                    <WeekActionBar
+                        key={selectedWeeks.join(',')}
+                        selection={selection}
+                        copied={copied}
+                        compact={compact}
+                        onCopy={copyWeek}
+                        onPaste={pasteWeeks}
+                        onClear={clearWeeks}
+                        onSaveNotes={(week, notes) => updateWeek(week.weekStart, () => ({ notes }))}
+                        onClose={() => setSelectedWeeks([])}
+                    />
+                    {/* Highlights the selected rows without redrawing the grid (which would close an open editor). */}
+                    <style>
+                        {`${selection.map((week) => `.strava-plan-grid .ag-row[row-id="${week.weekStart}"]`).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
+                    </style>
+                </>
             )}
             <div className="strava-plan-grid">
                 <AgGridReact

@@ -216,7 +216,6 @@ jobs:
           coverage: none
           php-version: 8.4
           extensions: curl, pdo_pgsql
-          tools: composer
       - name: Install pnpm
         uses: pnpm/action-setup@v6
       - name: Use Node.js
