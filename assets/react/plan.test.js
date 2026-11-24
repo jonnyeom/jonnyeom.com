@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+import { addWeeks, hasPlan, normalizeWeek, relativeMiles, round1, weekLabel, weekTotal } from './plan.js';
+
+describe('relativeMiles', () => {
+    it('weights each sport like the stats (bike ÷3, swim ×4, tennis ×2)', () => {
+        expect(relativeMiles({ Run: 5 })).toBe(5);
+        expect(relativeMiles({ Bike: 30 })).toBe(10);
+        expect(relativeMiles({ Swim: 1 })).toBe(4);
+        expect(relativeMiles({ Tennis: 1.5 })).toBe(3);
+        expect(relativeMiles({ Run: 5, Bike: 30, Swim: 1, Tennis: 1.5 })).toBe(22);
+    });
+
+    it('treats a missing day, missing sports and junk as 0', () => {
+        expect(relativeMiles(undefined)).toBe(0);
+        expect(relativeMiles({})).toBe(0);
+        expect(relativeMiles({ Run: 'abc', Hike: 10 })).toBe(0);
+    });
+});
+
+describe('weekTotal', () => {
+    it('adds the relative miles of every day', () => {
+        expect(weekTotal({ Mon: { Run: 5 }, Wed: { Bike: 30 }, Sun: { Swim: 1 } })).toBe(19);
+        expect(weekTotal({})).toBe(0);
+    });
+});
+
+describe('hasPlan', () => {
+    it('is true when any day has miles', () => {
+        expect(hasPlan({ days: { Tue: { Run: 3 } } })).toBe(true);
+        expect(hasPlan({ days: {} })).toBe(false);
+        expect(hasPlan({ days: { Tue: { Run: 0 } } })).toBe(false);
+    });
+});
+
+describe('weeks', () => {
+    it('labels a week like the stats table', () => {
+        expect(weekLabel('2026-11-23')).toBe('11.23');
+        expect(weekLabel('2027-01-04')).toBe('1.04');
+    });
+
+    it('adds weeks across months and years', () => {
+        expect(addWeeks('2026-11-23', 1)).toBe('2026-11-30');
+        expect(addWeeks('2026-12-28', 1)).toBe('2027-01-04');
+        expect(addWeeks('2026-11-23', -8)).toBe('2026-09-28');
+    });
+
+    it('normalizes the empty days of the API ([]) to an object', () => {
+        expect(normalizeWeek({ weekStart: '2026-11-23', days: [] }).days).toEqual({});
+        const days = { Mon: { Run: 5 } };
+        const week = normalizeWeek({ weekStart: '2026-11-23', days });
+        expect(week.days).toEqual(days);
+        expect(week.days).not.toBe(days);
+    });
+
+    it('rounds to one decimal', () => {
+        expect(round1(21.666)).toBe(21.7);
+        expect(round1(5)).toBe(5);
+    });
+});

@@ -53,6 +53,10 @@ jobs:
           key: ${{ github.sha }}-vendor
       - name: Install node dependencies
         run: pnpm install
+      - name: Lint frontend (oxlint)
+        run: pnpm lint
+      - name: Test frontend (Vitest)
+        run: pnpm test
       - name: Build bundle
         run: pnpm build
       - name: Cache build for jobs

@@ -5,7 +5,6 @@ import {
     CustomEditorModule,
     LargeTextEditorModule,
     ModuleRegistry,
-    RenderApiModule,
     RowStyleModule,
     themeQuartz,
     TooltipModule,
@@ -14,6 +13,20 @@ import {
 import { AgGridReact, useGridCellEditor } from 'ag-grid-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PlanChart from '../components/PlanChart.jsx';
+import WeekActionBar from '../components/WeekActionBar.jsx';
+import {
+    addWeeks,
+    DAYS,
+    hasPlan,
+    inputSize,
+    MAX_MILES,
+    normalizeWeek,
+    relativeMiles,
+    round1,
+    SPORTS,
+    weekLabel,
+    weekTotal,
+} from '../plan.js';
 
 // Only the features this grid uses (clipboard / range selection are Enterprise; copy & paste of
 // weeks is implemented below).
@@ -21,49 +34,13 @@ ModuleRegistry.registerModules([
     ClientSideRowModelModule,
     CustomEditorModule,
     LargeTextEditorModule,
-    RenderApiModule,
     RowStyleModule,
     CellStyleModule,
     TooltipModule,
     ...(import.meta.env?.DEV ? [ValidationModule] : []),
 ]);
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-// Same weighting as the stats (App\Enum\SportType::relativeDistance()).
-const SPORTS = [
-    { type: 'Run', icon: 'person-running', factor: 1 },
-    { type: 'Bike', icon: 'person-biking', factor: 1 / 3 },
-    { type: 'Swim', icon: 'person-swimming', factor: 4 },
-    { type: 'Tennis', icon: 'table-tennis-paddle-ball', factor: 2 },
-];
-
 const LOAD_MORE_WEEKS = 8;
-const MAX_MILES = 300;
-
-const round1 = (value) => Math.round(value * 10) / 10;
-
-const addWeeks = (weekStart, weeks) => {
-    const date = new Date(`${weekStart}T00:00:00Z`);
-    date.setUTCDate(date.getUTCDate() + weeks * 7);
-    return date.toISOString().slice(0, 10);
-};
-
-// "2026-11-23" -> "11.23", like the stats table.
-const weekLabel = (weekStart) => {
-    const [, month, day] = weekStart.split('-');
-    return `${Number(month)}.${day}`;
-};
-
-const relativeMiles = (sports) =>
-    SPORTS.reduce((total, sport) => total + (Number(sports?.[sport.type]) || 0) * sport.factor, 0);
-
-const weekTotal = (days) => DAYS.reduce((total, day) => total + relativeMiles(days?.[day]), 0);
-
-const hasPlan = (week) => DAYS.some((day) => relativeMiles(week.days?.[day]) > 0);
-
-// The API returns [] for a week without plan; the grid always works with an object.
-const normalizeWeek = (week) => ({ ...week, days: Array.isArray(week.days) ? {} : { ...week.days } });
 
 const useMediaQuery = (media) => {
     const query = useMemo(() => (typeof window !== 'undefined' ? window.matchMedia?.(media) : null), [media]);
@@ -80,14 +57,14 @@ const useMediaQuery = (media) => {
 };
 
 /** Day cell: relative miles and the icons of the planned sports (on phones: "*" for several sports). */
-const DayCellRenderer = ({ value, context }) => {
+const DayCellRenderer = ({ value, compact }) => {
     const miles = relativeMiles(value);
     if (miles <= 0) {
         return null;
     }
     const planned = SPORTS.filter((sport) => value?.[sport.type] > 0);
 
-    if (context.compact) {
+    if (compact) {
         return <span>{round1(miles)}{planned.length > 1 && '*'}</span>;
     }
 
@@ -109,8 +86,8 @@ const dayTooltip = ({ value }) => {
 };
 
 /** Week cell: the week; on phones also "planned/actual" miles (their columns are hidden). */
-const WeekCellRenderer = ({ data, context }) => {
-    if (!context.compact) {
+const WeekCellRenderer = ({ data, compact }) => {
+    if (!compact) {
         return <span>{weekLabel(data.weekStart)}{data.notes && <span className="icon is-small ml-1 has-text-grey"><i className="fas fa-note-sticky" /></span>}</span>;
     }
     const plan = round1(weekTotal(data.days));
@@ -125,11 +102,8 @@ const WeekCellRenderer = ({ data, context }) => {
     );
 };
 
-// Inputs of at least 16px, so phones don't zoom in when one is focused.
-const inputSize = (compact) => (compact ? '' : ' is-small');
-
 /** Popup editor of one day: miles per sport. Enter saves, Escape cancels. */
-const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context }) => {
+const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact }) => {
     const [draft, setDraft] = useState(() =>
         Object.fromEntries(SPORTS.map((sport) => [sport.type, value?.[sport.type]?.toString() ?? ''])));
     const firstInput = useRef(null);
@@ -168,7 +142,7 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context })
                     <input
                         id={`plan-${sport.type}`}
                         ref={index === 0 ? firstInput : undefined}
-                        className={`input${inputSize(context.compact)}`}
+                        className={`input${inputSize(compact)}`}
                         type="number"
                         inputMode="decimal"
                         min="0"
@@ -191,83 +165,7 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context })
     );
 };
 
-/**
- * Bar acting on the selected weeks (tap / click weeks to select them): copy a week, paste the
- * copied week into every selected week, clear them, notes of a single week. Only shown while weeks
- * are selected; it floats at the bottom of the screen, so it doesn't move the grid and stays in
- * reach while scrolling.
- */
-const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, onSaveNotes, onClose }) => {
-    const [notesOpen, setNotesOpen] = useState(false);
-    const [notes, setNotes] = useState('');
-    const week = selection.length === 1 ? selection[0] : null;
-
-    useEffect(() => {
-        setNotesOpen(false);
-        setNotes(week?.notes ?? '');
-    }, [week?.weekStart, week?.notes]);
-
-    const isSource = (candidate) => copied?.weekStart === candidate.weekStart;
-    const pasteTargets = selection.filter((candidate) => !isSource(candidate));
-    const clearTargets = selection.filter(hasPlan);
-    const button = (label, icon, onClick, disabled, extra = '') => (
-        <button type="button" className={`button is-small mb-0${extra}`} onClick={onClick} disabled={disabled}>
-            <span className="icon"><i className={`fas fa-${icon}`} /></span>
-            {label && <span>{label}</span>}
-        </button>
-    );
-
-    if (selection.length === 0) {
-        return null;
-    }
-
-    const title = week ? `Week of ${weekLabel(week.weekStart)}` : `${selection.length} weeks selected`;
-
-    return (
-        <div className="strava-plan-actions box px-3 py-2">
-            <div className="is-flex is-align-items-center is-flex-wrap-wrap" style={{ gap: '0.5rem' }}>
-                <span className="has-text-weight-semibold mr-auto">{title}</span>
-                <div className="buttons are-small mb-0 is-flex-wrap-nowrap" style={{ gap: '0.25rem' }}>
-                    {selection.length <= 1 && button('Copy', 'copy', () => onCopy(week), !week || !hasPlan(week), week && isSource(week) ? ' is-link is-light' : '')}
-                    {button('Paste', 'paste', () => onPaste(pasteTargets), !copied || pasteTargets.length === 0)}
-                    {button(compact ? '' : 'Clear', 'eraser', () => onClear(clearTargets), clearTargets.length === 0)}
-                    {selection.length <= 1 && button(compact ? '' : 'Notes', 'note-sticky', () => setNotesOpen((open) => !open), !week, notesOpen ? ' is-link is-light' : '')}
-                    <button type="button" className="delete is-medium ml-1" aria-label="Unselect the weeks" onClick={onClose} />
-                </div>
-            </div>
-            {week && notesOpen && (
-                <div className="mt-2">
-                    <textarea
-                        className={`textarea${inputSize(compact)} mb-2`}
-                        rows={3}
-                        maxLength={2000}
-                        placeholder="Notes (e.g. long run Saturday, recovery week)"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                    />
-                    <div className="buttons is-right mb-0">
-                        <button type="button" className="button is-small mb-0" onClick={() => setNotesOpen(false)}>Cancel</button>
-                        <button
-                            type="button"
-                            className="button is-small is-link mb-0"
-                            onClick={() => {
-                                setNotesOpen(false);
-                                if (notes !== (week.notes ?? '')) {
-                                    onSaveNotes(week, notes);
-                                }
-                            }}
-                        >
-                            Save notes
-                        </button>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
 const StravaPlanner = ({ apiUrl, connectUrl }) => {
-    const gridRef = useRef(null);
     const importInput = useRef(null);
     const [weeks, setWeeks] = useState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
@@ -311,10 +209,10 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             .finally(() => setLoading(false));
     }, [request]);
 
-    const replaceWeek = (saved) => {
+    const replaceWeek = useCallback((saved) => {
         const week = normalizeWeek(saved);
         setWeeks((current) => current.map((row) => (row.weekStart === week.weekStart ? week : row)));
-    };
+    }, []);
 
     const saveWeek = useCallback(async (weekStart, days, notes) => {
         setError(null);
@@ -330,7 +228,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             request(`/${weekStart}`).then(replaceWeek).catch(() => {});
             return false;
         }
-    }, [request]);
+    }, [request, replaceWeek]);
 
     const copyWeek = useCallback((week) => {
         if (!hasPlan(week)) {
@@ -416,6 +314,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             cellClass: compact ? 'has-text-weight-bold px-2' : 'has-text-weight-bold',
             headerClass: compact ? 'px-2' : undefined,
             cellRenderer: WeekCellRenderer,
+            cellRendererParams: { compact },
             cellStyle: editable ? { cursor: 'pointer' } : undefined,
         },
         ...DAYS.map((day) => ({
@@ -438,8 +337,10 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             },
             equals: (a, b) => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {}),
             cellRenderer: DayCellRenderer,
+            cellRendererParams: { compact },
             tooltipValueGetter: dayTooltip,
             cellEditor: DayEditor,
+            cellEditorParams: { compact },
             cellEditorPopup: true,
             cellEditorPopupPosition: 'under',
             // Tab moves between the inputs of the popup, not to the next cell.
@@ -528,19 +429,10 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     }, [editable, copyWeek, pasteWeeks]);
 
     // Newest first, like the stats table.
-    const rows = useMemo(() => [...weeks].reverse(), [weeks]);
+    const rows = useMemo(() => weeks.toReversed(), [weeks]);
     const chartWeeks = useMemo(() => weeks.map((week) => ({ ...week, planMiles: round1(weekTotal(week.days)) })), [weeks]);
-    const context = useMemo(
-        () => ({ compact }),
-        [compact],
-    );
     // Newest first, like the grid.
     const selection = rows.filter((week) => selectedWeeks.includes(week.weekStart));
-
-    // Day and week cells read `compact` from the context.
-    useEffect(() => {
-        gridRef.current?.api?.refreshCells({ force: true });
-    }, [compact]);
 
     if (loading && weeks.length === 0) {
         return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
@@ -571,6 +463,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             </div>
             {editable && (
                 <WeekActionBar
+                    key={selectedWeeks.join(',')}
                     selection={selection}
                     copied={copied}
                     compact={compact}
@@ -589,7 +482,6 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             )}
             <div className="strava-plan-grid">
             <AgGridReact
-                ref={gridRef}
                 theme={theme}
                 rowData={rows}
                 columnDefs={columnDefs}
@@ -597,7 +489,6 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 getRowId={({ data }) => data.weekStart}
                 rowHeight={compact ? 48 : undefined}
                 rowClassRules={{ 'strava-plan-current-week': ({ data }) => data.weekStart === currentWeek }}
-                context={context}
                 domLayout="autoHeight"
                 singleClickEdit
                 stopEditingWhenCellsLoseFocus
@@ -646,6 +537,6 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     );
 };
 
-export default function (props) {
+export default function StravaPlannerController(props) {
     return <StravaPlanner apiUrl={props.apiUrl ?? '/api/strava/plans'} connectUrl={props.connectUrl ?? '/strava/connect/entry'} />;
 }

@@ -154,15 +154,22 @@ export default function PlanChart({ weeks, currentWeek, label }) {
                 </span>
             ))}
         </div>
-        <div ref={containerRef} className="strava-weekly-chart mb-5" tabIndex={0} aria-label="Weekly mileage plan chart, scroll for other weeks">
+        <section
+            ref={containerRef}
+            className="strava-weekly-chart mb-5"
+            // A scrollable region: focusable so it can be scrolled with the keyboard.
+            tabIndex={0}
+            aria-label="Weekly mileage plan chart, scroll for other weeks"
+        >
             <div className="strava-weekly-chart__inner" style={{ '--chart-weeks': Math.max(weeks.length, 1) }}>
                 <canvas
                     ref={canvasRef}
+                    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Chart.js draws on a canvas; role="img" + aria-label describes it.
                     role="img"
                     aria-label={`Planned and actual weekly miles and the 5-week average for ${weeks.length} weeks. The table below lists every value.`}
                 />
             </div>
-        </div>
+        </section>
         </>
     );
 }
