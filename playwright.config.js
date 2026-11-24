@@ -22,6 +22,8 @@ export default defineConfig({
     testDir: './e2e',
     globalSetup: './e2e/setup.js',
     forbidOnly: !!process.env.CI,
+    // The specs share the database, and saving replaces a whole week: one at a time.
+    workers: 1,
     use: { ...devices['iPhone 13'], browserName: 'chromium', baseURL: url },
     webServer: {
         // variables_order: without E, PHP's server ignores DATABASE_URL and uses the one in the .env files.

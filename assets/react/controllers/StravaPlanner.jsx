@@ -15,6 +15,8 @@ import PlanChart from '../components/PlanChart.jsx';
 import WeekActionBar from '../components/WeekActionBar.jsx';
 import {
     addWeeks,
+    cellLabel,
+    cellsBetween,
     DAYS,
     hasPlan,
     inputSize,
@@ -22,9 +24,11 @@ import {
     normalizeWeek,
     relativeMiles,
     round1,
+    sameSports,
     SPORTS,
     weekLabel,
     weekTotal,
+    withDay,
 } from '../plan.js';
 
 // Only the features this grid uses.
@@ -66,28 +70,37 @@ const useMediaQuery = (media) => useSyncExternalStore(
 );
 
 /** Day cell: relative miles and the icons of the planned sports (on phones: "*" for several sports). */
-const DayCellRenderer = ({ value, compact }) => {
+const DayCellRenderer = ({ value, compact, editable }) => {
     const miles = relativeMiles(value);
     if (miles <= 0) {
         return null;
     }
     const planned = SPORTS.filter((sport) => value?.[sport.type] > 0);
 
-    if (compact) {
-        return <span>{round1(miles)}{planned.length > 1 && '*'}</span>;
-    }
-
     return (
-        <span className="icon-text is-flex-wrap-nowrap">
-            <span>{round1(miles)}</span>
-            {planned.map((sport) => (
-                <span key={sport.type} className="icon is-small ml-1">
-                    <i className={`fas fa-${sport.icon}`} />
+        <>
+            {compact ? <span>{round1(miles)}{planned.length > 1 && '*'}</span> : (
+                <span className="icon-text is-flex-wrap-nowrap">
+                    <span>{round1(miles)}</span>
+                    {planned.map((sport) => (
+                        <span key={sport.type} className="icon is-small ml-1">
+                            <i className={`fas fa-${sport.icon}`} />
+                        </span>
+                    ))}
                 </span>
-            ))}
-        </span>
+            )}
+            {editable && <span className="strava-plan-fill" />}
+        </>
     );
 };
+
+const isFillHandle = (event) => Boolean(event.target.closest?.('.strava-plan-fill'));
+
+// The week of the row under the pointer, if any.
+const weekAt = ({ clientX, clientY }) =>
+    document.elementFromPoint(clientX, clientY)?.closest('.strava-plan-grid .ag-row')?.getAttribute('row-id');
+
+const cellSelector = ({ weekStart, day }) => `.strava-plan-grid .ag-row[row-id="${weekStart}"] [col-id="${day}"]`;
 
 const dayTooltip = ({ value }) => {
     const planned = SPORTS.filter((sport) => value?.[sport.type] > 0);
@@ -176,6 +189,7 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact })
 
 export default function StravaPlanner({ apiUrl, connectUrl }) {
     const importInput = useRef(null);
+    const gridRef = useRef(null);
     const saveQueue = useRef({});
     const weeksRef = useRef([]);
     const [weeks, setWeeksState] = useState([]);
@@ -183,6 +197,8 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     const [editable, setEditable] = useState(false);
     const [copied, setCopied] = useState(null);
     const [selectedWeeks, setSelectedWeeks] = useState([]);
+    // Dragging a day's corner: { from, to }, the cells it is dragged from and to.
+    const [fill, setFill] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notice, setNotice] = useState(null);
@@ -257,6 +273,30 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         const pasted = targets.filter((week, index) => saved[index]).map((week) => weekLabel(week.weekStart));
         if (pasted.length > 0) {
             setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${pasted.join(', ')}.`);
+        }
+    };
+
+    const sportsOf = ({ weekStart, day }) => weeksRef.current.find((week) => week.weekStart === weekStart)?.days[day] ?? {};
+
+    // Copies the sports of a day into each cell ({ weekStart, day }); saves every changed week once.
+    const fillCells = async (source, sports, cells) => {
+        const changed = cells.filter((cell) => !sameSports(sportsOf(cell), sports));
+        if (changed.length === 0) {
+            return;
+        }
+        const planned = changed.filter((cell) => relativeMiles(sportsOf(cell)) > 0).map(cellLabel);
+        if (planned.length > 0 && !window.confirm(`Replace ${planned.join(', ')} with ${cellLabel(source)}?`)) {
+            return;
+        }
+        const weekStarts = [...new Set(changed.map((cell) => cell.weekStart))];
+        const saved = await Promise.all(weekStarts.map((weekStart) => updateWeek(weekStart, (week) => ({
+            days: changed
+                .filter((cell) => cell.weekStart === weekStart)
+                .reduce((days, { day }) => withDay(days, day, sports), week.days),
+        }))));
+        const filled = changed.filter((cell) => saved[weekStarts.indexOf(cell.weekStart)]).map(cellLabel);
+        if (filled.length > 0) {
+            setNotice(`Copied ${cellLabel(source)} to ${filled.join(', ')}.`);
         }
     };
 
@@ -337,7 +377,12 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             valueGetter: ({ data }) => data.days[day] ?? {},
             equals: (a, b) => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {}),
             cellRenderer: DayCellRenderer,
-            cellRendererParams: { compact },
+            cellRendererParams: {
+                compact,
+                editable,
+                // Dragging the corner of a day doesn't open its popup.
+                suppressMouseEventHandling: ({ event }) => isFillHandle(event),
+            },
             tooltipValueGetter: dayTooltip,
             cellEditor: DayEditor,
             cellEditorParams: { compact },
@@ -383,15 +428,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
 
     // The grid doesn't change its row data (readOnlyEdit): an edited day becomes a new week object.
     const onCellEditRequest = ({ data, colDef, newValue }) => {
-        updateWeek(data.weekStart, (week) => {
-            const days = { ...week.days };
-            if (Object.keys(newValue ?? {}).length === 0) {
-                delete days[colDef.colId];
-            } else {
-                days[colDef.colId] = newValue;
-            }
-            return { days };
-        });
+        updateWeek(data.weekStart, (week) => ({ days: withDay(week.days, colDef.colId, newValue) }));
     };
 
     // Tapping a week adds it to / removes it from the selection; tapping a day only edits it.
@@ -424,6 +461,42 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         }
     };
 
+    // Dragging the corner of a day up or down copies it to the weeks on the way. The corner captures the
+    // pointer, so all these events reach it (and no cell is clicked), wherever the pointer is.
+    const onFillStart = (event) => {
+        if (event.button !== 0 || !isFillHandle(event)) {
+            return;
+        }
+        // Saves an open popup; it would stay open otherwise.
+        gridRef.current.api.stopEditing();
+        event.target.setPointerCapture(event.pointerId);
+        const from = {
+            weekStart: event.target.closest('.ag-row').getAttribute('row-id'),
+            day: event.target.closest('[col-id]').getAttribute('col-id'),
+        };
+        setFill({ from, to: from });
+    };
+
+    const fillTo = (event) => {
+        const weekStart = weekAt(event);
+        return weekStart ? { ...fill.from, weekStart } : fill.to;
+    };
+
+    const onFillMove = (event) => {
+        if (fill) {
+            // Without the button down, the end of the drag was missed (e.g. the corner disappeared).
+            setFill(event.buttons === 0 ? null : { from: fill.from, to: fillTo(event) });
+        }
+    };
+
+    const onFillEnd = (event) => {
+        if (!fill) {
+            return;
+        }
+        setFill(null);
+        fillCells(fill.from, sportsOf(fill.from), cellsBetween(rows, fill.from, fillTo(event)));
+    };
+
     if (loading && weeks.length === 0) {
         return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
     }
@@ -441,7 +514,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     {notice ?? (editable
                         ? (compact
                             ? 'Tap a day to plan it, or a week to copy and paste it.'
-                            : 'Click a day to plan it, or a week to copy and paste it (or Ctrl/⌘+C, Ctrl/⌘+V).')
+                            : 'Click a day to plan it, or drag its corner up or down to copy it. Click a week to copy and paste it (or Ctrl/⌘+C, Ctrl/⌘+V).')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
                 {!editable && <a href={connectUrl} className="button is-small mb-0 ml-2">Connect to edit</a>}
@@ -470,8 +543,20 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     </style>
                 </>
             )}
-            <div className="strava-plan-grid">
+            {fill && (
+                <style>
+                    {`${cellsBetween(rows, fill.from, fill.to).map(cellSelector).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
+                </style>
+            )}
+            <div
+                className="strava-plan-grid"
+                onPointerDown={onFillStart}
+                onPointerMove={onFillMove}
+                onPointerUp={onFillEnd}
+                onPointerCancel={() => setFill(null)}
+            >
                 <AgGridReact
+                    ref={gridRef}
                     theme={theme}
                     rowData={rows}
                     columnDefs={columnDefs}

@@ -52,6 +52,18 @@ const planDay = async (weekStart, name, miles) => {
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
 };
 
+const fillHandle = (weekStart, day) => dayCell(weekStart, day).querySelector('.strava-plan-fill');
+
+// Drags the corner of a day to a day cell. jsdom has no layout: the element under the pointer is given.
+const drag = (weekStart, day, to) => {
+    const handle = fillHandle(weekStart, day);
+    handle.setPointerCapture = vi.fn();
+    document.elementFromPoint = () => to;
+    fireEvent.pointerDown(handle, { button: 0, buttons: 1 });
+    fireEvent.pointerMove(handle, { buttons: 1 });
+    fireEvent.pointerUp(handle, { button: 0 });
+};
+
 const importFile = () => fireEvent.change(document.querySelector('input[type="file"]'), {
     target: { files: [{ name: 'plan.csv', text: () => Promise.resolve('csv') }] },
 });
@@ -304,6 +316,48 @@ describe('StravaPlanner', () => {
         expect(puts()).toEqual([]);
     });
 
+    it('copies a day to the weeks its corner is dragged over', async () => {
+        mockApi();
+        await renderPlanner();
+
+        drag('2026-11-16', 'Sat', dayCell('2026-11-30', 'Sat'));
+
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        // The other days of the weeks stay; nothing planned was replaced.
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Sat: { Bike: 30 } }, notes: null }],
+            ['/api/strava/plans/2026-11-30', { days: { Sat: { Bike: 30 } }, notes: null }],
+        ]));
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(await screen.findByText('Copied Sat 11.16 to Sat 11.30, Sat 11.23.')).toBeInTheDocument();
+        // No popup opened.
+        expect(screen.queryByLabelText('Run')).not.toBeInTheDocument();
+    });
+
+    it('drags down too, and asks before replacing a planned day', async () => {
+        mockApi();
+        await renderPlanner();
+        await planDay('2026-11-30', 'Mon', '3');
+        await waitFor(() => expect(puts()).toHaveLength(1));
+        await waitFor(() => expect(fillHandle('2026-11-30', 'Mon')).not.toBeNull());
+        window.confirm.mockReturnValueOnce(false);
+
+        drag('2026-11-30', 'Mon', dayCell('2026-11-16', 'Mon'));
+        expect(window.confirm).toHaveBeenCalledWith('Replace Mon 11.16 with Mon 11.30?');
+        // Saves are sent a moment later.
+        await new Promise((resolve) => {
+            setTimeout(resolve, 50);
+        });
+        expect(puts()).toHaveLength(1);
+
+        drag('2026-11-30', 'Mon', dayCell('2026-11-16', 'Mon'));
+        await waitFor(() => expect(puts()).toHaveLength(3));
+        expect(puts().slice(1)).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Mon: { Run: 3 } }, notes: null }],
+            ['/api/strava/plans/2026-11-16', { days: { Mon: { Run: 3 }, Sat: { Bike: 30 } }, notes: null }],
+        ]));
+    });
+
     it('is read-only without a Strava connection', async () => {
         mockApi({ editable: false });
         await renderPlanner();
@@ -311,6 +365,7 @@ describe('StravaPlanner', () => {
         expect(screen.getByRole('link', { name: 'Connect to edit' })).toHaveAttribute('href', '/strava/connect/entry');
         expect(screen.queryByRole('button', { name: 'Import' })).not.toBeInTheDocument();
 
+        expect(fillHandle('2026-11-16', 'Mon')).toBeNull();
         tap(weekCell('2026-11-16'));
         tap(dayCell('2026-11-16', 'Mon'));
         expect(screen.queryByRole('button', { name: 'Copy' })).not.toBeInTheDocument();
