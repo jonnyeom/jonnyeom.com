@@ -10,7 +10,7 @@ import {
     PointElement,
     Tooltip,
 } from 'chart.js';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { round1, weekLabel, weekTotal } from '../plan.js';
 
 Chart.register(BarController, BarElement, CategoryScale, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip);
@@ -50,40 +50,6 @@ export default function PlanChart({ weeks, currentWeek }) {
     const chartRef = useRef(null);
     const scrolledRef = useRef(false);
 
-    const data = useMemo(() => ({
-        labels: weeks.map((week) => weekLabel(week.weekStart)),
-        datasets: [
-            {
-                type: 'line',
-                label: '5-week average',
-                data: weeks.map((week) => week.actual?.fiveWeekAverage ?? null),
-                borderColor: COLOR_AVERAGE,
-                backgroundColor: COLOR_AVERAGE,
-                borderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 5,
-                tension: 0,
-                order: 1,
-            },
-            {
-                label: 'Planned',
-                data: weeks.map((week) => round1(weekTotal(week.days)) || null),
-                backgroundColor: COLOR_PLAN,
-                order: 2,
-                ...BAR,
-            },
-            {
-                label: 'Actual',
-                data: weeks.map((week) => week.actual?.totalMiles ?? null),
-                backgroundColor: COLOR_ACTUAL,
-                order: 3,
-                ...BAR,
-            },
-        ],
-    }), [weeks]);
-
-    const currentIndex = weeks.findIndex((week) => week.weekStart === currentWeek);
-
     useEffect(() => {
         chartRef.current = new Chart(canvasRef.current, {
             type: 'bar',
@@ -121,11 +87,39 @@ export default function PlanChart({ weeks, currentWeek }) {
 
     useEffect(() => {
         const chart = chartRef.current;
-        if (!chart) {
-            return;
-        }
-        chart.data = data;
+        chart.data = {
+            labels: weeks.map((week) => weekLabel(week.weekStart)),
+            datasets: [
+                {
+                    type: 'line',
+                    label: '5-week average',
+                    data: weeks.map((week) => week.actual?.fiveWeekAverage ?? null),
+                    borderColor: COLOR_AVERAGE,
+                    backgroundColor: COLOR_AVERAGE,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    tension: 0,
+                    order: 1,
+                },
+                {
+                    label: 'Planned',
+                    data: weeks.map((week) => round1(weekTotal(week.days)) || null),
+                    backgroundColor: COLOR_PLAN,
+                    order: 2,
+                    ...BAR,
+                },
+                {
+                    label: 'Actual',
+                    data: weeks.map((week) => week.actual?.totalMiles ?? null),
+                    backgroundColor: COLOR_ACTUAL,
+                    order: 3,
+                    ...BAR,
+                },
+            ],
+        };
         // The current week's label is bold.
+        const currentIndex = weeks.findIndex((week) => week.weekStart === currentWeek);
         chart.options.scales.x.ticks.font = (context) => ({ weight: context.index === currentIndex ? 'bold' : 'normal' });
         chart.update();
 
@@ -138,7 +132,7 @@ export default function PlanChart({ weeks, currentWeek }) {
             const box = container.getBoundingClientRect();
             container.scrollBy({ left: weekX - (box.left + box.width / 3) });
         }
-    }, [data, currentIndex]);
+    }, [weeks, currentWeek]);
 
     return (
         <>

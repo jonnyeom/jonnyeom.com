@@ -10,7 +10,7 @@ import {
     ValidationModule,
 } from 'ag-grid-community';
 import { AgGridReact, useGridCellEditor } from 'ag-grid-react';
-import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import PlanChart from '../components/PlanChart.jsx';
 import WeekActionBar from '../components/WeekActionBar.jsx';
 import {
@@ -128,7 +128,7 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact })
         const next = { ...draft, [type]: input };
         setDraft(next);
         onValueChange(Object.fromEntries(SPORTS
-            .map((sport) => [sport.type, Math.min(MAX_MILES, Math.max(0, Number(next[sport.type]) || 0))])
+            .map((sport) => [sport.type, Number(next[sport.type]) || 0])
             .filter(([, miles]) => miles > 0)));
     };
 
@@ -177,7 +177,8 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact })
 export default function StravaPlanner({ apiUrl, connectUrl }) {
     const importInput = useRef(null);
     const saveQueue = useRef({});
-    const [weeks, setWeeks] = useState([]);
+    const weeksRef = useRef([]);
+    const [weeks, setWeeksState] = useState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
     const [copied, setCopied] = useState(null);
@@ -191,45 +192,52 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
 
     const theme = useMemo(() => (dark ? themeQuartz.withPart(colorSchemeDark) : themeQuartz), [dark]);
 
+    // The ref always holds the latest weeks: handlers may run before the next render (e.g. tapping Paste
+    // also saves an open day popup).
+    const setWeeks = useCallback((update) => {
+        weeksRef.current = update(weeksRef.current);
+        setWeeksState(weeksRef.current);
+    }, []);
+
     useEffect(() => {
         api(apiUrl)
             .then((body) => {
-                setWeeks(body.weeks.map(normalizeWeek));
+                setWeeks(() => body.weeks.map(normalizeWeek));
                 setCurrentWeek(body.currentWeek);
                 setEditable(body.editable);
             })
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
-    }, [apiUrl]);
+    }, [apiUrl, setWeeks]);
 
-    // Replaces a week object in the state (by identity, so a stale response can't undo a newer edit).
-    const swapWeek = (from, to) => setWeeks((current) => current.map((week) => (week === from ? to : week)));
+    const replaceWeek = (to) => setWeeks((current) => current.map((week) => (week.weekStart === to.weekStart ? to : week)));
 
-    // Shows the change at once, then saves the week. Saves of the same week are queued, so they reach
-    // the server in order. A failed save restores the week as it was.
-    const updateWeek = (previous, changes) => {
-        const next = { ...previous, ...changes };
-        swapWeek(previous, next);
+    // Shows the change at once, then saves the week; resolves to whether that worked. Saves of the same
+    // week are queued, so they reach the server in order. After the last one, the week is shown as the
+    // server last confirmed it, so a failed change is undone.
+    const updateWeek = async (weekStart, changes) => {
+        const current = weeksRef.current.find((week) => week.weekStart === weekStart);
+        const next = { ...current, ...changes(current) };
+        replaceWeek(next);
         setError(null);
 
-        const save = (saveQueue.current[next.weekStart] ?? Promise.resolve()).then(() => api(`${apiUrl}/${next.weekStart}`, {
+        const confirmed = saveQueue.current[weekStart] ?? Promise.resolve(current);
+        const save = confirmed.then(() => api(`${apiUrl}/${weekStart}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ days: next.days, notes: next.notes ?? null }),
-        }));
-        saveQueue.current[next.weekStart] = save.catch(() => {});
+        })).then(normalizeWeek);
+        const settled = save.catch(() => confirmed);
+        saveQueue.current[weekStart] = settled;
 
-        return save.then(
-            (saved) => {
-                swapWeek(next, normalizeWeek(saved));
-                return true;
-            },
-            (e) => {
-                setError(e.message);
-                swapWeek(next, previous);
-                return false;
-            },
-        );
+        const failure = await save.then(() => null, (e) => e);
+        if (failure) {
+            setError(failure.message);
+        }
+        if (saveQueue.current[weekStart] === settled) {
+            replaceWeek(await settled);
+        }
+        return !failure;
     };
 
     const copyWeek = (week) => {
@@ -245,7 +253,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         if (planned.length > 0 && !window.confirm(`Replace the plan of ${planned.join(', ')} with ${weekLabel(copied.weekStart)}?`)) {
             return;
         }
-        const saved = await Promise.all(targets.map((week) => updateWeek(week, { days: copied.days })));
+        const saved = await Promise.all(targets.map((week) => updateWeek(week.weekStart, () => ({ days: copied.days }))));
         const pasted = targets.filter((week, index) => saved[index]).map((week) => weekLabel(week.weekStart));
         if (pasted.length > 0) {
             setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${pasted.join(', ')}.`);
@@ -254,7 +262,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
 
     const clearWeeks = (targets) => {
         if (window.confirm(`Clear the plan of ${targets.map((week) => weekLabel(week.weekStart)).join(', ')}?`)) {
-            targets.forEach((week) => updateWeek(week, { days: {} }));
+            targets.forEach((week) => updateWeek(week.weekStart, () => ({ days: {} })));
         }
     };
 
@@ -268,17 +276,22 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         }
         setError(null);
         setLoading(true);
+        let failed = 'Import failed';
         try {
+            // Pending saves first, or they would overwrite the import.
+            await Promise.all(Object.values(saveQueue.current));
+            saveQueue.current = {};
             const { imported } = await api(`${apiUrl}/import`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/csv' },
                 body: await file.text(),
             });
+            failed = 'Imported, but the weeks could not be reloaded';
             const body = await api(`${apiUrl}?from=${weeks[0].weekStart}&weeks=${weeks.length}`);
-            setWeeks(body.weeks.map(normalizeWeek));
+            setWeeks(() => body.weeks.map(normalizeWeek));
             setNotice(`Imported ${imported} week${imported === 1 ? '' : 's'}.`);
         } catch (e) {
-            setError(`Import failed: ${e.message}`);
+            setError(`${failed}: ${e.message}`);
         } finally {
             setLoading(false);
         }
@@ -370,13 +383,15 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
 
     // The grid doesn't change its row data (readOnlyEdit): an edited day becomes a new week object.
     const onCellEditRequest = ({ data, colDef, newValue }) => {
-        const days = { ...data.days };
-        if (Object.keys(newValue ?? {}).length === 0) {
-            delete days[colDef.colId];
-        } else {
-            days[colDef.colId] = newValue;
-        }
-        updateWeek(data, { days });
+        updateWeek(data.weekStart, (week) => {
+            const days = { ...week.days };
+            if (Object.keys(newValue ?? {}).length === 0) {
+                delete days[colDef.colId];
+            } else {
+                days[colDef.colId] = newValue;
+            }
+            return { days };
+        });
     };
 
     // Tapping a week adds it to / removes it from the selection; tapping a day only edits it.
@@ -436,7 +451,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     Later weeks
                 </button>
             </div>
-            {editable && (
+            {selection.length > 0 && (
                 <WeekActionBar
                     key={selectedWeeks.join(',')}
                     selection={selection}
@@ -445,7 +460,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     onCopy={copyWeek}
                     onPaste={pasteWeeks}
                     onClear={clearWeeks}
-                    onSaveNotes={(week, notes) => updateWeek(week, { notes })}
+                    onSaveNotes={(week, notes) => updateWeek(week.weekStart, () => ({ notes }))}
                     onClose={() => setSelectedWeeks([])}
                 />
             )}

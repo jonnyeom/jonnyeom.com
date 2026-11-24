@@ -209,7 +209,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $this->postCsv("2026-11-23,5\n2026-11-30,lots\n");
 
         self::assertResponseStatusCodeSame(422);
-        self::assertSame(['error' => 'Row 3: "Mon Run" must be a number of miles, "lots" was given.'], $this->responseJson());
+        self::assertSame(['error' => 'Row 3: Run miles on Mon must be a number.'], $this->responseJson());
     }
 
     /** @param string $rows the rows below the header of the export */

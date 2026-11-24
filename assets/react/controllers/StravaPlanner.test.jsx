@@ -6,10 +6,10 @@ import StravaPlanner from './StravaPlanner.jsx';
 // Chart.js needs a real canvas, which jsdom doesn't have.
 vi.mock('../components/PlanChart.jsx', () => ({ default: () => null }));
 
-const week = (weekStart, days = [], notes = null, actual = null) => ({ weekStart, days, notes, actual, totalMiles: 0 });
+const week = (weekStart, days = [], notes = null, actual = null) => ({ weekStart, days, notes, actual });
 
 const WEEKS = [
-    week('2026-11-16', { Mon: { Run: 5 }, Sat: { Bike: 30 } }, null, { totalMiles: 14, dailyMiles: {}, fiveWeekAverage: 12 }),
+    week('2026-11-16', { Mon: { Run: 5 }, Sat: { Bike: 30 } }, null, { totalMiles: 14, fiveWeekAverage: 12 }),
     week('2026-11-23', { Wed: { Run: 4 } }),
     week('2026-11-30'),
 ];
@@ -45,6 +45,16 @@ const tap = (element) => {
     fireEvent.mouseUp(element, { detail: 1 });
     fireEvent.click(element, { detail: 1 });
 };
+
+const planDay = async (weekStart, name, miles) => {
+    tap(dayCell(weekStart, name));
+    fireEvent.change(await screen.findByLabelText('Run'), { target: { value: miles } });
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+};
+
+const importFile = () => fireEvent.change(document.querySelector('input[type="file"]'), {
+    target: { files: [{ name: 'plan.csv', text: () => Promise.resolve('csv') }] },
+});
 
 const renderPlanner = async () => {
     render(<StravaPlanner apiUrl="/api/strava/plans" connectUrl="/strava/connect/entry" />);
@@ -94,6 +104,91 @@ describe('StravaPlanner', () => {
 
         expect(await screen.findByText('Run miles on Tue must be between 0 and 300.')).toBeInTheDocument();
         await waitFor(() => expect(dayCell('2026-11-30', 'Tue').textContent.trim()).toBe(''));
+    });
+
+    it('restores the last confirmed week when several saves fail', async () => {
+        mockApi();
+        await renderPlanner();
+        const rejects = [];
+        fetchMock.mockImplementation(() => new Promise((resolve, reject) => {
+            rejects.push(() => reject(new Error('offline')));
+        }));
+
+        await planDay('2026-11-30', 'Mon', '3');
+        await planDay('2026-11-30', 'Tue', '4');
+        await waitFor(() => expect(dayCell('2026-11-30', 'Tue')).toHaveTextContent('4'));
+        rejects[0]();
+        await waitFor(() => expect(rejects).toHaveLength(2));
+        rejects[1]();
+
+        await waitFor(() => expect(dayCell('2026-11-30', 'Tue').textContent.trim()).toBe(''));
+        expect(dayCell('2026-11-30', 'Mon').textContent.trim()).toBe('');
+        expect(screen.getByText('offline')).toBeInTheDocument();
+    });
+
+    it("sends what was typed, so the server can reject a typo", async () => {
+        mockApi();
+        await renderPlanner();
+
+        await planDay('2026-11-30', 'Mon', '500');
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: { Mon: { Run: 500 } }, notes: null }],
+        ]));
+    });
+
+    it('imports after the pending saves, then reloads the weeks', async () => {
+        mockApi();
+        await renderPlanner();
+        const respond = fetchMock.getMockImplementation();
+        let releaseSave;
+        const imported = [WEEKS[0], WEEKS[1], week('2026-11-30', { Sun: { Run: 20 } })];
+        fetchMock.mockImplementation((url, options = {}) => {
+            if (options.method === 'PUT') {
+                return new Promise((resolve) => {
+                    releaseSave = () => resolve(respond(url, options));
+                });
+            }
+            return options.method === 'POST' ? json({ imported: 1 }) : json({ weeks: imported });
+        });
+        const posts = () => fetchMock.mock.calls.filter(([, options]) => options?.method === 'POST');
+
+        await planDay('2026-11-30', 'Mon', '3');
+        await waitFor(() => expect(puts()).toHaveLength(1));
+        importFile();
+        await new Promise((resolve) => {
+            setTimeout(resolve, 50);
+        });
+        expect(posts()).toHaveLength(0);
+
+        releaseSave();
+        expect(await screen.findByText('Imported 1 week.')).toBeInTheDocument();
+        expect(posts()).toHaveLength(1);
+        expect(fetchMock.mock.lastCall[0]).toBe('/api/strava/plans?from=2026-11-16&weeks=3');
+        await waitFor(() => expect(dayCell('2026-11-30', 'Sun')).toHaveTextContent('20'));
+        expect(dayCell('2026-11-30', 'Mon').textContent.trim()).toBe('');
+    });
+
+    it('says when only reloading after an import failed', async () => {
+        mockApi();
+        await renderPlanner();
+        fetchMock.mockImplementation((url, options = {}) => (options.method === 'POST'
+            ? json({ imported: 1 })
+            : json({ error: 'offline' }, 500)));
+
+        importFile();
+        expect(await screen.findByText('Imported, but the weeks could not be reloaded: offline')).toBeInTheDocument();
+    });
+
+    it('loads later and earlier weeks', async () => {
+        mockApi();
+        await renderPlanner();
+        fetchMock.mockImplementation(() => json({ weeks: [] }));
+
+        fireEvent.click(screen.getByRole('button', { name: 'Later weeks' }));
+        await waitFor(() => expect(fetchMock.mock.lastCall[0]).toBe('/api/strava/plans?from=2026-12-07&weeks=8'));
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Load more' })).toBeEnabled());
+        fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+        await waitFor(() => expect(fetchMock.mock.lastCall[0]).toBe('/api/strava/plans?from=2026-09-21&weeks=8'));
     });
 
     it('saves edits of the same week in order', async () => {
@@ -201,6 +296,11 @@ describe('StravaPlanner', () => {
         tap(weekCell('2026-11-23'));
         fireEvent.click(await screen.findByRole('button', { name: 'Paste' }));
 
+        // Saves are sent a moment later.
+        await new Promise((resolve) => {
+            setTimeout(resolve, 50);
+        });
+        expect(window.confirm).toHaveBeenCalled();
         expect(puts()).toEqual([]);
     });
 

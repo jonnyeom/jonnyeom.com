@@ -79,7 +79,7 @@ final class WeeklyPlanCsvTest extends TestCase
         yield 'no sport column' => [str_replace('"Mon Bike",', '', self::header()) . "\n2026-11-23,5\n", 'The CSV is missing these columns: Mon Bike.'];
         yield 'not a monday' => [self::header() . "\n2026-11-24,5\n", 'Row 2: A week starts on a Monday'];
         yield 'not a date' => [self::header() . "\nnext week,5\n", 'Row 2: Invalid week "next week"'];
-        yield 'not a number' => [self::header() . "\n2026-11-23,abc\n", 'Row 2: "Mon Run" must be a number of miles'];
+        yield 'not a number' => [self::header() . "\n2026-11-23,abc\n", 'Row 2: Run miles on Mon must be a number.'];
         yield 'too many miles' => [self::header() . "\n2026-11-23,400\n", 'Row 2: Run miles on Mon must be between 0 and 300'];
         yield 'week twice' => [self::header() . "\n2026-11-23,5\n11/23/2026,6\n", 'Row 3: Week 2026-11-23 is listed twice.'];
         yield 'notes too long' => [self::header() . "\n2026-11-23" . str_repeat(',', 30) . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];

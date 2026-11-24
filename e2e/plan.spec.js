@@ -27,6 +27,9 @@ test('plans a day and copies the week to another week', async ({ page, context, 
     await week(source).tap();
     await page.getByRole('button', { name: 'Copy' }).tap();
     await week(target).tap();
+    // Pasting while a day is still being edited keeps both.
+    await day(target, 'Thu').tap();
+    await page.getByLabel('Run').fill('4');
     await page.getByRole('button', { name: 'Paste' }).tap();
     await expect(page.getByText(/^Pasted /)).toBeVisible();
     await page.getByRole('button', { name: 'Unselect the weeks' }).tap();
@@ -35,4 +38,5 @@ test('plans a day and copies the week to another week', async ({ page, context, 
     await page.reload();
     await expect(day(source, 'Tue')).toHaveText('10');
     await expect(day(target, 'Tue')).toHaveText('10');
+    await expect(day(target, 'Thu')).toHaveText('4');
 });

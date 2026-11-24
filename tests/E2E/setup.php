@@ -29,7 +29,8 @@ $session->setId((string) getenv('E2E_SESSION_ID'));
 $athleteGuard->connect($session);
 $session->save();
 
-$connection = DriverManager::getConnection((new DsnParser(['postgresql' => 'pdo_pgsql']))->parse($databaseUrl));
+$dsnParser  = new DsnParser(['postgres' => 'pdo_pgsql', 'postgresql' => 'pdo_pgsql']);
+$connection = DriverManager::getConnection($dsnParser->parse($databaseUrl));
 $connection->executeStatement(
     'DELETE FROM strava_weekly_plan WHERE athlete_id = ?',
     [$athleteGuard->getAllowedAthleteId()],

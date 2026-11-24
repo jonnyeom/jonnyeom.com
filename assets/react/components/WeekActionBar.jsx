@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
 import { hasPlan, inputSize, weekLabel } from '../plan.js';
 
-const BarButton = ({ label, icon, onClick, disabled, extra = '' }) => (
-    <button type="button" className={`button is-small mb-0${extra}`} onClick={onClick} disabled={disabled}>
+const BarButton = ({ label, icon, iconOnly = false, onClick, disabled = false, active = false }) => (
+    <button
+        type="button"
+        className={`button is-small mb-0${active ? ' is-link is-light' : ''}`}
+        aria-label={label}
+        onClick={onClick}
+        disabled={disabled}
+    >
         <span className="icon"><i className={`fas fa-${icon}`} /></span>
-        {label && <span>{label}</span>}
+        {!iconOnly && <span>{label}</span>}
     </button>
 );
 
 /**
  * Bar acting on the selected weeks (tap / click weeks to select them): copy a week, paste the
- * copied week into every selected week, clear them, notes of a single week. Only shown while weeks
+ * copied week into every selected week, clear them, notes of a single week. Only rendered while weeks
  * are selected; it floats at the bottom of the screen, so it doesn't move the grid and stays in
  * reach while scrolling.
  */
@@ -18,15 +24,11 @@ export default function WeekActionBar({ selection, copied, compact, onCopy, onPa
     const week = selection.length === 1 ? selection[0] : null;
     // The parent gives the bar a key per selection, so this state starts fresh for each selection.
     const [notesOpen, setNotesOpen] = useState(false);
-    const [notes, setNotes] = useState(week?.notes ?? '');
+    const [notes, setNotes] = useState('');
 
     const isSource = (candidate) => copied?.weekStart === candidate.weekStart;
     const pasteTargets = selection.filter((candidate) => !isSource(candidate));
     const clearTargets = selection.filter(hasPlan);
-
-    if (selection.length === 0) {
-        return null;
-    }
 
     const title = week ? `Week of ${weekLabel(week.weekStart)}` : `${selection.length} weeks selected`;
 
@@ -35,29 +37,24 @@ export default function WeekActionBar({ selection, copied, compact, onCopy, onPa
             <div className="is-flex is-align-items-center is-flex-wrap-wrap" style={{ gap: '0.5rem' }}>
                 <span className="has-text-weight-semibold mr-auto">{title}</span>
                 <div className="buttons are-small mb-0 is-flex-wrap-nowrap" style={{ gap: '0.25rem' }}>
-                    {selection.length <= 1 && (
-                        <BarButton
-                            label="Copy"
-                            icon="copy"
-                            onClick={() => onCopy(week)}
-                            disabled={!week || !hasPlan(week)}
-                            extra={week && isSource(week) ? ' is-link is-light' : ''}
-                        />
+                    {week && (
+                        <BarButton label="Copy" icon="copy" onClick={() => onCopy(week)} disabled={!hasPlan(week)} active={isSource(week)} />
                     )}
                     <BarButton label="Paste" icon="paste" onClick={() => onPaste(pasteTargets)} disabled={!copied || pasteTargets.length === 0} />
-                    <BarButton label={compact ? '' : 'Clear'} icon="eraser" onClick={() => onClear(clearTargets)} disabled={clearTargets.length === 0} />
-                    {selection.length <= 1 && (
+                    <BarButton label="Clear" icon="eraser" iconOnly={compact} onClick={() => onClear(clearTargets)} disabled={clearTargets.length === 0} />
+                    {week && (
                         <BarButton
-                            label={compact ? '' : 'Notes'}
+                            label="Notes"
                             icon="note-sticky"
-                            onClick={() => setNotesOpen((open) => !open)}
-                            disabled={!week}
-                            extra={notesOpen ? ' is-link is-light' : ''}
+                            iconOnly={compact}
+                            onClick={() => {
+                                setNotes(week.notes ?? '');
+                                setNotesOpen(!notesOpen);
+                            }}
+                            active={notesOpen}
                         />
                     )}
-                    <button type="button" className="button is-small mb-0" aria-label="Unselect the weeks" onClick={onClose}>
-                        <span className="icon"><i className="fas fa-xmark" /></span>
-                    </button>
+                    <BarButton label="Unselect the weeks" icon="xmark" iconOnly onClick={onClose} />
                 </div>
             </div>
             {week && notesOpen && (

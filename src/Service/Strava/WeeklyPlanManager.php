@@ -87,11 +87,7 @@ class WeeklyPlanManager
             $weekStarts[] = $from->modify(sprintf('+%d weeks', $i));
         }
 
-        if ($weekStarts === []) {
-            return [];
-        }
-
-        $plans = $this->planRepository->findBetween($athleteId, $weekStarts[0], $weekStarts[$weeks - 1]);
+        $plans = $this->planRepository->findBetween($athleteId, $from, $from->modify(sprintf('+%d weeks', $weeks - 1)));
         $stats = $this->statRepository->findByAthleteAndWeeks(
             $athleteId,
             array_map(static fn (DateTimeImmutable $week): string => $week->format('Y-m-d'), $weekStarts),

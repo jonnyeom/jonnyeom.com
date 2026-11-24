@@ -11,13 +11,11 @@ use DateTimeImmutable;
 
 use function array_filter;
 use function array_key_exists;
-use function fclose;
 use function fgetcsv;
 use function fopen;
 use function fputcsv;
 use function fwrite;
 use function implode;
-use function is_numeric;
 use function preg_match;
 use function rewind;
 use function sprintf;
@@ -39,12 +37,9 @@ use function trim;
  */
 class WeeklyPlanCsv
 {
-    private const string WEEK      = 'Week';
-    private const string NOTES     = 'Notes';
-    private const string ACTUAL    = 'Actual (mi)';
-    private const string SEPARATOR = ',';
-    private const string ENCLOSURE = '"';
-    private const string ESCAPE    = '';
+    private const string WEEK   = 'Week';
+    private const string NOTES  = 'Notes';
+    private const string ACTUAL = 'Actual (mi)';
 
     /** @param list<WeekPlanView> $weeks */
     public function export(array $weeks): string
@@ -54,7 +49,7 @@ class WeeklyPlanCsv
             return '';
         }
 
-        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::ACTUAL, self::NOTES], self::SEPARATOR, self::ENCLOSURE, self::ESCAPE);
+        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::ACTUAL, self::NOTES], escape: '');
 
         foreach ($weeks as $week) {
             $row = [$week['weekStart']];
@@ -67,14 +62,12 @@ class WeeklyPlanCsv
             $row[] = $week['actual'] === null ? '' : self::formatMiles($week['actual']['totalMiles']);
             $row[] = $week['notes'] ?? '';
 
-            fputcsv($stream, $row, self::SEPARATOR, self::ENCLOSURE, self::ESCAPE);
+            fputcsv($stream, $row, escape: '');
         }
 
         rewind($stream);
-        $csv = (string) stream_get_contents($stream);
-        fclose($stream);
 
-        return $csv;
+        return (string) stream_get_contents($stream);
     }
 
     /**
@@ -97,23 +90,7 @@ class WeeklyPlanCsv
         fwrite($stream, $csv);
         rewind($stream);
 
-        try {
-            return $this->parseRows($stream);
-        } finally {
-            fclose($stream);
-        }
-    }
-
-    /**
-     * @param resource $stream
-     *
-     * @return array<string, ImportedPlan>
-     *
-     * @throws InvalidPlan
-     */
-    private function parseRows($stream): array
-    {
-        $header = fgetcsv($stream, null, self::SEPARATOR, self::ENCLOSURE, self::ESCAPE);
+        $header = fgetcsv($stream, escape: '');
         if ($header === false) {
             throw new InvalidPlan('The CSV is empty.');
         }
@@ -134,9 +111,9 @@ class WeeklyPlanCsv
 
         $plans = [];
         $line  = 1;
-        while (($row = fgetcsv($stream, null, self::SEPARATOR, self::ENCLOSURE, self::ESCAPE)) !== false) {
+        while (($row = fgetcsv($stream, escape: '')) !== false) {
             $line++;
-            $cell = static fn (string $name): string => trim((string) ($row[$columns[strtolower($name)] ?? -1] ?? ''));
+            $cell = static fn (string $name): string => trim((string) ($row[$columns[strtolower($name)]] ?? ''));
 
             $weekCell = $cell(self::WEEK);
             if ($weekCell === '') {
@@ -153,24 +130,13 @@ class WeeklyPlanCsv
                 $days = [];
                 foreach (StravaWeeklyPlan::DAYS as $day) {
                     foreach (SportType::cases() as $sport) {
-                        $value = $cell($day . ' ' . $sport->value);
-                        if ($value === '') {
-                            continue;
-                        }
-
-                        if (! is_numeric($value)) {
-                            throw new InvalidPlan(sprintf('"%s %s" must be a number of miles, "%s" was given.', $day, $sport->value, $value));
-                        }
-
-                        $days[$day][$sport->value] = (float) $value;
+                        $days[$day][$sport->value] = $cell($day . ' ' . $sport->value);
                     }
                 }
 
-                $notes = $cell(self::NOTES);
-
                 // Validates the row (distances, notes) like a PUT of the week would.
                 $plan = new StravaWeeklyPlan('0', $weekStart);
-                $plan->update($days, $notes);
+                $plan->update($days, $cell(self::NOTES));
 
                 $plans[$key] = ['days' => $plan->getDays(), 'notes' => $plan->getNotes()];
             } catch (InvalidPlan $e) {

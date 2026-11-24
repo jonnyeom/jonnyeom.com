@@ -20,11 +20,6 @@ const renderBar = (props) => {
 const button = (name) => screen.getByRole('button', { name });
 
 describe('WeekActionBar', () => {
-    it('is hidden while no week is selected', () => {
-        renderBar({ selection: [] });
-        expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    });
-
     it('copies the selected week', () => {
         const selected = week('2026-11-23');
         const { onCopy } = renderBar({ selection: [selected] });
@@ -80,6 +75,30 @@ describe('WeekActionBar', () => {
 
         expect(onSaveNotes).toHaveBeenCalledWith(selected, 'Long run Saturday');
         expect(screen.queryByPlaceholderText(/Notes/)).not.toBeInTheDocument();
+    });
+
+    it('opens with the current notes, not a discarded draft', () => {
+        const props = { copied: null, compact: false, onSaveNotes: () => {} };
+        const { rerender } = render(<WeekActionBar {...props} selection={[week('2026-11-23', {}, 'Easy')]} />);
+
+        fireEvent.click(button('Notes'));
+        fireEvent.change(screen.getByPlaceholderText(/Notes/), { target: { value: 'Discarded' } });
+        fireEvent.click(button('Cancel'));
+        fireEvent.click(button('Notes'));
+        expect(screen.getByPlaceholderText(/Notes/)).toHaveValue('Easy');
+
+        // Changed meanwhile, e.g. by an import.
+        fireEvent.click(button('Cancel'));
+        rerender(<WeekActionBar {...props} selection={[week('2026-11-23', {}, 'From CSV')]} />);
+        fireEvent.click(button('Notes'));
+        expect(screen.getByPlaceholderText(/Notes/)).toHaveValue('From CSV');
+    });
+
+    it('names the icon-only buttons on phones', () => {
+        renderBar({ selection: [week('2026-11-23')], compact: true });
+        expect(screen.getAllByRole('button').map((element) => element.getAttribute('aria-label')))
+            .toEqual(['Copy', 'Paste', 'Clear', 'Notes', 'Unselect the weeks']);
+        expect(button('Clear')).toHaveTextContent('');
     });
 
     it("doesn't save unchanged notes", () => {
