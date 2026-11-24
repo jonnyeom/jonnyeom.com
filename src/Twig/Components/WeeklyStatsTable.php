@@ -10,6 +10,7 @@ use App\Service\Strava\StravaDataProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\UX\Chartjs\Builder\ChartBuilderInterface;
 use Symfony\UX\Chartjs\Model\Chart;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -32,7 +33,7 @@ class WeeklyStatsTable extends AbstractController
 
     private const int INITIAL_VISIBLE_WEEKS = 20;
     private const int LOAD_MORE_SIZE        = 10;
-    private const int CHART_WEEKS           = 10;
+    private const int CHART_WEEKS           = 20;
 
     private const float METERS_PER_MILE = 1609.34;
 
@@ -73,28 +74,32 @@ class WeeklyStatsTable extends AbstractController
      * stats from the database.
      */
     #[LiveAction]
-    public function refresh(): void
+    public function refresh(): RedirectResponse|null
     {
         try {
             $this->stravaDataProvider->refresh();
             $this->notice = 'Updated the latest week with fresh Strava data';
         } catch (Throwable $e) {
-            $this->handleError($e);
+            return $this->handleStravaActionError($e);
         }
+
+        return null;
     }
 
     /**
      * Deletes the stored weeks and reloads the whole history from Strava.
      */
     #[LiveAction]
-    public function reset(): void
+    public function reset(): RedirectResponse|null
     {
         try {
             $weeks        = count($this->stravaDataProvider->reset());
             $this->notice = sprintf('Reloaded all %d weeks from Strava', $weeks);
         } catch (Throwable $e) {
-            $this->handleError($e);
+            return $this->handleStravaActionError($e);
         }
+
+        return null;
     }
 
     public function getNotice(): string|null
@@ -171,11 +176,12 @@ class WeeklyStatsTable extends AbstractController
                     'ticks' => ['color' => self::COLOR_MUTED],
                 ],
                 'y' => [
+                    // On the right: the chart opens scrolled to the latest weeks (see the template).
+                    'position' => 'right',
                     'beginAtZero' => true,
                     'grid' => ['color' => self::COLOR_GRID],
                     'border' => ['display' => false],
                     'ticks' => ['color' => self::COLOR_MUTED, 'maxTicksLimit' => 5],
-                    'title' => ['display' => true, 'text' => 'miles', 'color' => self::COLOR_MUTED],
                 ],
             ],
         ]);
@@ -212,6 +218,29 @@ class WeeklyStatsTable extends AbstractController
         } catch (Throwable $e) {
             $this->handleError($e);
         }
+    }
+
+    /**
+     * Refresh / Reset could not reach Strava (not connected, no stored token, or the token was
+     * rejected): send the visitor to the connect page. Other errors are shown on the page.
+     */
+    private function handleStravaActionError(Throwable $e): RedirectResponse|null
+    {
+        if ($e instanceof AccessTokenMissing) {
+            $this->addFlash('error', 'Connect to Strava to refresh the stats.');
+
+            return $this->redirectToRoute('strava_connect_entry');
+        }
+
+        if ($e instanceof IdentityProviderException) {
+            $this->addFlash('error', 'Strava access error: ' . $e->getMessage() . '. Please reconnect to Strava.');
+
+            return $this->redirectToRoute('strava_connect_entry');
+        }
+
+        $this->handleError($e);
+
+        return null;
     }
 
     private function handleError(Throwable $e): void

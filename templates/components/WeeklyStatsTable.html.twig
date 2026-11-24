@@ -5,11 +5,15 @@
         {% set weeklyStats = this.weeklyStats %}
         {% set chart = this.chart %}
         {% if chart %}
-            <div class="strava-weekly-chart mb-5">
-                {{ render_chart(chart, {
-                    role: 'img',
-                    'aria-label': 'Weekly miles and 5-week average for the last ' ~ chart.data.labels|length ~ ' weeks. The table below lists every value.',
-                }) }}
+            {% set chartWeeks = chart.data.labels|length %}
+            {# Scrolls horizontally, starting at the latest weeks (right end); about 10 weeks are visible. #}
+            <div class="strava-weekly-chart mb-5" tabindex="0" aria-label="Weekly mileage chart, scroll left for older weeks">
+                <div class="strava-weekly-chart__inner" style="--chart-weeks: {{ chartWeeks }}">
+                    {{ render_chart(chart, {
+                        role: 'img',
+                        'aria-label': 'Weekly miles and 5-week average for the last ' ~ chartWeeks ~ ' weeks. The table below lists every value.',
+                    }) }}
+                </div>
             </div>
         {% endif %}
         <div class="is-flex is-align-items-center is-justify-content-flex-end mb-3">

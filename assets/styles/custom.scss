@@ -136,8 +136,19 @@ h6:hover .heading-permalink,
 }
 
 // Weekly mileage chart (Symfony UX Chart.js) in the WeeklyStatsTable live component.
-// Chart.js fills its container (maintainAspectRatio: false), so the container sets the height.
+// The outer box scrolls horizontally. `direction: rtl` makes it start scrolled to the right end
+// (the latest weeks) without any JavaScript; the inner box switches back to left-to-right.
 .strava-weekly-chart {
+  direction: rtl;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+// Chart.js fills this box (maintainAspectRatio: false): about 10 weeks fit in the visible width.
+.strava-weekly-chart__inner {
+  direction: ltr;
   position: relative;
   height: 260px;
+  width: calc(100% * var(--chart-weeks, 10) / 10);
+  min-width: 100%;
 }

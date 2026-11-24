@@ -4,20 +4,15 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Service\Strava\AthleteGuard;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class StravaController extends BaseController
 {
     #[Route('/strava', name: 'strava_metrics')]
-    public function stravaMetrics(Request $request, AthleteGuard $athleteGuard): Response
+    public function stravaMetrics(): Response
     {
-        if (! $athleteGuard->isConnected($request->getSession())) {
-            return $this->redirectToRoute('strava_connect_entry');
-        }
-
+        // The stored stats are shown to everyone; only Refresh / Reset need the Strava connection.
         $this->setSeoTitle('jonnyeom | Weekly running metrics');
         $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
         $this->setSeoKeywords('strava,running,metrics,mileage');
