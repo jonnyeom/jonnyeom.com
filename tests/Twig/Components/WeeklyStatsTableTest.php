@@ -96,7 +96,6 @@ final class WeeklyStatsTableTest extends KernelTestCase
 
         $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
 
-        $this->assertStringContainsString('Weekly mileage, last 3 weeks', $rendered);
         $this->assertStringContainsString('data-controller="symfony--ux-chartjs--chart"', $rendered);
     }
 

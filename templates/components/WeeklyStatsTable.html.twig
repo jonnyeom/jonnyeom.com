@@ -5,7 +5,6 @@
         {% set weeklyStats = this.weeklyStats %}
         {% set chart = this.chart %}
         {% if chart %}
-            <h2 class="is-size-6 has-text-weight-semibold mb-2">Weekly mileage, last {{ chart.data.labels|length }} weeks</h2>
             <div class="strava-weekly-chart mb-5">
                 {{ render_chart(chart, {
                     role: 'img',
