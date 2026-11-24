@@ -47,9 +47,7 @@ class WeeklyPlanCsv
     private const string ENCLOSURE = '"';
     private const string ESCAPE    = '';
 
-    /**
-     * @param list<WeekPlanView> $weeks
-     */
+    /** @param list<WeekPlanView> $weeks */
     public function export(array $weeks): string
     {
         $stream = fopen('php://temp', 'r+');

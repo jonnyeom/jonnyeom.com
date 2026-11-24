@@ -15,9 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 use function array_column;
 
-/**
- * Integration tests against a real database (Postgres in CI, see .github/workflows/ci.yml).
- */
+/** Integration tests against a real database (Postgres in CI, see .github/workflows/ci.yml). */
 #[Group('database')]
 final class WeeklyPlanManagerTest extends KernelTestCase
 {
