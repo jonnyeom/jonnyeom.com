@@ -13,6 +13,7 @@ import {
 } from 'ag-grid-community';
 import { AgGridReact, useGridCellEditor } from 'ag-grid-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import PlanChart from '../components/PlanChart.jsx';
 
 // Only the features this grid uses (clipboard / range selection are Enterprise; copy & paste of
 // weeks is implemented below).
@@ -333,7 +334,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             colId: 'plan',
             width: 75,
             valueGetter: ({ data }) => round1(weekTotal(data.days)),
-            valueFormatter: ({ value }) => (value > 0 ? `${value} mi` : ''),
+            valueFormatter: ({ value }) => (value > 0 ? `${value}` : ''),
             cellClass: 'has-text-weight-bold',
         },
         {
@@ -341,12 +342,12 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             colId: 'actual',
             width: 75,
             valueGetter: ({ data }) => data.actual?.totalMiles ?? null,
-            valueFormatter: ({ value }) => (value === null ? '' : `${value} mi`),
+            valueFormatter: ({ value }) => (value === null ? '' : `${value}`),
         },
         {
             headerName: '±',
             colId: 'diff',
-            width: 55,
+            width: 65,
             valueGetter: ({ data }) => {
                 const plan = weekTotal(data.days);
                 return data.actual && plan > 0 ? round1(data.actual.totalMiles - plan) : null;
@@ -360,7 +361,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         {
             headerName: 'Notes',
             field: 'notes',
-            minWidth: 100,
+            minWidth: 90,
             flex: 1,
             editable,
             tooltipField: 'notes',
@@ -398,6 +399,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
 
     // Newest first, like the stats table.
     const rows = useMemo(() => [...weeks].reverse(), [weeks]);
+    const chartWeeks = useMemo(() => weeks.map((week) => ({ ...week, planMiles: round1(weekTotal(week.days)) })), [weeks]);
     const context = useMemo(() => ({ copied, copyWeek, pasteWeek }), [copied, copyWeek, pasteWeek]);
 
     // The actions column reads `copied` from the context: redraw it when that changes.
@@ -415,6 +417,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
 
     return (
         <div>
+            <PlanChart weeks={chartWeeks} currentWeek={currentWeek} label={weekLabel} />
             {error && <div className="notification is-danger is-light py-2">{error}</div>}
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">

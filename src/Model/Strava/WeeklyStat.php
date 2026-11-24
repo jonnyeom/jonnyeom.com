@@ -75,9 +75,11 @@ class WeeklyStat implements IteratorAggregate
 
         // Other sport types are listed but don't count towards the weekly distance.
         $sportType = SportType::tryFrom($activity['sport_type']);
-        if ($sportType !== null) {
-            $this->totalDistance += $sportType->relativeDistance((float) $activity['distance']);
+        if ($sportType === null) {
+            return;
         }
+
+        $this->totalDistance += $sportType->relativeDistance((float) $activity['distance']);
     }
 
     public function getTotalDistance(): float

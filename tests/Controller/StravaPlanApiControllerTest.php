@@ -86,7 +86,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
             ->expects($this->once())
             ->method('save')
             ->with(new DateTimeImmutable('2026-11-23'), ['Mon' => ['Run' => 5], 'Sat' => ['Bike' => 30]], 'Build week')
-            ->willReturn(['weekStart' => '2026-11-23', 'totalMiles' => 15.0]);
+            ->willReturn(['weekStart' => '2026-11-23', 'totalMiles' => 15.5]);
 
         $this->putJson('/api/strava/plans/2026-11-23', [
             'days' => ['Mon' => ['Run' => 5], 'Sat' => ['Bike' => 30]],
@@ -94,7 +94,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['weekStart' => '2026-11-23', 'totalMiles' => 15.0], $this->responseJson());
+        self::assertSame(['weekStart' => '2026-11-23', 'totalMiles' => 15.5], $this->responseJson());
     }
 
     public function testUpdateOnlyAcceptsJson(): void
