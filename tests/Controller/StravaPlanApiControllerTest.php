@@ -14,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\HttpFoundation\Session\SessionFactoryInterface;
 
+use function explode;
 use function json_decode;
 use function json_encode;
 
@@ -145,6 +146,94 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $this->client->request('DELETE', '/api/strava/plans/2026-11-23');
 
         self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testExportIsACsvDownload(): void
+    {
+        $this->planManager
+            ->expects($this->once())
+            ->method('getWeeks')
+            ->with(new DateTimeImmutable('2026-11-23'), 2)
+            ->willReturn([
+                [
+                    'weekStart' => '2026-11-23',
+                    'days' => ['Mon' => ['Run' => 5.0]],
+                    'dailyMiles' => [],
+                    'sportTotals' => [],
+                    'totalMiles' => 5.0,
+                    'notes' => 'Easy',
+                    'updatedAt' => null,
+                    'actual' => null,
+                ],
+            ]);
+
+        $this->client->request('GET', '/api/strava/plans.csv?from=2026-11-23&weeks=2');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=strava-plan-2026-11-23.csv');
+        $lines = explode("\n", (string) $this->client->getResponse()->getContent());
+        self::assertStringStartsWith('Week,"Mon Run"', $lines[0]);
+        self::assertStringStartsWith('2026-11-23,5,', $lines[1]);
+        self::assertStringEndsWith(',5,,Easy', $lines[1]);
+    }
+
+    public function testImportNeedsAStravaConnection(): void
+    {
+        $this->planManager->expects($this->never())->method('saveMany');
+
+        $this->postCsv("Week,Mon Run\n2026-11-23,5\n");
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    public function testImportOnlyAcceptsCsv(): void
+    {
+        $this->connect();
+        $this->planManager->expects($this->never())->method('saveMany');
+
+        $this->client->request('POST', '/api/strava/plans/import', ['csv' => 'Week']);
+
+        self::assertResponseStatusCodeSame(415);
+    }
+
+    public function testImportSavesEveryWeek(): void
+    {
+        $this->connect();
+        $this->planManager
+            ->expects($this->once())
+            ->method('saveMany')
+            ->with([
+                '2026-11-23' => ['days' => ['Mon' => ['Run' => 5.0]], 'notes' => 'Easy'],
+                '2026-11-30' => ['days' => [], 'notes' => null],
+            ])
+            ->willReturn([['weekStart' => '2026-11-23'], ['weekStart' => '2026-11-30']]);
+
+        $this->postCsv("Week,Mon Run,Notes\n2026-11-23,5,Easy\n2026-11-30,,\n");
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['weeks' => [['weekStart' => '2026-11-23'], ['weekStart' => '2026-11-30']]], $this->responseJson());
+    }
+
+    public function testImportReportsTheInvalidRow(): void
+    {
+        $this->connect();
+        $this->planManager->expects($this->never())->method('saveMany');
+
+        $this->postCsv("Week,Mon Run\n2026-11-23,5\n2026-11-30,lots\n");
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSame(['error' => 'Row 3: "Mon Run" must be a number of miles, "lots" was given.'], $this->responseJson());
+    }
+
+    private function postCsv(string $csv): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/strava/plans/import',
+            server: ['CONTENT_TYPE' => 'text/csv'],
+            content: $csv,
+        );
     }
 
     private function connect(): void

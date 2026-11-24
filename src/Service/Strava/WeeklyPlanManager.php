@@ -16,7 +16,9 @@ use Exception;
 
 use function array_combine;
 use function array_fill_keys;
+use function array_keys;
 use function array_map;
+use function ksort;
 use function preg_match;
 use function round;
 use function sprintf;
@@ -123,25 +125,38 @@ class WeeklyPlanManager
      */
     public function save(DateTimeImmutable $weekStart, array $days, string|null $notes): array
     {
-        $athleteId = $this->athleteGuard->getAllowedAthleteId();
-        $plan      = $this->planRepository->findOneByAthleteAndWeek($athleteId, $weekStart);
-
-        if (! $plan instanceof StravaWeeklyPlan) {
-            $plan = new StravaWeeklyPlan($athleteId, $weekStart);
-            $plan->update($days, $notes);
-            if (! $plan->isEmpty()) {
-                $this->entityManager->persist($plan);
-            }
-        } else {
-            $plan->update($days, $notes);
-            if ($plan->isEmpty()) {
-                $this->entityManager->remove($plan);
-            }
-        }
-
+        $this->apply($weekStart, $days, $notes);
         $this->entityManager->flush();
 
         return $this->getWeek($weekStart);
+    }
+
+    /**
+     * Creates or replaces the plans of several weeks in one transaction (CSV import): either all
+     * weeks are saved, or none.
+     *
+     * @param array<string, array{days: array<mixed>, notes: string|null}> $plans keyed by week start (Y-m-d)
+     *
+     * @return list<WeekPlanView> the saved weeks, oldest first
+     *
+     * @throws InvalidPlan
+     */
+    public function saveMany(array $plans): array
+    {
+        ksort($plans);
+
+        $this->entityManager->wrapInTransaction(function () use ($plans): void {
+            foreach ($plans as $weekStart => $plan) {
+                $this->apply(self::parseWeekStart((string) $weekStart), $plan['days'], $plan['notes']);
+            }
+
+            $this->entityManager->flush();
+        });
+
+        return array_map(
+            fn (string $weekStart): array => $this->getWeek(self::parseWeekStart($weekStart)),
+            array_map('strval', array_keys($plans)),
+        );
     }
 
     public function delete(DateTimeImmutable $weekStart): void
@@ -163,6 +178,36 @@ class WeeklyPlanManager
     public static function weekStartOf(DateTimeImmutable $date): DateTimeImmutable
     {
         return $date->modify('monday this week')->setTime(0, 0);
+    }
+
+    /**
+     * Creates, updates or removes (when empty) the week's plan, without flushing.
+     *
+     * @param array<mixed> $days
+     *
+     * @throws InvalidPlan
+     */
+    private function apply(DateTimeImmutable $weekStart, array $days, string|null $notes): void
+    {
+        $athleteId = $this->athleteGuard->getAllowedAthleteId();
+        $plan      = $this->planRepository->findOneByAthleteAndWeek($athleteId, $weekStart);
+
+        if (! $plan instanceof StravaWeeklyPlan) {
+            $plan = new StravaWeeklyPlan($athleteId, $weekStart);
+            $plan->update($days, $notes);
+            if (! $plan->isEmpty()) {
+                $this->entityManager->persist($plan);
+            }
+
+            return;
+        }
+
+        $plan->update($days, $notes);
+        if (! $plan->isEmpty()) {
+            return;
+        }
+
+        $this->entityManager->remove($plan);
     }
 
     /** @return WeekPlanView */

@@ -280,6 +280,7 @@ const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, o
 
 const StravaPlanner = ({ apiUrl, connectUrl }) => {
     const gridRef = useRef(null);
+    const importInput = useRef(null);
     const [weeks, setWeeks] = useState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
@@ -298,7 +299,11 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         const response = await fetch(`${apiUrl}${path}`, {
             credentials: 'same-origin',
             ...options,
-            headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}) },
+            headers: {
+                Accept: 'application/json',
+                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                ...options.headers,
+            },
         });
         const body = await response.json().catch(() => ({}));
         if (!response.ok) {
@@ -363,6 +368,34 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${pasted.join(', ')}.`);
         }
     }, [copied, saveWeek]);
+
+    // Imports a CSV (the format of the export, e.g. edited in Google Sheets): each week in the file
+    // replaces that week's plan.
+    const importCsv = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file || !window.confirm(`Import ${file.name}? Each week in the file replaces that week's plan.`)) {
+            return;
+        }
+        setError(null);
+        setLoading(true);
+        try {
+            const body = await request('/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/csv' },
+                body: await file.text(),
+            });
+            const imported = new Map(body.weeks.map((week) => [week.weekStart, normalizeWeek(week)]));
+            setWeeks((current) => current.map((week) => imported.get(week.weekStart) ?? week));
+            const shown = weeks.filter((week) => imported.has(week.weekStart)).length;
+            setNotice(`Imported ${imported.size} week${imported.size === 1 ? '' : 's'}`
+                + (shown < imported.size ? ` (${imported.size - shown} outside the weeks shown).` : '.'));
+        } catch (e) {
+            setError(`Import failed: ${e.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Weeks are kept oldest first; prepend earlier or append later weeks.
     const loadMore = async (direction) => {
@@ -539,7 +572,34 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                             : 'Click a day to plan it. Ctrl/⌘+C and Ctrl/⌘+V copy and paste the focused week.')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
-                {!editable && <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>}
+                <div className="buttons are-small is-flex-wrap-nowrap mb-0 ml-2">
+                    {weeks.length > 0 && (
+                        <a
+                            className="button is-small mb-0"
+                            href={`${apiUrl}.csv?from=${weeks[0].weekStart}&weeks=${weeks.length}`}
+                            title="Download the weeks shown as a CSV, to open in Google Sheets, Excel or Numbers"
+                            download
+                        >
+                            <span className="icon"><i className="fas fa-file-arrow-down" /></span>
+                            <span>Export</span>
+                        </a>
+                    )}
+                    {editable && (
+                        <>
+                            <button
+                                type="button"
+                                className={`button is-small mb-0${loading ? ' is-loading' : ''}`}
+                                title="Upload a CSV (e.g. the export, edited in a spreadsheet)"
+                                onClick={() => importInput.current?.click()}
+                            >
+                                <span className="icon"><i className="fas fa-file-arrow-up" /></span>
+                                <span>Import</span>
+                            </button>
+                            <input ref={importInput} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
+                        </>
+                    )}
+                    {!editable && <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>}
+                </div>
             </div>
             <div className="has-text-centered pb-3">
                 <button type="button" className="button is-small" onClick={() => loadMore('later')} disabled={loading}>

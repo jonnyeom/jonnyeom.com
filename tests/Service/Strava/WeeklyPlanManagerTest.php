@@ -123,6 +123,38 @@ final class WeeklyPlanManagerTest extends KernelTestCase
         self::assertNull($weeks[2]['actual']);
     }
 
+    public function testSaveManySavesEveryWeek(): void
+    {
+        $this->manager->save(new DateTimeImmutable('2026-11-30'), ['Mon' => ['Run' => 5]], null);
+
+        $views = $this->manager->saveMany([
+            '2026-11-30' => ['days' => [], 'notes' => null],
+            '2026-11-23' => ['days' => ['Sat' => ['Run' => 10.0]], 'notes' => 'Long run'],
+        ]);
+        $this->entityManager->clear();
+
+        self::assertSame(['2026-11-23', '2026-11-30'], array_column($views, 'weekStart'));
+        $plans = $this->repository->findAll();
+        self::assertCount(1, $plans); // 11.30 was cleared.
+        self::assertSame('2026-11-23', $plans[0]->getWeekStart()->format('Y-m-d'));
+        self::assertSame('Long run', $plans[0]->getNotes());
+    }
+
+    public function testSaveManySavesNothingWhenAWeekIsInvalid(): void
+    {
+        try {
+            $this->manager->saveMany([
+                '2026-11-23' => ['days' => ['Mon' => ['Run' => 5.0]], 'notes' => null],
+                '2026-11-30' => ['days' => ['Mon' => ['Run' => -1.0]], 'notes' => null],
+            ]);
+            self::fail('Expected an InvalidPlan exception');
+        } catch (InvalidPlan) {
+        }
+
+        // Read with the connection: a failed transaction closes the entity manager.
+        self::assertSame(0, (int) $this->entityManager->getConnection()->fetchOne('SELECT COUNT(*) FROM strava_weekly_plan'));
+    }
+
     public function testDelete(): void
     {
         $week = new DateTimeImmutable('2026-11-23');
