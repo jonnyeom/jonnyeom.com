@@ -23,9 +23,9 @@ class StravaController extends BaseController
     #[Route('/strava/plan', name: 'strava_plan')]
     public function stravaPlan(): Response
     {
-        $this->setSeoTitle('jonnyeom | Weekly running metrics');
-        $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
-        $this->setSeoKeywords('strava,running,metrics,mileage');
+        $this->setSeoTitle('jonnyeom | Weekly mileage plan');
+        $this->setSeoDescription('Planned weekly mileage for running, biking, swimming and tennis');
+        $this->setSeoKeywords('strava,running,plan,mileage');
 
         return $this->render('strava/plan.html.twig');
     }

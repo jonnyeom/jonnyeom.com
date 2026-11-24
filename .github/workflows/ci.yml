@@ -53,6 +53,10 @@ jobs:
           key: ${{ github.sha }}-vendor
       - name: Install node dependencies
         run: pnpm install
+      - name: Lint frontend (oxlint)
+        run: pnpm lint
+      - name: Test frontend (Vitest)
+        run: pnpm test
       - name: Build bundle
         run: pnpm build
       - name: Cache build for jobs
@@ -183,10 +187,63 @@ jobs:
       - name: Run PHPUnit tests
         run: vendor/bin/simple-phpunit
 
+  e2e:
+    name: "E2E"
+    runs-on: "ubuntu-24.04"
+    needs: build
+    services:
+      database:
+        image: postgres:15.5-alpine
+        env:
+          POSTGRES_DB: app
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: "postgresql://app:app_password@127.0.0.1:5432/app?serverVersion=15.5&charset=utf8"
+    steps:
+      - name: Checkout
+        uses: "actions/checkout@v6"
+      - name: Setup PHP
+        uses: "shivammathur/setup-php@v2"
+        with:
+          coverage: none
+          php-version: 8.4
+          extensions: curl, pdo_pgsql
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22.22.3'
+          cache: 'pnpm'
+      - name: Retrieve cached vendor folder
+        uses: actions/cache@v5
+        with:
+          path: vendor
+          key: ${{ github.sha }}-vendor
+      - name: Retrieve cached build folder
+        uses: actions/cache@v5
+        with:
+          path: public/build
+          key: ${{ github.sha }}-build
+      - name: Install node dependencies
+        run: pnpm install
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run end-to-end tests
+        run: pnpm e2e
+
   deploy:
     name: "Deploy to Render"
     runs-on: "ubuntu-24.04"
-    needs: [build, phpcs, phpstan, phpunit, docker-build]
+    needs: [build, phpcs, phpstan, phpunit, e2e, docker-build]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     environment: Render Production
     steps:
