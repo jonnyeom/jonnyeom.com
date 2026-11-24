@@ -9,12 +9,14 @@ use App\Enum\SportType;
 use App\Exception\Strava\InvalidPlan;
 use DateTimeImmutable;
 
+use function array_filter;
 use function array_key_exists;
 use function fclose;
 use function fgetcsv;
 use function fopen;
 use function fputcsv;
 use function fwrite;
+use function implode;
 use function is_numeric;
 use function preg_match;
 use function rewind;
@@ -29,7 +31,8 @@ use function trim;
  *
  * One row per week: Week (the Monday), then the miles of each day and sport ("Mon Run", "Mon Bike",
  * ... "Sun Tennis"), then Notes. Export also adds the "Actual" Strava miles, which import ignores,
- * like any other unknown column.
+ * like any other unknown column. Import needs all the others: a row replaces its week's plan, so a
+ * missing column would silently clear data.
  *
  * @phpstan-import-type WeekPlanView from WeeklyPlanManager
  * @phpstan-type ImportedPlan array{days: array<string, array<string, float>>, notes: string|null}
@@ -121,8 +124,12 @@ class WeeklyPlanCsv
             $columns[strtolower(trim((string) $name))] = $index;
         }
 
-        if (! array_key_exists(strtolower(self::WEEK), $columns)) {
-            throw new InvalidPlan(sprintf('The CSV needs a "%s" column (the Monday of each week).', self::WEEK));
+        $missing = array_filter(
+            [self::WEEK, ...self::dayColumns(), self::NOTES],
+            static fn (string $name): bool => ! array_key_exists(strtolower($name), $columns),
+        );
+        if ($missing !== []) {
+            throw new InvalidPlan(sprintf('The CSV is missing these columns: %s.', implode(', ', $missing)));
         }
 
         $plans = [];

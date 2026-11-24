@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 
 use function explode;
 use function str_repeat;
+use function str_replace;
+use function trim;
 
 final class WeeklyPlanCsvTest extends TestCase
 {
@@ -53,15 +55,16 @@ final class WeeklyPlanCsvTest extends TestCase
 
     public function testParseAcceptsWhatASpreadsheetSaves(): void
     {
-        // Byte order mark, CRLF, any column order and case, missing columns, reformatted dates,
-        // blank lines and unknown columns.
-        $csv = "\u{FEFF}Notes,week,Sat Run,Mon Tennis,Plan (rel. mi)\r\n"
-            . "Long run,11/23/2026,12,1.5,15\r\n"
-            . ",,,,\r\n"
-            . ",2026/12/7,,,\r\n";
+        // Byte order mark, CRLF, any column order and case, reformatted dates, blank lines and
+        // unknown columns.
+        $header = str_replace(['Week,', ',Notes'], ['week,', ',NOTES,My column'], self::header());
+        $csv    = "\u{FEFF}Unknown," . $header . "\r\n"
+            . 'x,11/23/2026,,,,1.5' . str_repeat(',', 26) . "Long run,y\r\n"
+            . str_repeat(',', 32) . "\r\n"
+            . "x,2026/12/7\r\n";
 
         self::assertSame([
-            '2026-11-23' => ['days' => ['Mon' => ['Tennis' => 1.5], 'Sat' => ['Run' => 12.0]], 'notes' => 'Long run'],
+            '2026-11-23' => ['days' => ['Mon' => ['Tennis' => 1.5]], 'notes' => 'Long run'],
             // An empty row clears the week.
             '2026-12-07' => ['days' => [], 'notes' => null],
         ], (new WeeklyPlanCsv())->parse($csv));
@@ -71,13 +74,15 @@ final class WeeklyPlanCsvTest extends TestCase
     public static function invalidCsv(): iterable
     {
         yield 'empty' => ['', 'The CSV is empty.'];
-        yield 'no week column' => ["Mon Run\n5\n", 'The CSV needs a "Week" column'];
-        yield 'not a monday' => ["Week,Mon Run\n2026-11-24,5\n", 'Row 2: A week starts on a Monday'];
-        yield 'not a date' => ["Week,Mon Run\nnext week,5\n", 'Row 2: Invalid week "next week"'];
-        yield 'not a number' => ["Week,Mon Run\n2026-11-23,abc\n", 'Row 2: "Mon Run" must be a number of miles'];
-        yield 'too many miles' => ["Week,Mon Run\n2026-11-23,400\n", 'Row 2: Run miles on Mon must be between 0 and 300'];
-        yield 'week twice' => ["Week,Mon Run\n2026-11-23,5\n11/23/2026,6\n", 'Row 3: Week 2026-11-23 is listed twice.'];
-        yield 'notes too long' => ["Week,Notes\n2026-11-23," . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];
+        yield 'no week column' => [str_replace('Week,', '', self::header()) . "\n5\n", 'The CSV is missing these columns: Week.'];
+        yield 'no notes column' => [str_replace(',Notes', '', self::header()) . "\n2026-11-23,5\n", 'The CSV is missing these columns: Notes.'];
+        yield 'no sport column' => [str_replace('"Mon Bike",', '', self::header()) . "\n2026-11-23,5\n", 'The CSV is missing these columns: Mon Bike.'];
+        yield 'not a monday' => [self::header() . "\n2026-11-24,5\n", 'Row 2: A week starts on a Monday'];
+        yield 'not a date' => [self::header() . "\nnext week,5\n", 'Row 2: Invalid week "next week"'];
+        yield 'not a number' => [self::header() . "\n2026-11-23,abc\n", 'Row 2: "Mon Run" must be a number of miles'];
+        yield 'too many miles' => [self::header() . "\n2026-11-23,400\n", 'Row 2: Run miles on Mon must be between 0 and 300'];
+        yield 'week twice' => [self::header() . "\n2026-11-23,5\n11/23/2026,6\n", 'Row 3: Week 2026-11-23 is listed twice.'];
+        yield 'notes too long' => [self::header() . "\n2026-11-23" . str_repeat(',', 30) . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];
     }
 
     #[DataProvider('invalidCsv')]
@@ -87,5 +92,10 @@ final class WeeklyPlanCsvTest extends TestCase
         $this->expectExceptionMessage($message);
 
         (new WeeklyPlanCsv())->parse($csv);
+    }
+
+    private static function header(): string
+    {
+        return trim((new WeeklyPlanCsv())->export([]));
     }
 }

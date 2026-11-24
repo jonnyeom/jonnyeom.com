@@ -128,6 +128,20 @@ describe('StravaPlanner', () => {
         expect(puts()[1]).toEqual(['/api/strava/plans/2026-11-30', { days: { Mon: { Run: 3 }, Tue: { Run: 4 } }, notes: null }]);
     });
 
+    it('planning a day selects nothing, so another week can be copied next', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-30', 'Tue'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '4' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+        await waitFor(() => expect(puts()).toHaveLength(1));
+        expect(document.querySelector('.strava-plan-actions')).toBeNull();
+
+        tap(weekCell('2026-11-16'));
+        expect(await screen.findByRole('button', { name: 'Copy' })).toBeEnabled();
+    });
+
     it('copies a week and pastes it into several weeks', async () => {
         mockApi();
         await renderPlanner();
@@ -151,6 +165,30 @@ describe('StravaPlanner', () => {
             ['/api/strava/plans/2026-11-30', { days: WEEKS[0].days, notes: null }],
         ]));
         expect(await screen.findByText('Pasted 11.16 into 11.30, 11.23.')).toBeInTheDocument();
+    });
+
+    it('copies and pastes with Ctrl/⌘+C and Ctrl/⌘+V', async () => {
+        mockApi();
+        await renderPlanner();
+        const copied = { days: WEEKS[0].days, notes: null };
+
+        // Onto the focused week.
+        fireEvent.keyDown(weekCell('2026-11-16'), { key: 'c', ctrlKey: true });
+        await screen.findByText(/Copied 11.16/);
+        fireEvent.keyDown(weekCell('2026-11-30'), { key: 'v', metaKey: true });
+        await waitFor(() => expect(puts()).toEqual([['/api/strava/plans/2026-11-30', copied]]));
+
+        // Into every selected week.
+        tap(weekCell('2026-11-23'));
+        await screen.findByText('Week of 11.23');
+        tap(weekCell('2026-11-30'));
+        await screen.findByText('2 weeks selected');
+        fireEvent.keyDown(weekCell('2026-11-30'), { key: 'v', ctrlKey: true });
+        await waitFor(() => expect(puts()).toHaveLength(3));
+        expect(puts().slice(1)).toEqual([
+            ['/api/strava/plans/2026-11-30', copied],
+            ['/api/strava/plans/2026-11-23', copied],
+        ]);
     });
 
     it("doesn't paste when the replacement isn't confirmed", async () => {

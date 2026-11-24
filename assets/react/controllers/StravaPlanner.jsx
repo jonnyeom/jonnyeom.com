@@ -306,7 +306,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             headerName: compact ? 'Wk' : 'Week',
             field: 'weekStart',
             pinned: 'left',
-            width: 80,
+            width: compact ? 80 : 100,
             cellClass: compact ? 'has-text-weight-bold px-2' : 'has-text-weight-bold',
             headerClass: compact ? 'px-2' : undefined,
             cellRenderer: WeekCellRenderer,
@@ -379,24 +379,35 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         updateWeek(data, { days });
     };
 
-    // Tapping a week adds it to / removes it from the selection. Planning a day selects its week,
-    // unless several weeks are selected (so a multi-selection isn't lost).
+    // Tapping a week adds it to / removes it from the selection; tapping a day only edits it.
     const onCellClicked = ({ colDef, data }) => {
-        if (!editable) {
+        if (!editable || colDef.field !== 'weekStart') {
             return;
         }
         const { weekStart } = data;
-        setSelectedWeeks((current) => {
-            if (colDef.field === 'weekStart') {
-                return current.includes(weekStart) ? current.filter((week) => week !== weekStart) : [...current, weekStart];
-            }
-            return current.length > 1 ? current : [weekStart];
-        });
+        setSelectedWeeks((current) => (current.includes(weekStart)
+            ? current.filter((week) => week !== weekStart)
+            : [...current, weekStart]));
     };
 
     // Newest first, like the stats table.
     const rows = useMemo(() => weeks.toReversed(), [weeks]);
     const selection = rows.filter((week) => selectedWeeks.includes(week.weekStart));
+
+    // Ctrl/⌘+C copies the focused week; Ctrl/⌘+V pastes into the selected weeks, or the focused week
+    // when it isn't selected. Left alone in an open editor, where they copy and paste text.
+    const onCellKeyDown = ({ event, data, api: grid }) => {
+        if (!editable || !(event.ctrlKey || event.metaKey) || grid.getEditingCells().length > 0) {
+            return;
+        }
+        const key = event.key.toLowerCase();
+        if (key === 'c' && hasPlan(data)) {
+            copyWeek(data);
+        } else if (key === 'v' && copied) {
+            const targets = selectedWeeks.includes(data.weekStart) ? selection : [data];
+            pasteWeeks(targets.filter((week) => week.weekStart !== copied.weekStart));
+        }
+    };
 
     if (loading && weeks.length === 0) {
         return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
@@ -413,7 +424,9 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">
                     {notice ?? (editable
-                        ? `${compact ? 'Tap' : 'Click'} a day to plan it, or a week to copy and paste it.`
+                        ? (compact
+                            ? 'Tap a day to plan it, or a week to copy and paste it.'
+                            : 'Click a day to plan it, or a week to copy and paste it (or Ctrl/⌘+C, Ctrl/⌘+V).')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
                 {!editable && <a href={connectUrl} className="button is-small mb-0 ml-2">Connect to edit</a>}
@@ -459,6 +472,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     tooltipShowDelay={300}
                     onCellEditRequest={onCellEditRequest}
                     onCellClicked={onCellClicked}
+                    onCellKeyDown={onCellKeyDown}
                 />
             </div>
             <div className="has-text-centered py-4">

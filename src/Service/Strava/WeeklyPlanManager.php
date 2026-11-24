@@ -15,6 +15,7 @@ use Exception;
 
 use function array_map;
 use function count;
+use function preg_match;
 use function round;
 use function sprintf;
 
@@ -48,7 +49,9 @@ class WeeklyPlanManager
      */
     public static function parseWeekStart(string $weekStart): DateTimeImmutable
     {
-        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $weekStart);
+        // Checked first: createFromFormat() throws a ValueError on NUL bytes.
+        $valid = preg_match('/^\d{4}-\d{2}-\d{2}$/D', $weekStart) === 1;
+        $date  = $valid ? DateTimeImmutable::createFromFormat('!Y-m-d', $weekStart) : false;
         if ($date === false || $date->format('Y-m-d') !== $weekStart) {
             throw new InvalidPlan(sprintf('Invalid week "%s", expected a date as YYYY-MM-DD.', $weekStart));
         }

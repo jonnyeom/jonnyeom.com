@@ -55,7 +55,9 @@ export default function WeekActionBar({ selection, copied, compact, onCopy, onPa
                             extra={notesOpen ? ' is-link is-light' : ''}
                         />
                     )}
-                    <button type="button" className="delete is-medium ml-1" aria-label="Unselect the weeks" onClick={onClose} />
+                    <button type="button" className="button is-small mb-0" aria-label="Unselect the weeks" onClick={onClose}>
+                        <span className="icon"><i className="fas fa-xmark" /></span>
+                    </button>
                 </div>
             </div>
             {week && notesOpen && (

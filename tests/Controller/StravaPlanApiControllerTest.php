@@ -6,6 +6,7 @@ namespace App\Tests\Controller;
 
 use App\Exception\Strava\InvalidPlan;
 use App\Service\Strava\AthleteGuard;
+use App\Service\Strava\WeeklyPlanCsv;
 use App\Service\Strava\WeeklyPlanManager;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -17,6 +18,7 @@ use Symfony\Component\HttpFoundation\Session\SessionFactoryInterface;
 use function explode;
 use function json_decode;
 use function json_encode;
+use function str_repeat;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -67,6 +69,13 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $this->planManager->expects($this->never())->method('getWeeks');
 
         $this->client->request('GET', '/api/strava/plans?from=2026-11-03');
+
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    public function testListRejectsAMalformedWeek(): void
+    {
+        $this->client->request('GET', '/api/strava/plans?from=2026%00');
 
         self::assertResponseStatusCodeSame(400);
     }
@@ -159,7 +168,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
     {
         $this->planManager->expects($this->never())->method('saveMany');
 
-        $this->postCsv("Week,Mon Run\n2026-11-23,5\n");
+        $this->postCsv("2026-11-23,5\n");
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -186,7 +195,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
             ])
             ->willReturn(2);
 
-        $this->postCsv("Week,Mon Run,Notes\n2026-11-23,5,Easy\n2026-11-30,,\n");
+        $this->postCsv('2026-11-23,5' . str_repeat(',', 29) . "Easy\n2026-11-30\n");
 
         self::assertResponseIsSuccessful();
         self::assertSame(['imported' => 2], $this->responseJson());
@@ -197,19 +206,20 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $this->connect();
         $this->planManager->expects($this->never())->method('saveMany');
 
-        $this->postCsv("Week,Mon Run\n2026-11-23,5\n2026-11-30,lots\n");
+        $this->postCsv("2026-11-23,5\n2026-11-30,lots\n");
 
         self::assertResponseStatusCodeSame(422);
         self::assertSame(['error' => 'Row 3: "Mon Run" must be a number of miles, "lots" was given.'], $this->responseJson());
     }
 
-    private function postCsv(string $csv): void
+    /** @param string $rows the rows below the header of the export */
+    private function postCsv(string $rows): void
     {
         $this->client->request(
             'POST',
             '/api/strava/plans/import',
             server: ['CONTENT_TYPE' => 'text/csv'],
-            content: $csv,
+            content: (new WeeklyPlanCsv())->export([]) . $rows,
         );
     }
 
