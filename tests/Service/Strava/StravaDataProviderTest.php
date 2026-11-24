@@ -14,6 +14,7 @@ use App\Service\Strava\StravaDataProvider;
 use App\Service\Strava\StravaTokenManager;
 use App\Service\Strava\WeeklyStatRecorder;
 use DateTimeImmutable;
+use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -126,26 +127,31 @@ final class StravaDataProviderTest extends TestCase
         self::assertSame(1, $stats[0]->getActivityCount());
     }
 
-    public function testStoredStatsThrowWhenNotConnected(): void
+    public function testStoredStatsAreVisibleWithoutAStravaConnection(): void
     {
-        $this->repository->expects($this->never())->method('findLatestForAthlete');
+        // Anyone can view the stats page: no session, no token, no Strava call.
+        $this->repository
+            ->expects($this->once())
+            ->method('findLatestForAthlete')
+            ->with(self::ALLOWED_ATHLETE_ID, 20)
+            ->willReturn([$this->storedWeek($this->mondayThisWeek, 5000.0)]);
+        $this->tokenManager->expects($this->never())->method('getValidToken');
+        $this->clientProvider->expects($this->never())->method('getAPIClient');
 
-        $this->expectException(AccessTokenMissing::class);
+        $stats = $this->provider->getStoredWeeklyStats(20);
 
-        $this->provider->getStoredWeeklyStats(20);
+        self::assertCount(1, $stats);
+        self::assertSame(5000.0, $stats[0]->getTotalDistance());
+        self::assertSame([], $this->session->all());
     }
 
-    #[DataProvider('disallowedAthletes')]
-    public function testStoredStatsRejectDisallowedAthleteAndClearSession(string|null $sessionAthleteId): void
+    public function testStoredStatsLeaveAnotherAthletesSessionAlone(): void
     {
-        $this->setSessionAthlete($sessionAthleteId);
+        $this->session->set(AthleteGuard::SESSION_KEY, '99999');
+        $this->repository->method('findLatestForAthlete')->with(self::ALLOWED_ATHLETE_ID, 20)->willReturn([]);
 
-        $this->repository->expects($this->never())->method('findLatestForAthlete');
-
-        $this->assertThrowsAccessTokenMissing(fn () => $this->provider->getStoredWeeklyStats(20));
-
-        self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
-        self::assertFalse($this->session->has(AthleteGuard::LEGACY_TOKEN_SESSION_KEY));
+        self::assertSame([], $this->provider->getStoredWeeklyStats(20));
+        self::assertSame('99999', $this->session->get(AthleteGuard::SESSION_KEY));
     }
 
     #[DataProvider('stravaActions')]
@@ -430,6 +436,25 @@ final class StravaDataProviderTest extends TestCase
         $this->recorder->expects($this->never())->method('record');
 
         $this->assertThrowsAccessTokenMissing(fn () => $this->provider->refresh());
+
+        self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
+    }
+
+    public function testRefreshWhenStravaRejectsTheTokenDisconnectsSoYouCanReconnect(): void
+    {
+        $this->session->set(AthleteGuard::SESSION_KEY, self::ALLOWED_ATHLETE_ID);
+
+        $this->tokenManager
+            ->method('getValidToken')
+            ->willThrowException(new IdentityProviderException('Bad Request', 400, []));
+        $this->clientProvider->expects($this->never())->method('getAPIClient');
+
+        try {
+            $this->provider->refresh();
+            self::fail('Expected IdentityProviderException.');
+        } catch (IdentityProviderException) {
+            // Expected.
+        }
 
         self::assertFalse($this->session->has(AthleteGuard::SESSION_KEY));
     }

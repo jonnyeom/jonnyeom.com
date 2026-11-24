@@ -10,6 +10,7 @@ use App\Service\Strava\StravaDataProvider;
 use App\Twig\Components\WeeklyStatsTable;
 use DateTime;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -19,6 +20,7 @@ use Symfony\UX\Chartjs\Builder\ChartBuilder;
 use Symfony\UX\Chartjs\Model\Chart;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 use Symfony\UX\LiveComponent\Test\TestLiveComponent;
+use Throwable;
 
 use function array_fill;
 use function sprintf;
@@ -202,18 +204,45 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringNotContainsString('is-danger', $rendered);
     }
 
-    public function testRefreshErrorIsShown(): void
+    #[DataProvider('stravaConnectionErrors')]
+    public function testRefreshOrResetWithoutStravaRedirectsToTheConnectPage(string $action, Throwable $error): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method($action)
+            ->willThrowException($error);
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn($this->buildWeeklyStats(3));
+
+        $response = $this->createComponentWithMockedProvider()
+            ->call($action)
+            ->response();
+
+        $this->assertStringContainsString('/strava/connect/entry', (string) $response->headers->get('Location'));
+    }
+
+    /** @return array<string, array{string, Throwable}> */
+    public static function stravaConnectionErrors(): array
+    {
+        return [
+            'refresh, not connected' => ['refresh', new AccessTokenMissing()],
+            'refresh, token rejected' => ['refresh', new IdentityProviderException('Bad Request', 400, [])],
+            'reset, not connected' => ['reset', new AccessTokenMissing()],
+            'reset, token rejected' => ['reset', new IdentityProviderException('Bad Request', 400, [])],
+        ];
+    }
+
+    public function testOtherRefreshErrorsAreShownOnThePage(): void
     {
         $this->stravaDataProvider
             ->expects($this->once())
             ->method('refresh')
-            ->willThrowException(new AccessTokenMissing());
+            ->willThrowException(new RuntimeException('database is down'));
 
         $rendered = (string) $this->createComponentWithMockedProvider()
             ->call('refresh')
             ->render();
 
-        $this->assertStringContainsString('No access token', $rendered);
+        $this->assertStringContainsString('Application error: database is down', $rendered);
         $this->assertStringNotContainsString('Updated the latest week', $rendered);
     }
 
@@ -236,22 +265,16 @@ final class WeeklyStatsTableTest extends KernelTestCase
 
     public function testNotConnectedAndStravaAuthErrorsAreNotLoggedHere(): void
     {
-        $this->stravaDataProvider
-            ->method('refresh')
-            ->willThrowException(new IdentityProviderException('Bad Request', 400, []));
-        $this->stravaDataProvider
-            ->method('getStoredWeeklyStats')
-            ->willThrowException(new AccessTokenMissing());
-
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())->method('error');
 
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger, new ChartBuilder());
-        $component->refresh();
-        $this->assertStringContainsString('Strava access error', (string) $component->getError());
+        foreach ([new AccessTokenMissing(), new IdentityProviderException('Bad Request', 400, [])] as $error) {
+            $stravaDataProvider = $this->createMock(StravaDataProvider::class);
+            $stravaDataProvider->method('getStoredWeeklyStats')->willThrowException($error);
 
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger, new ChartBuilder());
-        $this->assertStringContainsString('No access token', (string) $component->getError());
+            $component = new WeeklyStatsTable($stravaDataProvider, $logger, new ChartBuilder());
+            $this->assertNotNull($component->getError());
+        }
     }
 
     public function testAccessTokenMissingShowsError(): void

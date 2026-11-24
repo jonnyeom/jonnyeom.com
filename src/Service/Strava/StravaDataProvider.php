@@ -15,6 +15,7 @@ use League\OAuth2\Client\Token\AccessToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Throwable;
 
 use function array_key_exists;
 use function array_map;
@@ -56,17 +57,13 @@ class StravaDataProvider
     }
 
     /**
-     * Returns the newest $limit stored weeks (newest first), read from the database only.
-     * Never calls Strava.
+     * Returns the newest $limit stored weeks of the allowed athlete (newest first), read from the
+     * database only. Never calls Strava, and needs no Strava connection: the stats page is public.
      *
      * @return array<int, WeeklyStat>
-     *
-     * @throws AccessTokenMissing
      */
     public function getStoredWeeklyStats(int $limit): array
     {
-        $this->assertConnectedAthlete();
-
         return array_map(
             static fn (StravaWeeklyStat $stat): WeeklyStat => $stat->toWeeklyStat(),
             $this->weeklyStatRepository->findLatestForAthlete($this->athleteGuard->getAllowedAthleteId(), $limit),
@@ -353,9 +350,12 @@ class StravaDataProvider
 
         try {
             return $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
-        } catch (AccessTokenMissing $e) {
-            // Connected, but no token is stored: disconnect so the connect page offers a new login.
-            $this->athleteGuard->disconnect($this->getSession());
+        } catch (Throwable $e) {
+            // Connected, but no token is stored or Strava rejected it: disconnect so the connect
+            // page offers a new login instead of redirecting back.
+            if ($e instanceof AccessTokenMissing || $e instanceof IdentityProviderException) {
+                $this->athleteGuard->disconnect($this->getSession());
+            }
 
             throw $e;
         }
