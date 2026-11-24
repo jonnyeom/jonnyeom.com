@@ -7,12 +7,13 @@ if (!process.env.DATABASE_URL) {
     throw new Error('Set DATABASE_URL to a throwaway Postgres database to run the end-to-end tests.');
 }
 
-// Picked up by the server below and by the console commands in e2e/setup.js.
+// Picked up by the server below, tests/E2E/setup.php and the tests.
 Object.assign(process.env, {
     APP_ENV: 'prod',
     APP_DEBUG: '0',
     APP_SECRET: 'e2e',
     STRAVA_ATHLETE_ID: '12345',
+    E2E_SESSION_ID: 'e2esession',
 });
 
 const url = 'http://127.0.0.1:8765';

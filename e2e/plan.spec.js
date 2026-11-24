@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { SESSION_ID } from './setup.js';
 
 test('plans a day and copies the week to another week', async ({ page, context, baseURL }) => {
     // Nothing external: no analytics hits, no dependency on other sites.
     await context.route((url) => url.origin !== baseURL, (route) => route.abort());
-    await context.addCookies([{ name: 'PHPSESSID', value: SESSION_ID, url: baseURL }]);
+    await context.addCookies([{ name: 'PHPSESSID', value: process.env.E2E_SESSION_ID, url: baseURL }]);
     const week = (id) => page.locator(`.ag-pinned-left-cols-container .ag-row[row-id="${id}"] [col-id="weekStart"]`);
     const day = (id, name) => page.locator(`.ag-center-cols-container .ag-row[row-id="${id}"] [col-id="${name}"]`);
 
