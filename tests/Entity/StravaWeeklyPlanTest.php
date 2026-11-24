@@ -22,7 +22,6 @@ final class StravaWeeklyPlanTest extends TestCase
         self::assertSame('12345', $plan->getAthleteId());
         self::assertSame('2026-11-23', $plan->getWeekStart()->format('Y-m-d'));
         self::assertSame([], $plan->getDays());
-        self::assertSame(0.0, $plan->getTotalMiles());
         self::assertNull($plan->getNotes());
         self::assertTrue($plan->isEmpty());
     }
@@ -34,7 +33,7 @@ final class StravaWeeklyPlanTest extends TestCase
         new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-24'));
     }
 
-    public function testUpdateNormalizesDaysAndComputesRelativeMiles(): void
+    public function testUpdateNormalizesDays(): void
     {
         $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
 
@@ -51,12 +50,6 @@ final class StravaWeeklyPlanTest extends TestCase
             'Wed' => ['Swim' => 1.0, 'Tennis' => 1.5],
             'Sat' => ['Run' => 10.0],
         ], $plan->getDays());
-        self::assertSame(
-            ['Mon' => 15.0, 'Tue' => 0.0, 'Wed' => 7.0, 'Thu' => 0.0, 'Fri' => 0.0, 'Sat' => 10.0, 'Sun' => 0.0],
-            $plan->getDailyRelativeMiles(),
-        );
-        self::assertSame(32.0, $plan->getTotalMiles());
-        self::assertSame(['Run' => 15.0, 'Bike' => 30.0, 'Swim' => 1.0, 'Tennis' => 1.5], $plan->getSportTotals());
         self::assertSame('Recovery week', $plan->getNotes());
         self::assertFalse($plan->isEmpty());
     }
@@ -69,7 +62,6 @@ final class StravaWeeklyPlanTest extends TestCase
         $plan->update(['Tue' => ['Run' => 3]]);
 
         self::assertSame(['Tue' => ['Run' => 3.0]], $plan->getDays());
-        self::assertSame(3.0, $plan->getTotalMiles());
         self::assertNull($plan->getNotes());
     }
 
@@ -93,6 +85,21 @@ final class StravaWeeklyPlanTest extends TestCase
         $this->expectException(InvalidPlan::class);
 
         $plan->update($days);
+    }
+
+    public function testInvalidUpdateChangesNothing(): void
+    {
+        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan->update(['Mon' => ['Run' => 5]], 'notes');
+
+        try {
+            $plan->update(['Tue' => ['Run' => 3]], str_repeat('a', StravaWeeklyPlan::MAX_NOTES_LENGTH + 1));
+            self::fail('Expected an InvalidPlan exception');
+        } catch (InvalidPlan) {
+        }
+
+        self::assertSame(['Mon' => ['Run' => 5.0]], $plan->getDays());
+        self::assertSame('notes', $plan->getNotes());
     }
 
     public function testUpdateRejectsTooLongNotes(): void

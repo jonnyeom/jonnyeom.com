@@ -81,6 +81,53 @@ describe('StravaPlanner', () => {
         await waitFor(() => expect(dayCell('2026-11-30', 'Tue')).toHaveTextContent('6'));
     });
 
+    it('restores the week when saving fails', async () => {
+        mockApi();
+        await renderPlanner();
+        fetchMock.mockImplementation((url, options = {}) => (options.method === 'PUT'
+            ? json({ error: 'Run miles on Tue must be between 0 and 300.' }, 422)
+            : json({ currentWeek: '2026-11-23', editable: true, weeks: WEEKS })));
+
+        tap(dayCell('2026-11-30', 'Tue'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '5' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+        expect(await screen.findByText('Run miles on Tue must be between 0 and 300.')).toBeInTheDocument();
+        await waitFor(() => expect(dayCell('2026-11-30', 'Tue').textContent.trim()).toBe(''));
+    });
+
+    it('saves edits of the same week in order', async () => {
+        mockApi();
+        await renderPlanner();
+        // The first save is slow: the second must wait for it.
+        let releaseFirst;
+        const respond = fetchMock.getMockImplementation();
+        fetchMock.mockImplementation((url, options = {}) => {
+            if (options.method === 'PUT' && !releaseFirst) {
+                return new Promise((resolve) => {
+                    releaseFirst = () => resolve(respond(url, options));
+                });
+            }
+            return respond(url, options);
+        });
+
+        tap(dayCell('2026-11-30', 'Mon'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '3' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+        tap(dayCell('2026-11-30', 'Tue'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '4' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+        // Both edits show at once; only the first save has been sent.
+        await waitFor(() => expect(dayCell('2026-11-30', 'Tue')).toHaveTextContent('4'));
+        expect(dayCell('2026-11-30', 'Mon')).toHaveTextContent('3');
+        expect(puts()).toHaveLength(1);
+
+        releaseFirst();
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        expect(puts()[1]).toEqual(['/api/strava/plans/2026-11-30', { days: { Mon: { Run: 3 }, Tue: { Run: 4 } }, notes: null }]);
+    });
+
     it('copies a week and pastes it into several weeks', async () => {
         mockApi();
         await renderPlanner();

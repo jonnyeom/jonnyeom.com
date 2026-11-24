@@ -20,19 +20,15 @@ final class WeeklyPlanCsvTest extends TestCase
             [
                 'weekStart' => '2026-11-23',
                 'days' => ['Mon' => ['Run' => 5.0, 'Bike' => 30.0], 'Wed' => ['Swim' => 1.0]],
-                'dailyMiles' => [],
-                'sportTotals' => [],
-                'totalMiles' => 19.0,
                 'notes' => 'Build, "hard" week',
-                'updatedAt' => null,
-                'actual' => ['totalMiles' => 20.5, 'dailyMiles' => [], 'fiveWeekAverage' => 18.0],
+                'actual' => ['totalMiles' => 20.5, 'fiveWeekAverage' => 18.0],
             ],
         ]);
 
         $lines = explode("\n", $csv);
         self::assertStringStartsWith('Week,"Mon Run","Mon Bike","Mon Swim","Mon Tennis","Tue Run"', $lines[0]);
-        self::assertStringEndsWith('"Sun Tennis","Plan (rel. mi)","Actual (mi)",Notes', $lines[0]);
-        self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,19,20.5,"Build, ""hard"" week"', $lines[1]);
+        self::assertStringEndsWith('"Sun Tennis","Actual (mi)",Notes', $lines[0]);
+        self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,20.5,"Build, ""hard"" week"', $lines[1]);
     }
 
     public function testExportedCsvImportsBack(): void
@@ -42,11 +38,7 @@ final class WeeklyPlanCsvTest extends TestCase
             [
                 'weekStart' => '2026-11-23',
                 'days' => ['Mon' => ['Run' => 5.0], 'Sat' => ['Bike' => 30.0, 'Tennis' => 1.5]],
-                'dailyMiles' => [],
-                'sportTotals' => [],
-                'totalMiles' => 18.0,
                 'notes' => "Line 1\nLine 2",
-                'updatedAt' => null,
                 'actual' => null,
             ],
         ]));

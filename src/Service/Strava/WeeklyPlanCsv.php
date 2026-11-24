@@ -10,7 +10,6 @@ use App\Exception\Strava\InvalidPlan;
 use DateTimeImmutable;
 
 use function array_key_exists;
-use function count;
 use function fclose;
 use function fgetcsv;
 use function fopen;
@@ -29,19 +28,16 @@ use function trim;
  * Weekly plans as CSV, to edit them in a spreadsheet (Google Sheets, Excel, Numbers).
  *
  * One row per week: Week (the Monday), then the miles of each day and sport ("Mon Run", "Mon Bike",
- * ... "Sun Tennis"), then Notes. Export also adds the computed "Plan" and "Actual" totals, which
- * import ignores, like any other unknown column.
+ * ... "Sun Tennis"), then Notes. Export also adds the "Actual" Strava miles, which import ignores,
+ * like any other unknown column.
  *
  * @phpstan-import-type WeekPlanView from WeeklyPlanManager
  * @phpstan-type ImportedPlan array{days: array<string, array<string, float>>, notes: string|null}
  */
 class WeeklyPlanCsv
 {
-    public const int MAX_ROWS = 200;
-
     private const string WEEK      = 'Week';
     private const string NOTES     = 'Notes';
-    private const string PLAN      = 'Plan (rel. mi)';
     private const string ACTUAL    = 'Actual (mi)';
     private const string SEPARATOR = ',';
     private const string ENCLOSURE = '"';
@@ -55,7 +51,7 @@ class WeeklyPlanCsv
             return '';
         }
 
-        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::PLAN, self::ACTUAL, self::NOTES], self::SEPARATOR, self::ENCLOSURE, self::ESCAPE);
+        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::ACTUAL, self::NOTES], self::SEPARATOR, self::ENCLOSURE, self::ESCAPE);
 
         foreach ($weeks as $week) {
             $row = [$week['weekStart']];
@@ -65,7 +61,6 @@ class WeeklyPlanCsv
                 }
             }
 
-            $row[] = self::formatMiles($week['totalMiles']);
             $row[] = $week['actual'] === null ? '' : self::formatMiles($week['actual']['totalMiles']);
             $row[] = $week['notes'] ?? '';
 
@@ -139,10 +134,6 @@ class WeeklyPlanCsv
             $weekCell = $cell(self::WEEK);
             if ($weekCell === '') {
                 continue; // Blank line.
-            }
-
-            if (count($plans) >= self::MAX_ROWS) {
-                throw new InvalidPlan(sprintf('At most %d weeks can be imported at once.', self::MAX_ROWS));
             }
 
             try {

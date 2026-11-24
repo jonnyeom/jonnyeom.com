@@ -12,7 +12,6 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 use function array_keys;
-use function array_sum;
 use function implode;
 use function in_array;
 use function is_array;
@@ -30,8 +29,7 @@ use function trim;
  * Planned mileage for one athlete and ISO week (Monday start), per day and sport.
  *
  * The counterpart of StravaWeeklyStat: the stat is what was done, the plan is what is intended.
- * Planned distances are stored in miles of the sport itself (e.g. 20 miles of biking); the totals
- * are relative (run-equivalent) miles, weighted like the stats (see SportType::relativeDistance()).
+ * Planned distances are stored in miles of the sport itself (e.g. 20 miles of biking).
  */
 #[ORM\Entity(repositoryClass: StravaWeeklyPlanRepository::class)]
 #[ORM\Table(name: 'strava_weekly_plan')]
@@ -57,10 +55,6 @@ class StravaWeeklyPlan
      */
     #[ORM\Column(type: Types::JSON)]
     private array $days = [];
-
-    /** Total planned relative (run-equivalent) miles of the week. */
-    #[ORM\Column(type: Types::FLOAT)]
-    private float $totalMiles = 0;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private string|null $notes = null;
@@ -92,55 +86,18 @@ class StravaWeeklyPlan
      */
     public function update(array $days, string|null $notes = null): void
     {
-        $this->days       = self::normalizeDays($days);
-        $this->totalMiles = round(array_sum($this->getDailyRelativeMiles()), 2);
-        $this->notes      = self::normalizeNotes($notes);
-        $this->updatedAt  = new DateTimeImmutable();
+        // Validate everything before changing anything.
+        $days  = self::normalizeDays($days);
+        $notes = self::normalizeNotes($notes);
+
+        $this->days      = $days;
+        $this->notes     = $notes;
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function isEmpty(): bool
     {
         return $this->days === [] && $this->notes === null;
-    }
-
-    /**
-     * Relative (run-equivalent) miles per day, for all days Mon..Sun.
-     *
-     * @return array<string, float>
-     */
-    public function getDailyRelativeMiles(): array
-    {
-        $daily = [];
-        foreach (self::DAYS as $day) {
-            $miles = 0.0;
-            foreach ($this->days[$day] ?? [] as $sport => $distance) {
-                $miles += SportType::from($sport)->relativeDistance($distance);
-            }
-
-            $daily[$day] = round($miles, 2);
-        }
-
-        return $daily;
-    }
-
-    /**
-     * Planned miles per sport type over the whole week (sport miles, not relative).
-     *
-     * @return array<string, float>
-     */
-    public function getSportTotals(): array
-    {
-        $totals = [];
-        foreach (SportType::cases() as $sport) {
-            $miles = 0.0;
-            foreach ($this->days as $sports) {
-                $miles += $sports[$sport->value] ?? 0.0;
-            }
-
-            $totals[$sport->value] = round($miles, 2);
-        }
-
-        return $totals;
     }
 
     public function getId(): int|null
@@ -162,11 +119,6 @@ class StravaWeeklyPlan
     public function getDays(): array
     {
         return $this->days;
-    }
-
-    public function getTotalMiles(): float
-    {
-        return $this->totalMiles;
     }
 
     public function getNotes(): string|null

@@ -11,6 +11,7 @@ import {
     Tooltip,
 } from 'chart.js';
 import React, { useEffect, useMemo, useRef } from 'react';
+import { round1, weekLabel, weekTotal } from '../plan.js';
 
 Chart.register(BarController, BarElement, CategoryScale, Legend, LinearScale, LineController, LineElement, PointElement, Tooltip);
 
@@ -41,16 +42,16 @@ const BAR = {
  * Scrolls horizontally like the Progress chart, opening at the current week; about 10 weeks are
  * visible (6 on phones).
  *
- * Props: weeks (oldest first, with planMiles), currentWeek, label(weekStart).
+ * Props: weeks (oldest first, as the API returns them), currentWeek.
  */
-export default function PlanChart({ weeks, currentWeek, label }) {
+export default function PlanChart({ weeks, currentWeek }) {
     const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const chartRef = useRef(null);
     const scrolledRef = useRef(false);
 
     const data = useMemo(() => ({
-        labels: weeks.map((week) => label(week.weekStart)),
+        labels: weeks.map((week) => weekLabel(week.weekStart)),
         datasets: [
             {
                 type: 'line',
@@ -66,7 +67,7 @@ export default function PlanChart({ weeks, currentWeek, label }) {
             },
             {
                 label: 'Planned',
-                data: weeks.map((week) => week.planMiles || null),
+                data: weeks.map((week) => round1(weekTotal(week.days)) || null),
                 backgroundColor: COLOR_PLAN,
                 order: 2,
                 ...BAR,
@@ -79,7 +80,7 @@ export default function PlanChart({ weeks, currentWeek, label }) {
                 ...BAR,
             },
         ],
-    }), [weeks, label]);
+    }), [weeks]);
 
     const currentIndex = weeks.findIndex((week) => week.weekStart === currentWeek);
 

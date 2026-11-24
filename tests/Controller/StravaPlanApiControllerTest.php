@@ -87,7 +87,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
             ->expects($this->once())
             ->method('save')
             ->with(new DateTimeImmutable('2026-11-23'), ['Mon' => ['Run' => 5], 'Sat' => ['Bike' => 30]], 'Build week')
-            ->willReturn(['weekStart' => '2026-11-23', 'totalMiles' => 15.5]);
+            ->willReturn(['weekStart' => '2026-11-23', 'days' => ['Mon' => ['Run' => 5.0]], 'notes' => 'Build week', 'actual' => null]);
 
         $this->putJson('/api/strava/plans/2026-11-23', [
             'days' => ['Mon' => ['Run' => 5], 'Sat' => ['Bike' => 30]],
@@ -95,7 +95,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
         ]);
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['weekStart' => '2026-11-23', 'totalMiles' => 15.5], $this->responseJson());
+        self::assertSame('Build week', $this->responseJson()['notes']);
     }
 
     public function testUpdateOnlyAcceptsJson(): void
@@ -126,26 +126,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
 
         $this->putJson('/api/strava/plans/2026-11-24', ['days' => []]);
 
-        self::assertResponseStatusCodeSame(400);
-    }
-
-    public function testDeleteRemovesThePlan(): void
-    {
-        $this->connect();
-        $this->planManager->expects($this->once())->method('delete')->with(new DateTimeImmutable('2026-11-23'));
-
-        $this->client->request('DELETE', '/api/strava/plans/2026-11-23');
-
-        self::assertResponseStatusCodeSame(204);
-    }
-
-    public function testDeleteNeedsAStravaConnection(): void
-    {
-        $this->planManager->expects($this->never())->method('delete');
-
-        $this->client->request('DELETE', '/api/strava/plans/2026-11-23');
-
-        self::assertResponseStatusCodeSame(403);
+        self::assertResponseStatusCodeSame(422);
     }
 
     public function testExportIsACsvDownload(): void
@@ -158,11 +139,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
                 [
                     'weekStart' => '2026-11-23',
                     'days' => ['Mon' => ['Run' => 5.0]],
-                    'dailyMiles' => [],
-                    'sportTotals' => [],
-                    'totalMiles' => 5.0,
                     'notes' => 'Easy',
-                    'updatedAt' => null,
                     'actual' => null,
                 ],
             ]);
@@ -175,7 +152,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $lines = explode("\n", (string) $this->client->getResponse()->getContent());
         self::assertStringStartsWith('Week,"Mon Run"', $lines[0]);
         self::assertStringStartsWith('2026-11-23,5,', $lines[1]);
-        self::assertStringEndsWith(',5,,Easy', $lines[1]);
+        self::assertStringEndsWith(',,Easy', $lines[1]);
     }
 
     public function testImportNeedsAStravaConnection(): void
@@ -207,12 +184,12 @@ final class StravaPlanApiControllerTest extends WebTestCase
                 '2026-11-23' => ['days' => ['Mon' => ['Run' => 5.0]], 'notes' => 'Easy'],
                 '2026-11-30' => ['days' => [], 'notes' => null],
             ])
-            ->willReturn([['weekStart' => '2026-11-23'], ['weekStart' => '2026-11-30']]);
+            ->willReturn(2);
 
         $this->postCsv("Week,Mon Run,Notes\n2026-11-23,5,Easy\n2026-11-30,,\n");
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['weeks' => [['weekStart' => '2026-11-23'], ['weekStart' => '2026-11-30']]], $this->responseJson());
+        self::assertSame(['imported' => 2], $this->responseJson());
     }
 
     public function testImportReportsTheInvalidRow(): void

@@ -59,10 +59,9 @@ final class WeeklyPlanManagerTest extends KernelTestCase
         $plan = $this->repository->findOneByAthleteAndWeek(self::ATHLETE_ID, $week);
         self::assertNotNull($plan);
         self::assertSame(['Tue' => ['Swim' => 1.0]], $plan->getDays());
-        self::assertSame(4.0, $plan->getTotalMiles());
         self::assertNull($plan->getNotes());
         self::assertSame('2026-11-23', $view['weekStart']);
-        self::assertSame(4.0, $view['totalMiles']);
+        self::assertSame(['Tue' => ['Swim' => 1.0]], $view['days']);
         self::assertCount(1, $this->repository->findAll());
     }
 
@@ -104,15 +103,10 @@ final class WeeklyPlanManagerTest extends KernelTestCase
 
         // Actual mileage, no plan.
         self::assertSame([], $weeks[0]['days']);
-        self::assertSame(0.0, $weeks[0]['totalMiles']);
-        self::assertNotNull($weeks[0]['actual']);
-        self::assertSame(10.0, $weeks[0]['actual']['totalMiles']);
-        self::assertSame(10.0, $weeks[0]['actual']['dailyMiles']['Mon']);
-        self::assertSame(5.0, $weeks[0]['actual']['fiveWeekAverage']);
+        self::assertSame(['totalMiles' => 10.0, 'fiveWeekAverage' => 5.0], $weeks[0]['actual']);
 
         // Plan, no actual mileage yet.
         self::assertSame(['Mon' => ['Run' => 5.0]], $weeks[1]['days']);
-        self::assertSame(5.0, $weeks[1]['totalMiles']);
         self::assertSame('Easy', $weeks[1]['notes']);
         self::assertNull($weeks[1]['actual']);
 
@@ -125,43 +119,17 @@ final class WeeklyPlanManagerTest extends KernelTestCase
     {
         $this->manager->save(new DateTimeImmutable('2026-11-30'), ['Mon' => ['Run' => 5]], null);
 
-        $views = $this->manager->saveMany([
+        $saved = $this->manager->saveMany([
             '2026-11-30' => ['days' => [], 'notes' => null],
             '2026-11-23' => ['days' => ['Sat' => ['Run' => 10.0]], 'notes' => 'Long run'],
         ]);
         $this->entityManager->clear();
 
-        self::assertSame(['2026-11-23', '2026-11-30'], array_column($views, 'weekStart'));
+        self::assertSame(2, $saved);
         $plans = $this->repository->findAll();
         self::assertCount(1, $plans); // 11.30 was cleared.
         self::assertSame('2026-11-23', $plans[0]->getWeekStart()->format('Y-m-d'));
         self::assertSame('Long run', $plans[0]->getNotes());
-    }
-
-    public function testSaveManySavesNothingWhenAWeekIsInvalid(): void
-    {
-        try {
-            $this->manager->saveMany([
-                '2026-11-23' => ['days' => ['Mon' => ['Run' => 5.0]], 'notes' => null],
-                '2026-11-30' => ['days' => ['Mon' => ['Run' => -1.0]], 'notes' => null],
-            ]);
-            self::fail('Expected an InvalidPlan exception');
-        } catch (InvalidPlan) {
-        }
-
-        // Read with the connection: a failed transaction closes the entity manager.
-        self::assertSame(0, (int) $this->entityManager->getConnection()->fetchOne('SELECT COUNT(*) FROM strava_weekly_plan'));
-    }
-
-    public function testDelete(): void
-    {
-        $week = new DateTimeImmutable('2026-11-23');
-        $this->manager->save($week, ['Mon' => ['Run' => 5]], null);
-
-        $this->manager->delete($week);
-        $this->manager->delete($week); // Deleting a missing plan is a no-op.
-
-        self::assertSame([], $this->repository->findAll());
     }
 
     public function testParseWeekStart(): void

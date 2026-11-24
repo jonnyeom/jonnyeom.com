@@ -6,7 +6,6 @@ namespace App\Service\Strava;
 
 use App\Entity\StravaWeeklyPlan;
 use App\Entity\StravaWeeklyStat;
-use App\Enum\SportType;
 use App\Exception\Strava\InvalidPlan;
 use App\Repository\StravaWeeklyPlanRepository;
 use App\Repository\StravaWeeklyStatRepository;
@@ -14,16 +13,10 @@ use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 
-use function array_combine;
-use function array_fill_keys;
-use function array_keys;
 use function array_map;
-use function ksort;
-use function preg_match;
+use function count;
 use function round;
 use function sprintf;
-
-use const DATE_ATOM;
 
 /**
  * Reads and writes the weekly mileage plans of the allowed athlete, and puts them next to the
@@ -32,12 +25,8 @@ use const DATE_ATOM;
  * @phpstan-type WeekPlanView array{
  *     weekStart: string,
  *     days: array<string, array<string, float>>,
- *     dailyMiles: array<string, float>,
- *     sportTotals: array<string, float>,
- *     totalMiles: float,
  *     notes: string|null,
- *     updatedAt: string|null,
- *     actual: array{totalMiles: float, dailyMiles: array<string, float>, fiveWeekAverage: float}|null,
+ *     actual: array{totalMiles: float, fiveWeekAverage: float}|null,
  * }
  */
 class WeeklyPlanManager
@@ -59,10 +48,6 @@ class WeeklyPlanManager
      */
     public static function parseWeekStart(string $weekStart): DateTimeImmutable
     {
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStart) !== 1) {
-            throw new InvalidPlan(sprintf('Invalid week "%s", expected a date as YYYY-MM-DD.', $weekStart));
-        }
-
         $date = DateTimeImmutable::createFromFormat('!Y-m-d', $weekStart);
         if ($date === false || $date->format('Y-m-d') !== $weekStart) {
             throw new InvalidPlan(sprintf('Invalid week "%s", expected a date as YYYY-MM-DD.', $weekStart));
@@ -73,6 +58,16 @@ class WeeklyPlanManager
         }
 
         return $date;
+    }
+
+    /**
+     * The Monday of the week $date is in.
+     *
+     * @throws Exception
+     */
+    public static function weekStartOf(DateTimeImmutable $date): DateTimeImmutable
+    {
+        return $date->modify('monday this week')->setTime(0, 0);
     }
 
     /**
@@ -102,16 +97,10 @@ class WeeklyPlanManager
         $views = [];
         foreach ($weekStarts as $weekStart) {
             $key     = $weekStart->format('Y-m-d');
-            $views[] = $this->toView($weekStart, $plans[$key] ?? null, $stats[$key] ?? null);
+            $views[] = self::toView($weekStart, $plans[$key] ?? null, $stats[$key] ?? null);
         }
 
         return $views;
-    }
-
-    /** @return WeekPlanView */
-    public function getWeek(DateTimeImmutable $weekStart): array
-    {
-        return $this->getWeeks($weekStart, 1)[0];
     }
 
     /**
@@ -128,56 +117,28 @@ class WeeklyPlanManager
         $this->apply($weekStart, $days, $notes);
         $this->entityManager->flush();
 
-        return $this->getWeek($weekStart);
+        return $this->getWeeks($weekStart, 1)[0];
     }
 
     /**
-     * Creates or replaces the plans of several weeks in one transaction (CSV import): either all
-     * weeks are saved, or none.
+     * Creates or replaces the plans of several weeks (CSV import, already validated). The single
+     * flush writes all of them in one transaction.
      *
      * @param array<string, array{days: array<mixed>, notes: string|null}> $plans keyed by week start (Y-m-d)
      *
-     * @return list<WeekPlanView> the saved weeks, oldest first
+     * @return int the number of weeks saved
      *
      * @throws InvalidPlan
      */
-    public function saveMany(array $plans): array
+    public function saveMany(array $plans): int
     {
-        ksort($plans);
-
-        $this->entityManager->wrapInTransaction(function () use ($plans): void {
-            foreach ($plans as $weekStart => $plan) {
-                $this->apply(self::parseWeekStart((string) $weekStart), $plan['days'], $plan['notes']);
-            }
-
-            $this->entityManager->flush();
-        });
-
-        return array_map(
-            fn (string $weekStart): array => $this->getWeek(self::parseWeekStart($weekStart)),
-            array_map('strval', array_keys($plans)),
-        );
-    }
-
-    public function delete(DateTimeImmutable $weekStart): void
-    {
-        $plan = $this->planRepository->findOneByAthleteAndWeek($this->athleteGuard->getAllowedAthleteId(), $weekStart);
-        if (! $plan instanceof StravaWeeklyPlan) {
-            return;
+        foreach ($plans as $weekStart => $plan) {
+            $this->apply(new DateTimeImmutable((string) $weekStart), $plan['days'], $plan['notes']);
         }
 
-        $this->entityManager->remove($plan);
         $this->entityManager->flush();
-    }
 
-    /**
-     * The Monday of the week $date is in.
-     *
-     * @throws Exception
-     */
-    public static function weekStartOf(DateTimeImmutable $date): DateTimeImmutable
-    {
-        return $date->modify('monday this week')->setTime(0, 0);
+        return count($plans);
     }
 
     /**
@@ -211,28 +172,14 @@ class WeeklyPlanManager
     }
 
     /** @return WeekPlanView */
-    private function toView(DateTimeImmutable $weekStart, StravaWeeklyPlan|null $plan, StravaWeeklyStat|null $stat): array
+    private static function toView(DateTimeImmutable $weekStart, StravaWeeklyPlan|null $plan, StravaWeeklyStat|null $stat): array
     {
-        $emptyDays = array_fill_keys(StravaWeeklyPlan::DAYS, 0.0);
-
         return [
             'weekStart' => $weekStart->format('Y-m-d'),
             'days' => $plan?->getDays() ?? [],
-            'dailyMiles' => $plan?->getDailyRelativeMiles() ?? $emptyDays,
-            'sportTotals' => $plan?->getSportTotals()
-                ?? array_fill_keys(array_map(static fn (SportType $sport): string => $sport->value, SportType::cases()), 0.0),
-            'totalMiles' => $plan?->getTotalMiles() ?? 0.0,
             'notes' => $plan?->getNotes(),
-            'updatedAt' => $plan?->getUpdatedAt()->format(DATE_ATOM),
             'actual' => $stat === null ? null : [
                 'totalMiles' => $stat->getTotalMiles(),
-                'dailyMiles' => array_combine(
-                    StravaWeeklyPlan::DAYS,
-                    array_map(
-                        static fn (string $day): float => round(($stat->getDailyDistances()[$day] ?? 0.0) / self::METERS_PER_MILE, 1),
-                        StravaWeeklyPlan::DAYS,
-                    ),
-                ),
                 'fiveWeekAverage' => round($stat->getFiveWeekAverage() / self::METERS_PER_MILE, 1),
             ],
         ];

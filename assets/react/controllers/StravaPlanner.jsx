@@ -3,7 +3,6 @@ import {
     ClientSideRowModelModule,
     colorSchemeDark,
     CustomEditorModule,
-    LargeTextEditorModule,
     ModuleRegistry,
     RowStyleModule,
     themeQuartz,
@@ -11,7 +10,7 @@ import {
     ValidationModule,
 } from 'ag-grid-community';
 import { AgGridReact, useGridCellEditor } from 'ag-grid-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import PlanChart from '../components/PlanChart.jsx';
 import WeekActionBar from '../components/WeekActionBar.jsx';
 import {
@@ -28,12 +27,10 @@ import {
     weekTotal,
 } from '../plan.js';
 
-// Only the features this grid uses (clipboard / range selection are Enterprise; copy & paste of
-// weeks is implemented below).
+// Only the features this grid uses.
 ModuleRegistry.registerModules([
     ClientSideRowModelModule,
     CustomEditorModule,
-    LargeTextEditorModule,
     RowStyleModule,
     CellStyleModule,
     TooltipModule,
@@ -42,19 +39,31 @@ ModuleRegistry.registerModules([
 
 const LOAD_MORE_WEEKS = 8;
 
-const useMediaQuery = (media) => {
-    const query = useMemo(() => (typeof window !== 'undefined' ? window.matchMedia?.(media) : null), [media]);
-    const [matches, setMatches] = useState(query?.matches ?? false);
-    useEffect(() => {
-        if (!query) {
-            return undefined;
-        }
-        const onChange = (event) => setMatches(event.matches);
+const DEFAULT_COL_DEF = { sortable: false, resizable: false, suppressMovable: true };
+const getRowId = ({ data }) => data.weekStart;
+
+/** Calls the plan API; throws with the API's error message. */
+const api = async (url, options = {}) => {
+    const response = await fetch(url, {
+        credentials: 'same-origin',
+        ...options,
+        headers: { Accept: 'application/json', ...options.headers },
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(body.error ?? `Request failed (${response.status})`);
+    }
+    return body;
+};
+
+const useMediaQuery = (media) => useSyncExternalStore(
+    (onChange) => {
+        const query = window.matchMedia(media);
         query.addEventListener('change', onChange);
         return () => query.removeEventListener('change', onChange);
-    }, [query]);
-    return matches;
-};
+    },
+    () => window.matchMedia(media).matches,
+);
 
 /** Day cell: relative miles and the icons of the planned sports (on phones: "*" for several sports). */
 const DayCellRenderer = ({ value, compact }) => {
@@ -165,8 +174,9 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact })
     );
 };
 
-const StravaPlanner = ({ apiUrl, connectUrl }) => {
+export default function StravaPlanner({ apiUrl, connectUrl }) {
     const importInput = useRef(null);
+    const saveQueue = useRef({});
     const [weeks, setWeeks] = useState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
@@ -181,25 +191,8 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
 
     const theme = useMemo(() => (dark ? themeQuartz.withPart(colorSchemeDark) : themeQuartz), [dark]);
 
-    const request = useCallback(async (path, options = {}) => {
-        const response = await fetch(`${apiUrl}${path}`, {
-            credentials: 'same-origin',
-            ...options,
-            headers: {
-                Accept: 'application/json',
-                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-                ...options.headers,
-            },
-        });
-        const body = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(body.error ?? `Request failed (${response.status})`);
-        }
-        return body;
-    }, [apiUrl]);
-
     useEffect(() => {
-        request('')
+        api(apiUrl)
             .then((body) => {
                 setWeeks(body.weeks.map(normalizeWeek));
                 setCurrentWeek(body.currentWeek);
@@ -207,58 +200,66 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             })
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
-    }, [request]);
+    }, [apiUrl]);
 
-    const replaceWeek = useCallback((saved) => {
-        const week = normalizeWeek(saved);
-        setWeeks((current) => current.map((row) => (row.weekStart === week.weekStart ? week : row)));
-    }, []);
+    // Replaces a week object in the state (by identity, so a stale response can't undo a newer edit).
+    const swapWeek = (from, to) => setWeeks((current) => current.map((week) => (week === from ? to : week)));
 
-    const saveWeek = useCallback(async (weekStart, days, notes) => {
+    // Shows the change at once, then saves the week. Saves of the same week are queued, so they reach
+    // the server in order. A failed save restores the week as it was.
+    const updateWeek = (previous, changes) => {
+        const next = { ...previous, ...changes };
+        swapWeek(previous, next);
         setError(null);
-        try {
-            replaceWeek(await request(`/${weekStart}`, {
-                method: 'PUT',
-                body: JSON.stringify({ days, notes: notes ?? null }),
-            }));
-            return true;
-        } catch (e) {
-            setError(e.message);
-            // Revert the row to what is stored.
-            request(`/${weekStart}`).then(replaceWeek).catch(() => {});
-            return false;
-        }
-    }, [request, replaceWeek]);
 
-    const copyWeek = useCallback((week) => {
-        if (!hasPlan(week)) {
-            return;
-        }
-        setCopied({ weekStart: week.weekStart, days: structuredClone(week.days) });
+        const save = (saveQueue.current[next.weekStart] ?? Promise.resolve()).then(() => api(`${apiUrl}/${next.weekStart}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ days: next.days, notes: next.notes ?? null }),
+        }));
+        saveQueue.current[next.weekStart] = save.catch(() => {});
+
+        return save.then(
+            (saved) => {
+                swapWeek(next, normalizeWeek(saved));
+                return true;
+            },
+            (e) => {
+                setError(e.message);
+                swapWeek(next, previous);
+                return false;
+            },
+        );
+    };
+
+    const copyWeek = (week) => {
+        setCopied(week);
         // Start a fresh selection: the weeks tapped next are where it gets pasted.
         setSelectedWeeks([]);
         setNotice(`Copied ${weekLabel(week.weekStart)}. Select the weeks to paste it into.`);
-    }, []);
+    };
 
     // Pastes the copied week's activities into each target week (keeping their notes).
-    const pasteWeeks = useCallback(async (targets) => {
-        const weeksToPaste = copied ? targets.filter((week) => week.weekStart !== copied.weekStart) : [];
-        if (weeksToPaste.length === 0) {
-            return;
-        }
-        const planned = weeksToPaste.filter(hasPlan).map((week) => weekLabel(week.weekStart));
+    const pasteWeeks = async (targets) => {
+        const planned = targets.filter(hasPlan).map((week) => weekLabel(week.weekStart));
         if (planned.length > 0 && !window.confirm(`Replace the plan of ${planned.join(', ')} with ${weekLabel(copied.weekStart)}?`)) {
             return;
         }
-        const saved = await Promise.all(weeksToPaste.map((week) => saveWeek(week.weekStart, copied.days, week.notes)));
-        const pasted = weeksToPaste.filter((week, index) => saved[index]).map((week) => weekLabel(week.weekStart));
+        const saved = await Promise.all(targets.map((week) => updateWeek(week, { days: copied.days })));
+        const pasted = targets.filter((week, index) => saved[index]).map((week) => weekLabel(week.weekStart));
         if (pasted.length > 0) {
             setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${pasted.join(', ')}.`);
         }
-    }, [copied, saveWeek]);
+    };
+
+    const clearWeeks = (targets) => {
+        if (window.confirm(`Clear the plan of ${targets.map((week) => weekLabel(week.weekStart)).join(', ')}?`)) {
+            targets.forEach((week) => updateWeek(week, { days: {} }));
+        }
+    };
 
     // Imports a CSV (the format of the export, e.g. edited in Google Sheets): each week in the file
-    // replaces that week's plan.
+    // replaces that week's plan. Then reloads the weeks shown.
     const importCsv = async (event) => {
         const file = event.target.files?.[0];
         event.target.value = '';
@@ -268,16 +269,14 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         setError(null);
         setLoading(true);
         try {
-            const body = await request('/import', {
+            const { imported } = await api(`${apiUrl}/import`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/csv' },
                 body: await file.text(),
             });
-            const imported = new Map(body.weeks.map((week) => [week.weekStart, normalizeWeek(week)]));
-            setWeeks((current) => current.map((week) => imported.get(week.weekStart) ?? week));
-            const shown = weeks.filter((week) => imported.has(week.weekStart)).length;
-            setNotice(`Imported ${imported.size} week${imported.size === 1 ? '' : 's'}`
-                + (shown < imported.size ? ` (${imported.size - shown} outside the weeks shown).` : '.'));
+            const body = await api(`${apiUrl}?from=${weeks[0].weekStart}&weeks=${weeks.length}`);
+            setWeeks(body.weeks.map(normalizeWeek));
+            setNotice(`Imported ${imported} week${imported === 1 ? '' : 's'}.`);
         } catch (e) {
             setError(`Import failed: ${e.message}`);
         } finally {
@@ -287,15 +286,12 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
 
     // Weeks are kept oldest first; prepend earlier or append later weeks.
     const loadMore = async (direction) => {
-        if (weeks.length === 0) {
-            return;
-        }
         setLoading(true);
         try {
             const from = direction === 'earlier'
                 ? addWeeks(weeks[0].weekStart, -LOAD_MORE_WEEKS)
                 : addWeeks(weeks[weeks.length - 1].weekStart, 1);
-            const body = await request(`?from=${from}&weeks=${LOAD_MORE_WEEKS}`);
+            const body = await api(`${apiUrl}?from=${from}&weeks=${LOAD_MORE_WEEKS}`);
             const loaded = body.weeks.map(normalizeWeek);
             setWeeks((current) => (direction === 'earlier' ? [...loaded, ...current] : [...current, ...loaded]));
         } catch (e) {
@@ -326,15 +322,6 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             cellClass: compact ? 'is-flex is-align-items-center px-1' : 'is-flex is-align-items-center',
             headerClass: compact ? 'px-1' : undefined,
             valueGetter: ({ data }) => data.days[day] ?? {},
-            valueSetter: ({ data, newValue }) => {
-                data.days = { ...data.days };
-                if (Object.keys(newValue ?? {}).length === 0) {
-                    delete data.days[day];
-                } else {
-                    data.days[day] = newValue;
-                }
-                return true;
-            },
             equals: (a, b) => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {}),
             cellRenderer: DayCellRenderer,
             cellRendererParams: { compact },
@@ -375,22 +362,26 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 'has-text-danger': ({ value }) => value !== null && value < 0,
             },
         },
-        {
-            headerName: 'Notes',
-            field: 'notes',
-            minWidth: 90,
-            flex: 1,
-            editable,
-            tooltipField: 'notes',
-            cellEditor: 'agLargeTextCellEditor',
-            cellEditorPopup: true,
-            cellEditorParams: { maxLength: 2000, rows: 5, cols: 40 },
-        }]),
+        // Edited from the week bar (select the week, Notes).
+        { headerName: 'Notes', field: 'notes', minWidth: 90, flex: 1, tooltipField: 'notes' }]),
     ], [editable, compact]);
+
+    const rowClassRules = useMemo(() => ({ 'strava-plan-current-week': ({ data }) => data.weekStart === currentWeek }), [currentWeek]);
+
+    // The grid doesn't change its row data (readOnlyEdit): an edited day becomes a new week object.
+    const onCellEditRequest = ({ data, colDef, newValue }) => {
+        const days = { ...data.days };
+        if (Object.keys(newValue ?? {}).length === 0) {
+            delete days[colDef.colId];
+        } else {
+            days[colDef.colId] = newValue;
+        }
+        updateWeek(data, { days });
+    };
 
     // Tapping a week adds it to / removes it from the selection. Planning a day selects its week,
     // unless several weeks are selected (so a multi-selection isn't lost).
-    const onCellClicked = useCallback(({ colDef, data }) => {
+    const onCellClicked = ({ colDef, data }) => {
         if (!editable) {
             return;
         }
@@ -401,37 +392,10 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             }
             return current.length > 1 ? current : [weekStart];
         });
-    }, [editable]);
-
-    const clearWeeks = useCallback(async (targets) => {
-        const labels = targets.map((week) => weekLabel(week.weekStart)).join(', ');
-        if (targets.length > 0 && window.confirm(`Clear the plan of ${labels}?`)) {
-            await Promise.all(targets.map((week) => saveWeek(week.weekStart, {}, week.notes)));
-        }
-    }, [saveWeek]);
-
-    const onCellValueChanged = useCallback(({ data }) => {
-        saveWeek(data.weekStart, data.days, data.notes);
-    }, [saveWeek]);
-
-    // Ctrl/⌘+C copies the focused week, Ctrl/⌘+V pastes onto it.
-    const onCellKeyDown = useCallback(({ event, data, api }) => {
-        if (!editable || !event || !(event.ctrlKey || event.metaKey) || api.getEditingCells().length > 0) {
-            return;
-        }
-        const key = event.key.toLowerCase();
-        if (key === 'c') {
-            copyWeek(data);
-        } else if (key === 'v') {
-            event.preventDefault();
-            pasteWeeks([data]);
-        }
-    }, [editable, copyWeek, pasteWeeks]);
+    };
 
     // Newest first, like the stats table.
     const rows = useMemo(() => weeks.toReversed(), [weeks]);
-    const chartWeeks = useMemo(() => weeks.map((week) => ({ ...week, planMiles: round1(weekTotal(week.days)) })), [weeks]);
-    // Newest first, like the grid.
     const selection = rows.filter((week) => selectedWeeks.includes(week.weekStart));
 
     if (loading && weeks.length === 0) {
@@ -444,14 +408,12 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
 
     return (
         <div>
-            <PlanChart weeks={chartWeeks} currentWeek={currentWeek} label={weekLabel} />
+            <PlanChart weeks={weeks} currentWeek={currentWeek} />
             {error && <div className="notification is-danger is-light py-2">{error}</div>}
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">
                     {notice ?? (editable
-                        ? (compact
-                            ? 'Tap a day to plan it, or a week to copy and paste it.'
-                            : 'Click a day to plan it, or a week to copy and paste it (or Ctrl/⌘+C, Ctrl/⌘+V).')
+                        ? `${compact ? 'Tap' : 'Click'} a day to plan it, or a week to copy and paste it.`
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
                 {!editable && <a href={connectUrl} className="button is-small mb-0 ml-2">Connect to edit</a>}
@@ -470,7 +432,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                     onCopy={copyWeek}
                     onPaste={pasteWeeks}
                     onClear={clearWeeks}
-                    onSaveNotes={(week, notes) => saveWeek(week.weekStart, week.days, notes)}
+                    onSaveNotes={(week, notes) => updateWeek(week, { notes })}
                     onClose={() => setSelectedWeeks([])}
                 />
             )}
@@ -481,23 +443,23 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 </style>
             )}
             <div className="strava-plan-grid">
-            <AgGridReact
-                theme={theme}
-                rowData={rows}
-                columnDefs={columnDefs}
-                defaultColDef={{ sortable: false, resizable: false, suppressMovable: true }}
-                getRowId={({ data }) => data.weekStart}
-                rowHeight={compact ? 48 : undefined}
-                rowClassRules={{ 'strava-plan-current-week': ({ data }) => data.weekStart === currentWeek }}
-                domLayout="autoHeight"
-                singleClickEdit
-                stopEditingWhenCellsLoseFocus
-                popupParent={typeof document !== 'undefined' ? document.body : undefined}
-                tooltipShowDelay={300}
-                onCellValueChanged={onCellValueChanged}
-                onCellKeyDown={onCellKeyDown}
-                onCellClicked={onCellClicked}
-            />
+                <AgGridReact
+                    theme={theme}
+                    rowData={rows}
+                    columnDefs={columnDefs}
+                    defaultColDef={DEFAULT_COL_DEF}
+                    getRowId={getRowId}
+                    rowHeight={compact ? 48 : undefined}
+                    rowClassRules={rowClassRules}
+                    domLayout="autoHeight"
+                    singleClickEdit
+                    readOnlyEdit
+                    stopEditingWhenCellsLoseFocus
+                    popupParent={document.body}
+                    tooltipShowDelay={300}
+                    onCellEditRequest={onCellEditRequest}
+                    onCellClicked={onCellClicked}
+                />
             </div>
             <div className="has-text-centered py-4">
                 <button type="button" className="button" onClick={() => loadMore('earlier')} disabled={loading}>
@@ -505,24 +467,22 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 </button>
             </div>
             <div className="buttons is-centered are-small">
-                {weeks.length > 0 && (
-                    <a
-                        className="button is-small mb-0"
-                        href={`${apiUrl}.csv?from=${weeks[0].weekStart}&weeks=${weeks.length}`}
-                        title="Download the weeks shown as a CSV, to open in Google Sheets, Excel or Numbers"
-                        download
-                    >
-                        <span className="icon"><i className="fas fa-file-arrow-down" /></span>
-                        <span>Export</span>
-                    </a>
-                )}
+                <a
+                    className="button is-small mb-0"
+                    href={`${apiUrl}.csv?from=${weeks[0].weekStart}&weeks=${weeks.length}`}
+                    title="Download the weeks shown as a CSV, to open in Google Sheets, Excel or Numbers"
+                    download
+                >
+                    <span className="icon"><i className="fas fa-file-arrow-down" /></span>
+                    <span>Export</span>
+                </a>
                 {editable && (
                     <>
                         <button
                             type="button"
                             className={`button is-small mb-0${loading ? ' is-loading' : ''}`}
                             title="Upload a CSV (e.g. the export, edited in a spreadsheet)"
-                            onClick={() => importInput.current?.click()}
+                            onClick={() => importInput.current.click()}
                         >
                             <span className="icon"><i className="fas fa-file-arrow-up" /></span>
                             <span>Import</span>
@@ -535,8 +495,4 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             {selection.length > 0 && <div style={{ height: '6rem' }} />}
         </div>
     );
-};
-
-export default function StravaPlannerController(props) {
-    return <StravaPlanner apiUrl={props.apiUrl ?? '/api/strava/plans'} connectUrl={props.connectUrl ?? '/strava/connect/entry'} />;
 }
