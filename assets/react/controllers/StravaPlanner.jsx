@@ -192,45 +192,58 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context })
 };
 
 /**
- * Bar above the grid acting on the selected week (tap / click a week to select it): copy it, paste
- * the copied week onto it, clear it, notes. Always shown when editable, so selecting a week doesn't
- * move the grid. Sticky, so it stays reachable while scrolling through the weeks.
+ * Bar above the grid acting on the selected weeks (tap / click weeks to select them): copy a week,
+ * paste the copied week into every selected week, clear them, notes of a single week. Always shown
+ * when editable, so selecting doesn't move the grid. Sticky, so it stays reachable while scrolling.
  */
-const WeekActionBar = ({ week, copied, compact, onCopy, onPaste, onClear, onSaveNotes, onClose }) => {
+const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, onSaveNotes, onClose }) => {
     const [notesOpen, setNotesOpen] = useState(false);
     const [notes, setNotes] = useState('');
+    const week = selection.length === 1 ? selection[0] : null;
 
     useEffect(() => {
         setNotesOpen(false);
         setNotes(week?.notes ?? '');
     }, [week?.weekStart, week?.notes]);
 
-    const isSource = copied && week && copied.weekStart === week.weekStart;
+    const isSource = (candidate) => copied?.weekStart === candidate.weekStart;
+    const pasteTargets = selection.filter((candidate) => !isSource(candidate));
+    const clearTargets = selection.filter(hasPlan);
     const button = (label, icon, onClick, disabled, extra = '') => (
         <button type="button" className={`button is-small mb-0${extra}`} onClick={onClick} disabled={disabled}>
             <span className="icon"><i className={`fas fa-${icon}`} /></span>
-            <span>{label}</span>
+            {label && <span>{label}</span>}
         </button>
     );
+
+    let title;
+    if (selection.length === 0) {
+        title = (
+            <span className="has-text-grey has-text-weight-normal is-size-7">
+                {compact ? 'Tap' : 'Click'} weeks to select them
+                {copied ? ` (copied: ${weekLabel(copied.weekStart)})` : ''}
+            </span>
+        );
+    } else {
+        title = week ? `Week of ${weekLabel(week.weekStart)}` : `${selection.length} weeks selected`;
+    }
+
+    let pasteLabel = 'Paste';
+    if (copied && pasteTargets.length > 0) {
+        pasteLabel = `Paste ${weekLabel(copied.weekStart)}${pasteTargets.length > 1 ? ` into ${pasteTargets.length}` : ''}`;
+    }
 
     return (
         <div className="strava-plan-actions box px-3 py-2 mb-3">
             <div className="is-flex is-align-items-center is-flex-wrap-wrap" style={{ gap: '0.5rem' }}>
-                <span className="has-text-weight-semibold mr-auto">
-                    {week ? `Week of ${weekLabel(week.weekStart)}` : (
-                        <span className="has-text-grey has-text-weight-normal is-size-7">
-                            {compact ? 'Tap' : 'Click'} a week to select it
-                            {copied ? ` (copied: ${weekLabel(copied.weekStart)})` : ''}
-                        </span>
-                    )}
-                </span>
+                <span className="has-text-weight-semibold mr-auto">{title}</span>
                 <div className="buttons are-small mb-0 is-flex-wrap-nowrap" style={{ gap: '0.25rem' }}>
-                    {button('Copy', 'copy', () => onCopy(week), !week || !hasPlan(week), isSource ? ' is-link is-light' : '')}
-                    {button(copied && !isSource ? `Paste ${weekLabel(copied.weekStart)}` : 'Paste', 'paste', () => onPaste(week), !week || !copied || isSource)}
-                    {button(compact ? '' : 'Clear', 'eraser', () => onClear(week), !week || !hasPlan(week))}
-                    {button(compact ? '' : 'Notes', 'note-sticky', () => setNotesOpen((open) => !open), !week, notesOpen ? ' is-link is-light' : '')}
-                    {week && (
-                        <button type="button" className="delete is-medium ml-1" aria-label="Unselect the week" onClick={onClose} />
+                    {selection.length <= 1 && button('Copy', 'copy', () => onCopy(week), !week || !hasPlan(week), week && isSource(week) ? ' is-link is-light' : '')}
+                    {button(pasteLabel, 'paste', () => onPaste(pasteTargets), !copied || pasteTargets.length === 0)}
+                    {button(compact ? '' : 'Clear', 'eraser', () => onClear(clearTargets), clearTargets.length === 0)}
+                    {selection.length <= 1 && button(compact ? '' : 'Notes', 'note-sticky', () => setNotesOpen((open) => !open), !week, notesOpen ? ' is-link is-light' : '')}
+                    {selection.length > 0 && (
+                        <button type="button" className="delete is-medium ml-1" aria-label="Unselect the weeks" onClick={onClose} />
                     )}
                 </div>
             </div>
@@ -271,7 +284,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
     const [copied, setCopied] = useState(null);
-    const [selectedWeek, setSelectedWeek] = useState(null);
+    const [selectedWeeks, setSelectedWeeks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notice, setNotice] = useState(null);
@@ -334,15 +347,20 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         setNotice(`Copied ${weekLabel(week.weekStart)}. Paste it on another week.`);
     }, []);
 
-    const pasteWeek = useCallback(async (week) => {
-        if (!copied || copied.weekStart === week.weekStart) {
+    // Pastes the copied week's activities into each target week (keeping their notes).
+    const pasteWeeks = useCallback(async (targets) => {
+        const weeksToPaste = copied ? targets.filter((week) => week.weekStart !== copied.weekStart) : [];
+        if (weeksToPaste.length === 0) {
             return;
         }
-        if (hasPlan(week) && !window.confirm(`Replace the plan of ${weekLabel(week.weekStart)} with ${weekLabel(copied.weekStart)}?`)) {
+        const planned = weeksToPaste.filter(hasPlan).map((week) => weekLabel(week.weekStart));
+        if (planned.length > 0 && !window.confirm(`Replace the plan of ${planned.join(', ')} with ${weekLabel(copied.weekStart)}?`)) {
             return;
         }
-        if (await saveWeek(week.weekStart, copied.days, week.notes)) {
-            setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${weekLabel(week.weekStart)}.`);
+        const saved = await Promise.all(weeksToPaste.map((week) => saveWeek(week.weekStart, copied.days, week.notes)));
+        const pasted = weeksToPaste.filter((week, index) => saved[index]).map((week) => weekLabel(week.weekStart));
+        if (pasted.length > 0) {
+            setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${pasted.join(', ')}.`);
         }
     }, [copied, saveWeek]);
 
@@ -446,17 +464,25 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         }]),
     ], [editable, compact]);
 
-    // Tapping the week toggles its selection; planning a day also selects its week.
+    // Tapping a week adds it to / removes it from the selection. Planning a day selects its week,
+    // unless several weeks are selected (so a multi-selection isn't lost).
     const onCellClicked = useCallback(({ colDef, data }) => {
         if (!editable) {
             return;
         }
-        setSelectedWeek((current) => (colDef.field === 'weekStart' && current === data.weekStart ? null : data.weekStart));
+        const { weekStart } = data;
+        setSelectedWeeks((current) => {
+            if (colDef.field === 'weekStart') {
+                return current.includes(weekStart) ? current.filter((week) => week !== weekStart) : [...current, weekStart];
+            }
+            return current.length > 1 ? current : [weekStart];
+        });
     }, [editable]);
 
-    const clearWeek = useCallback((week) => {
-        if (window.confirm(`Clear the plan of ${weekLabel(week.weekStart)}?`)) {
-            saveWeek(week.weekStart, {}, week.notes);
+    const clearWeeks = useCallback(async (targets) => {
+        const labels = targets.map((week) => weekLabel(week.weekStart)).join(', ');
+        if (targets.length > 0 && window.confirm(`Clear the plan of ${labels}?`)) {
+            await Promise.all(targets.map((week) => saveWeek(week.weekStart, {}, week.notes)));
         }
     }, [saveWeek]);
 
@@ -474,9 +500,9 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             copyWeek(data);
         } else if (key === 'v') {
             event.preventDefault();
-            pasteWeek(data);
+            pasteWeeks([data]);
         }
-    }, [editable, copyWeek, pasteWeek]);
+    }, [editable, copyWeek, pasteWeeks]);
 
     // Newest first, like the stats table.
     const rows = useMemo(() => [...weeks].reverse(), [weeks]);
@@ -485,7 +511,8 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         () => ({ compact }),
         [compact],
     );
-    const selected = weeks.find((week) => week.weekStart === selectedWeek) ?? null;
+    // Newest first, like the grid.
+    const selection = rows.filter((week) => selectedWeeks.includes(week.weekStart));
 
     // Day and week cells read `compact` from the context.
     useEffect(() => {
@@ -521,19 +548,21 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             </div>
             {editable && (
                 <WeekActionBar
-                    week={selected}
+                    selection={selection}
                     copied={copied}
                     compact={compact}
                     onCopy={copyWeek}
-                    onPaste={pasteWeek}
-                    onClear={clearWeek}
+                    onPaste={pasteWeeks}
+                    onClear={clearWeeks}
                     onSaveNotes={(week, notes) => saveWeek(week.weekStart, week.days, notes)}
-                    onClose={() => setSelectedWeek(null)}
+                    onClose={() => setSelectedWeeks([])}
                 />
             )}
-            {/* Highlights the selected row without redrawing the grid (which would close an open editor). */}
-            {selected && (
-                <style>{`.strava-plan-grid .ag-row[row-id="${selected.weekStart}"] { background-color: rgba(57, 135, 229, 0.28); }`}</style>
+            {/* Highlights the selected rows without redrawing the grid (which would close an open editor). */}
+            {selection.length > 0 && (
+                <style>
+                    {`${selection.map((week) => `.strava-plan-grid .ag-row[row-id="${week.weekStart}"]`).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
+                </style>
             )}
             <div className="strava-plan-grid">
             <AgGridReact
