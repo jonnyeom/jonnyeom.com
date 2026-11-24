@@ -37,7 +37,7 @@ class DailyStat
     /** @param Activity $activity */
     public function addActivity(array $activity): void
     {
-        $sportType = SportType::tryFrom($activity['sport_type']);
+        $sportType = SportType::fromStrava($activity['sport_type']);
         if ($sportType !== null) {
             $this->distance += $sportType->relativeDistance((float) $activity['distance']);
         }
@@ -47,7 +47,7 @@ class DailyStat
 
     public function getSportIcon(string $sportType): string|null
     {
-        return SportType::tryFrom($sportType)?->icon();
+        return SportType::fromStrava($sportType)?->icon();
     }
 
     public function getDistance(): float

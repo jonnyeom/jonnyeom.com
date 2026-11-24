@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Enum;
 
 /**
- * The Strava sport types counted towards weekly mileage, and how each converts to "relative"
- * (run-equivalent) distance.
+ * The sports counted towards weekly mileage, and how each converts to "relative" (run-equivalent)
+ * distance. The values are the names used in the plans; see fromStrava() for Strava's own types.
  */
 enum SportType: string
 {
@@ -14,6 +14,18 @@ enum SportType: string
     case Bike   = 'Bike';
     case Swim   = 'Swim';
     case Tennis = 'Tennis';
+
+    /** The sport a Strava sport_type counts as; null when it doesn't count (e.g. walks, e-bike rides). */
+    public static function fromStrava(string $sportType): self|null
+    {
+        return match ($sportType) {
+            'Run', 'TrailRun', 'VirtualRun' => self::Run,
+            'Ride', 'GravelRide', 'MountainBikeRide', 'VirtualRide' => self::Bike,
+            'Swim' => self::Swim,
+            'Tennis' => self::Tennis,
+            default => null,
+        };
+    }
 
     /** Converts a distance of this sport to run-equivalent distance (same unit in and out). */
     public function relativeDistance(float $distance): float

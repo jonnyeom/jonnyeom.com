@@ -76,6 +76,19 @@ final class StravaWeeklyStatTest extends TestCase
         self::assertSame(4000.0, $weeklyStat->getDailyDistances()['Wed']);
     }
 
+    public function testToWeeklyStatCountsRidesAsBiking(): void
+    {
+        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat->update(0.0, 0.0, [], 1, [
+            ['sport_type' => 'Ride', 'distance' => 30000.0, 'start_date_local' => '2026-11-16T08:00:00Z'],
+        ]);
+
+        $weeklyStat = $stat->toWeeklyStat();
+
+        self::assertSame(10000.0, $weeklyStat->getTotalDistance()); // 30000 / 3 (bike weighting)
+        self::assertSame(10000.0, $weeklyStat->getDailyDistances()['Mon']);
+    }
+
     public function testToWeeklyStatWithoutActivitiesIsAnEmptyWeek(): void
     {
         $weeklyStat = (new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16')))->toWeeklyStat();

@@ -74,7 +74,7 @@ class WeeklyStat implements IteratorAggregate
         $this->stats[$date->format('D')]->addActivity($activity);
 
         // Other sport types are listed but don't count towards the weekly distance.
-        $sportType = SportType::tryFrom($activity['sport_type']);
+        $sportType = SportType::fromStrava($activity['sport_type']);
         if ($sportType === null) {
             return;
         }
