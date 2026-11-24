@@ -24,6 +24,7 @@
     },
     "devDependencies": {
         "@hotwired/stimulus": "3.2.2",
+        "@playwright/test": "1.65.1",
         "@symfony/stimulus-bridge": "4.0.1",
         "@symfony/ux-chartjs": "file:vendor/symfony/ux-chartjs/assets",
         "@symfony/ux-live-component": "file:vendor/symfony/ux-live-component/assets",
@@ -50,6 +51,7 @@
         "build": "vite build",
         "lint": "oxlint --deny-warnings",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "e2e": "playwright test"
     }
 }
