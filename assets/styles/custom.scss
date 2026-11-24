@@ -134,3 +134,10 @@ h6:hover .heading-permalink,
     }
   }
 }
+
+// Weekly mileage chart (Symfony UX Chart.js) in the WeeklyStatsTable live component.
+// Chart.js fills its container (maintainAspectRatio: false), so the container sets the height.
+.strava-weekly-chart {
+  position: relative;
+  height: 260px;
+}
