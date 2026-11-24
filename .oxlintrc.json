@@ -12,7 +12,7 @@
     },
     "categories": {
         "correctness": "error",
-        "suspicious": "warn"
+        "suspicious": "error"
     },
     "rules": {
         // The React recommended rules (incl. hooks) that the correctness category doesn't enable;
@@ -28,7 +28,7 @@
         "react/react-in-jsx-scope": "off",
 
         "react/button-has-type": "error",
-        "react/self-closing-comp": "warn",
+        "react/self-closing-comp": "error",
 
         // Side-effect imports (styles, Stimulus bootstrap) are intended.
         "import/no-unassigned-import": "off",
