@@ -32,5 +32,9 @@ final class StravaControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('table');
         self::assertSelectorExists('[data-controller="symfony--ux-chartjs--chart"]');
+
+        // The menu offers Connect instead of Logout.
+        self::assertSelectorTextContains('.tabs li.is-info a', 'Connect');
+        self::assertSelectorNotExists('a[href="/strava/logout"]');
     }
 }

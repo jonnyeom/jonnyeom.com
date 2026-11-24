@@ -33,7 +33,7 @@ class WeeklyStatsTable extends AbstractController
 
     private const int INITIAL_VISIBLE_WEEKS = 20;
     private const int LOAD_MORE_SIZE        = 10;
-    private const int CHART_WEEKS           = 10;
+    private const int CHART_WEEKS           = 20;
 
     private const float METERS_PER_MILE = 1609.34;
 
@@ -176,11 +176,12 @@ class WeeklyStatsTable extends AbstractController
                     'ticks' => ['color' => self::COLOR_MUTED],
                 ],
                 'y' => [
+                    // On the right: the chart opens scrolled to the latest weeks (see the template).
+                    'position' => 'right',
                     'beginAtZero' => true,
                     'grid' => ['color' => self::COLOR_GRID],
                     'border' => ['display' => false],
                     'ticks' => ['color' => self::COLOR_MUTED, 'maxTicksLimit' => 5],
-                    'title' => ['display' => true, 'text' => 'miles', 'color' => self::COLOR_MUTED],
                 ],
             ],
         ]);

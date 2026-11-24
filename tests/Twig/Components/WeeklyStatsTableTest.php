@@ -23,6 +23,7 @@ use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 use Throwable;
 
 use function array_fill;
+use function range;
 use function sprintf;
 
 final class WeeklyStatsTableTest extends KernelTestCase
@@ -101,11 +102,11 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringContainsString('data-controller="symfony--ux-chartjs--chart"', $rendered);
     }
 
-    public function testChartShowsTheLatestTenWeeksOldestFirst(): void
+    public function testChartShowsTheLatestTwentyWeeksOldestFirst(): void
     {
         // Provider order: newest first. Week i (0 = this week) runs i + 1 miles.
         $weeks = [];
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 0; $i < 25; $i++) {
             $monday = new DateTime('monday this week');
             $monday->modify(sprintf('-%d weeks', $i));
 
@@ -127,16 +128,16 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertSame(Chart::TYPE_BAR, $chart->getType());
 
         $data = $chart->getData();
-        $this->assertCount(10, $data['labels']);
-        $this->assertSame($weeks[9]->getDate(), $data['labels'][0]);
-        $this->assertSame($weeks[0]->getDate(), $data['labels'][9]);
+        $this->assertCount(20, $data['labels']);
+        $this->assertSame($weeks[19]->getDate(), $data['labels'][0]);
+        $this->assertSame($weeks[0]->getDate(), $data['labels'][19]);
 
         [$average, $miles] = $data['datasets'];
         $this->assertSame('line', $average['type']);
         $this->assertSame('5-week average', $average['label']);
-        $this->assertSame(array_fill(0, 10, 2.0), $average['data']);
+        $this->assertSame(array_fill(0, 20, 2.0), $average['data']);
         $this->assertSame('Weekly miles', $miles['label']);
-        $this->assertSame([10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0], $miles['data']);
+        $this->assertSame(range(20.0, 1.0), $miles['data']);
     }
 
     public function testNoChartWithoutStoredWeeks(): void

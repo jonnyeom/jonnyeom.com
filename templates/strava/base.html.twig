@@ -16,7 +16,12 @@
                     <li{% if app.request.get('_route') == 'strava_plan' %} class="is-active"{% endif %}>
                         <a href="{{ path('strava_plan') }}">Plan</a></li>
                     <li class="is-info">
-                        <a href="{{ path('strava_logout') }}">Logout</a></li>
+                        {% if strava_connected() %}
+                            <a href="{{ path('strava_logout') }}">Logout</a>
+                        {% else %}
+                            <a href="{{ path('strava_connect_entry') }}">Connect</a>
+                        {% endif %}
+                    </li>
                 </ul>
             </div>
         </div>
