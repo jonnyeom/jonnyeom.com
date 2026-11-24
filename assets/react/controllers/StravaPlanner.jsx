@@ -20,6 +20,7 @@ import {
     DAYS,
     hasPlan,
     inputSize,
+    isSameCell,
     MAX_MILES,
     normalizeWeek,
     relativeMiles,
@@ -60,6 +61,21 @@ const api = async (url, options = {}) => {
     return body;
 };
 
+/**
+ * State with a ref that always holds its latest value: the grid's handlers may run before the next render
+ * (e.g. tapping Paste also saves an open day popup), or with the handlers of the previous one.
+ */
+const useLatestState = (initial) => {
+    const ref = useRef(initial);
+    const [value, setValue] = useState(initial);
+    const set = useCallback((update) => {
+        ref.current = typeof update === 'function' ? update(ref.current) : update;
+        setValue(ref.current);
+    }, []);
+
+    return [value, set, ref];
+};
+
 const useMediaQuery = (media) => useSyncExternalStore(
     (onChange) => {
         const query = window.matchMedia(media);
@@ -93,6 +109,11 @@ const DayCellRenderer = ({ value, compact, editable }) => {
         </>
     );
 };
+
+const isDay = (colDef) => DAYS.includes(colDef.colId);
+
+// Ctrl/⌘/Shift+click selects days instead of opening their popup.
+const isSelectClick = (event) => event.type === 'click' && (event.ctrlKey || event.metaKey || event.shiftKey);
 
 const isFillHandle = (event) => Boolean(event.target.closest?.('.strava-plan-fill'));
 
@@ -191,11 +212,15 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     const importInput = useRef(null);
     const gridRef = useRef(null);
     const saveQueue = useRef({});
-    const weeksRef = useRef([]);
-    const [weeks, setWeeksState] = useState([]);
+    const [weeks, setWeeks, weeksRef] = useLatestState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
     const [copied, setCopied] = useState(null);
+    // The copied day: { cell, sports }. Copying a day forgets the copied week and the other way round.
+    const [copiedDay, setCopiedDay, copiedDayRef] = useLatestState(null);
+    const [selectedCells, setSelectedCells, selectedCellsRef] = useLatestState([]);
+    // Where Shift+click selects from.
+    const anchorCell = useRef(null);
     const [selectedWeeks, setSelectedWeeks] = useState([]);
     // Dragging a day's corner: { from, to }, the cells it is dragged from and to.
     const [fill, setFill] = useState(null);
@@ -207,13 +232,6 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     const compact = useMediaQuery('(max-width: 768px)');
 
     const theme = useMemo(() => (dark ? themeQuartz.withPart(colorSchemeDark) : themeQuartz), [dark]);
-
-    // The ref always holds the latest weeks: handlers may run before the next render (e.g. tapping Paste
-    // also saves an open day popup).
-    const setWeeks = useCallback((update) => {
-        weeksRef.current = update(weeksRef.current);
-        setWeeksState(weeksRef.current);
-    }, []);
 
     useEffect(() => {
         api(apiUrl)
@@ -258,9 +276,20 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
 
     const copyWeek = (week) => {
         setCopied(week);
+        setCopiedDay(null);
+        setSelectedCells([]);
         // Start a fresh selection: the weeks tapped next are where it gets pasted.
         setSelectedWeeks([]);
         setNotice(`Copied ${weekLabel(week.weekStart)}. Select the weeks to paste it into.`);
+    };
+
+    const copyDay = (cell) => {
+        setCopiedDay({ cell, sports: sportsOf(cell) });
+        setCopied(null);
+        // Like copyWeek(): the days selected next are where it gets pasted.
+        setSelectedCells([]);
+        anchorCell.current = cell;
+        setNotice(`Copied ${cellLabel(cell)}. Ctrl/⌘/Shift+click the days to paste it into.`);
     };
 
     // Pastes the copied week's activities into each target week (keeping their notes).
@@ -380,8 +409,8 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             cellRendererParams: {
                 compact,
                 editable,
-                // Dragging the corner of a day doesn't open its popup.
-                suppressMouseEventHandling: ({ event }) => isFillHandle(event),
+                // Dragging the corner of a day or selecting days doesn't open the popup.
+                suppressMouseEventHandling: ({ event }) => isFillHandle(event) || isSelectClick(event),
             },
             tooltipValueGetter: dayTooltip,
             cellEditor: DayEditor,
@@ -431,30 +460,74 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         updateWeek(data.weekStart, (week) => ({ days: withDay(week.days, colDef.colId, newValue) }));
     };
 
-    // Tapping a week adds it to / removes it from the selection; tapping a day only edits it.
-    const onCellClicked = ({ colDef, data }) => {
-        if (!editable || colDef.field !== 'weekStart') {
+    // Newest first, like the stats table.
+    const rows = useMemo(() => weeks.toReversed(), [weeks]);
+    const selection = rows.filter((week) => selectedWeeks.includes(week.weekStart));
+
+    // Ctrl/⌘+click adds a day to / removes it from the selected days; Shift+click selects up to it.
+    const selectCell = (cell, event) => {
+        if (event.shiftKey && anchorCell.current) {
+            setSelectedCells(cellsBetween(rows, anchorCell.current, cell));
+            return;
+        }
+        anchorCell.current = cell;
+        setSelectedCells((current) => (current.some((other) => isSameCell(other, cell))
+            ? current.filter((other) => !isSameCell(other, cell))
+            : [...current, cell]));
+    };
+
+    // Tapping a week adds it to / removes it from the selection; tapping a day edits it.
+    const onCellClicked = ({ colDef, data, event, api: grid }) => {
+        if (!editable || isFillHandle(event)) {
             return;
         }
         const { weekStart } = data;
+        if (isDay(colDef)) {
+            const cell = { weekStart, day: colDef.colId };
+            if (isSelectClick(event)) {
+                // Saves an open popup; it would stay open otherwise.
+                grid.stopEditing();
+                selectCell(cell, event);
+            } else {
+                anchorCell.current = cell;
+                setSelectedCells([]);
+            }
+            return;
+        }
+        if (colDef.field !== 'weekStart') {
+            return;
+        }
         setSelectedWeeks((current) => (current.includes(weekStart)
             ? current.filter((week) => week !== weekStart)
             : [...current, weekStart]));
     };
 
-    // Newest first, like the stats table.
-    const rows = useMemo(() => weeks.toReversed(), [weeks]);
-    const selection = rows.filter((week) => selectedWeeks.includes(week.weekStart));
-
-    // Ctrl/⌘+C copies the focused week; Ctrl/⌘+V pastes into the selected weeks, or the focused week
-    // when it isn't selected. Left alone in an open editor, where they copy and paste text.
-    const onCellKeyDown = ({ event, data, api: grid }) => {
-        if (!editable || !(event.ctrlKey || event.metaKey) || grid.getEditingCells().length > 0) {
+    // Ctrl/⌘+C copies the focused day, or the focused week in the other columns. Ctrl/⌘+V pastes a day into
+    // the selected days (or the focused day when none are), and a week into the selected weeks (or the
+    // focused week when it isn't selected). Left alone in an open editor, where they copy and paste text.
+    // Escape unselects the days.
+    const onCellKeyDown = ({ event, data, colDef, api: grid }) => {
+        if (!editable || grid.getEditingCells().length > 0) {
             return;
         }
+        if (event.key === 'Escape') {
+            setSelectedCells([]);
+            setCopiedDay(null);
+            return;
+        }
+        if (!(event.ctrlKey || event.metaKey)) {
+            return;
+        }
+        const cell = isDay(colDef) ? { weekStart: data.weekStart, day: colDef.colId } : null;
         const key = event.key.toLowerCase();
-        if (key === 'c' && hasPlan(data)) {
+        if (key === 'c' && cell) {
+            copyDay(cell);
+        } else if (key === 'c' && hasPlan(data)) {
             copyWeek(data);
+        } else if (key === 'v' && copiedDayRef.current) {
+            const { cell: source, sports } = copiedDayRef.current;
+            const focused = cell ? [cell] : [];
+            fillCells(source, sports, selectedCellsRef.current.length > 0 ? selectedCellsRef.current : focused);
         } else if (key === 'v' && copied) {
             const targets = selectedWeeks.includes(data.weekStart) ? selection : [data];
             pasteWeeks(targets.filter((week) => week.weekStart !== copied.weekStart));
@@ -505,6 +578,8 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         return <div className="notification is-danger">{error}</div>;
     }
 
+    const highlightedCells = fill ? cellsBetween(rows, fill.from, fill.to) : selectedCells;
+
     return (
         <div>
             <PlanChart weeks={weeks} currentWeek={currentWeek} />
@@ -514,7 +589,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     {notice ?? (editable
                         ? (compact
                             ? 'Tap a day to plan it, or a week to copy and paste it.'
-                            : 'Click a day to plan it, or drag its corner up or down to copy it. Click a week to copy and paste it (or Ctrl/⌘+C, Ctrl/⌘+V).')
+                            : 'Click a day to plan it, or drag its corner up or down to copy it. Click a week to copy and paste it. Ctrl/⌘/Shift+click selects days; Ctrl/⌘+C, Ctrl/⌘+V copy and paste days or weeks.')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
                 {!editable && <a href={connectUrl} className="button is-small mb-0 ml-2">Connect to edit</a>}
@@ -543,9 +618,14 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     </style>
                 </>
             )}
-            {fill && (
+            {highlightedCells.length > 0 && (
                 <style>
-                    {`${cellsBetween(rows, fill.from, fill.to).map(cellSelector).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
+                    {`${highlightedCells.map(cellSelector).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
+                </style>
+            )}
+            {copiedDay && (
+                <style>
+                    {`${cellSelector(copiedDay.cell)} { outline: 2px dashed #3987e5; outline-offset: -2px; }`}
                 </style>
             )}
             <div

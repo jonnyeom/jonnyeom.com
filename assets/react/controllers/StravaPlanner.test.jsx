@@ -40,10 +40,10 @@ const dayCell = (weekStart, day) => document.querySelector(`.ag-center-cols-cont
 
 // A click as a browser sends it: AG Grid only starts single-click editing for a click count
 // (`detail`) of 1.
-const tap = (element) => {
-    fireEvent.mouseDown(element, { detail: 1 });
-    fireEvent.mouseUp(element, { detail: 1 });
-    fireEvent.click(element, { detail: 1 });
+const tap = (element, keys = {}) => {
+    fireEvent.mouseDown(element, { detail: 1, ...keys });
+    fireEvent.mouseUp(element, { detail: 1, ...keys });
+    fireEvent.click(element, { detail: 1, ...keys });
 };
 
 const planDay = async (weekStart, name, miles) => {
@@ -356,6 +356,92 @@ describe('StravaPlanner', () => {
             ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Mon: { Run: 3 } }, notes: null }],
             ['/api/strava/plans/2026-11-16', { days: { Mon: { Run: 3 }, Sat: { Bike: 30 } }, notes: null }],
         ]));
+    });
+
+    it('copies a day and pastes it into the days selected with Ctrl/⌘+click', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        await screen.findByText(/^Copied Sat 11.16/);
+
+        tap(dayCell('2026-11-30', 'Sat'), { metaKey: true });
+        tap(dayCell('2026-11-30', 'Sun'), { ctrlKey: true });
+        // Unselected again: it keeps the focus, but isn't pasted into.
+        tap(dayCell('2026-11-23', 'Wed'), { metaKey: true });
+        tap(dayCell('2026-11-23', 'Wed'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-23', 'Wed'), { key: 'v', metaKey: true });
+
+        // Both days of the week in one save.
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: { Sat: { Bike: 30 }, Sun: { Bike: 30 } }, notes: null }],
+        ]));
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(screen.queryByLabelText('Run')).not.toBeInTheDocument();
+        expect(document.querySelector('.strava-plan-actions')).toBeNull();
+    });
+
+    it('selects a range of days with Shift+click, from the copied day', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', ctrlKey: true });
+        tap(dayCell('2026-11-30', 'Sat'), { shiftKey: true });
+        fireEvent.keyDown(dayCell('2026-11-30', 'Sat'), { key: 'v', ctrlKey: true });
+
+        // The copied day is in the range, but doesn't change.
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Sat: { Bike: 30 } }, notes: null }],
+            ['/api/strava/plans/2026-11-30', { days: { Sat: { Bike: 30 } }, notes: null }],
+        ]));
+    });
+
+    it('pastes a day into the focused day when none are selected', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        tap(dayCell('2026-11-23', 'Wed'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-23', 'Wed'), { key: 'Escape' });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-23', 'Wed'), { key: 'v', metaKey: true });
+
+        await waitFor(() => expect(window.confirm).toHaveBeenCalledWith('Replace Wed 11.23 with Sat 11.16?'));
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Bike: 30 } }, notes: null }],
+        ]));
+    });
+
+    it('pastes what was copied last, a day or a week', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        fireEvent.keyDown(weekCell('2026-11-16'), { key: 'c', metaKey: true });
+        await screen.findByText(/^Copied 11.16/);
+        fireEvent.keyDown(dayCell('2026-11-30', 'Tue'), { key: 'v', metaKey: true });
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: WEEKS[0].days, notes: null }],
+        ]));
+    });
+
+    it('saves an open popup when days are selected', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-30', 'Mon'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '3' } });
+        tap(dayCell('2026-11-23', 'Mon'), { metaKey: true });
+
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: { Mon: { Run: 3 } }, notes: null }],
+        ]));
+        await waitFor(() => expect(screen.queryByLabelText('Run')).not.toBeInTheDocument());
     });
 
     it('is read-only without a Strava connection', async () => {

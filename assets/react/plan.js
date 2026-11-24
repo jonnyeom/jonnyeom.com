@@ -38,6 +38,8 @@ export const hasPlan = (week) => DAYS.some((day) => relativeMiles(week.days?.[da
 // Whether two days plan the same miles (the order of the sports doesn't matter).
 export const sameSports = (a, b) => SPORTS.every(({ type }) => (Number(a?.[type]) || 0) === (Number(b?.[type]) || 0));
 
+export const isSameCell = (a, b) => a.weekStart === b.weekStart && a.day === b.day;
+
 /** The week's days with one day replaced; a day without sports is removed. */
 export const withDay = (days, day, sports) => {
     const { [day]: _replaced, ...others } = days;
