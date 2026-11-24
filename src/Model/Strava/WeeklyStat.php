@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\Strava;
 
+use App\Enum\SportType;
 use App\Exception\Strava\InvalidStat;
 use ArrayIterator;
 use DateTime;
@@ -72,21 +73,10 @@ class WeeklyStat implements IteratorAggregate
         $date = new DateTime($activity['start_date_local']);
         $this->stats[$date->format('D')]->addActivity($activity);
 
-        switch ($activity['sport_type']) {
-            case 'Tennis':
-                $this->totalDistance += $activity['distance'] * 2;
-                break;
-            case 'Swim':
-                $this->totalDistance += $activity['distance'] * 4;
-                break;
-            case 'Bike':
-                $this->totalDistance += $activity['distance'] / 3;
-                break;
-            case 'Run':
-                $this->totalDistance += $activity['distance'];
-                break;
-            default:
-                // Log something.
+        // Other sport types are listed but don't count towards the weekly distance.
+        $sportType = SportType::tryFrom($activity['sport_type']);
+        if ($sportType !== null) {
+            $this->totalDistance += $sportType->relativeDistance((float) $activity['distance']);
         }
     }
 

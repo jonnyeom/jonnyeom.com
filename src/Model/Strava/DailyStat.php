@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Model\Strava;
 
+use App\Enum\SportType;
+
 use function array_filter;
 use function array_map;
 use function array_unique;
@@ -35,20 +37,9 @@ class DailyStat
     /** @param Activity $activity */
     public function addActivity(array $activity): void
     {
-        switch ($activity['sport_type']) {
-            case 'Tennis':
-                $this->distance += $activity['distance'] * 2;
-                break;
-            case 'Swim':
-                $this->distance += $activity['distance'] * 4;
-                break;
-            case 'Bike':
-                $this->distance += $activity['distance'] / 3;
-                break;
-            case 'Run':
-                $this->distance += $activity['distance'];
-                break;
-            default:
+        $sportType = SportType::tryFrom($activity['sport_type']);
+        if ($sportType !== null) {
+            $this->distance += $sportType->relativeDistance((float) $activity['distance']);
         }
 
         $this->activities[] = $activity;
@@ -56,13 +47,7 @@ class DailyStat
 
     public function getSportIcon(string $sportType): string|null
     {
-        return match ($sportType) {
-            'Tennis' => 'table-tennis-paddle-ball',
-            'Swim' => 'person-swimming',
-            'Bike' => 'person-biking',
-            'Run' => 'person-running',
-            default => null,
-        };
+        return SportType::tryFrom($sportType)?->icon();
     }
 
     public function getDistance(): float
