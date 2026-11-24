@@ -164,9 +164,13 @@ h6:hover .heading-permalink,
   background-color: rgba(57, 135, 229, 0.14);
 }
 
-// Plan page: the selected week's action bar stays visible while scrolling the weeks.
+// Plan page: the action bar of the selected weeks floats at the bottom of the screen.
 .strava-plan-actions {
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  max-width: 928px;
+  margin: 0 auto;
+  z-index: 30;
 }

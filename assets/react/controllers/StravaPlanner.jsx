@@ -192,9 +192,10 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context })
 };
 
 /**
- * Bar above the grid acting on the selected weeks (tap / click weeks to select them): copy a week,
- * paste the copied week into every selected week, clear them, notes of a single week. Always shown
- * when editable, so selecting doesn't move the grid. Sticky, so it stays reachable while scrolling.
+ * Bar acting on the selected weeks (tap / click weeks to select them): copy a week, paste the
+ * copied week into every selected week, clear them, notes of a single week. Only shown while weeks
+ * are selected; it floats at the bottom of the screen, so it doesn't move the grid and stays in
+ * reach while scrolling.
  */
 const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, onSaveNotes, onClose }) => {
     const [notesOpen, setNotesOpen] = useState(false);
@@ -216,20 +217,14 @@ const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, o
         </button>
     );
 
-    let title;
     if (selection.length === 0) {
-        title = (
-            <span className="has-text-grey has-text-weight-normal is-size-7">
-                {compact ? 'Tap' : 'Click'} weeks to select them
-                {copied ? ` (copied: ${weekLabel(copied.weekStart)})` : ''}
-            </span>
-        );
-    } else {
-        title = week ? `Week of ${weekLabel(week.weekStart)}` : `${selection.length} weeks selected`;
+        return null;
     }
 
+    const title = week ? `Week of ${weekLabel(week.weekStart)}` : `${selection.length} weeks selected`;
+
     return (
-        <div className="strava-plan-actions box px-3 py-2 mb-3">
+        <div className="strava-plan-actions box px-3 py-2">
             <div className="is-flex is-align-items-center is-flex-wrap-wrap" style={{ gap: '0.5rem' }}>
                 <span className="has-text-weight-semibold mr-auto">{title}</span>
                 <div className="buttons are-small mb-0 is-flex-wrap-nowrap" style={{ gap: '0.25rem' }}>
@@ -237,9 +232,7 @@ const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, o
                     {button('Paste', 'paste', () => onPaste(pasteTargets), !copied || pasteTargets.length === 0)}
                     {button(compact ? '' : 'Clear', 'eraser', () => onClear(clearTargets), clearTargets.length === 0)}
                     {selection.length <= 1 && button(compact ? '' : 'Notes', 'note-sticky', () => setNotesOpen((open) => !open), !week, notesOpen ? ' is-link is-light' : '')}
-                    {selection.length > 0 && (
-                        <button type="button" className="delete is-medium ml-1" aria-label="Unselect the weeks" onClick={onClose} />
-                    )}
+                    <button type="button" className="delete is-medium ml-1" aria-label="Unselect the weeks" onClick={onClose} />
                 </div>
             </div>
             {week && notesOpen && (
@@ -344,7 +337,9 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             return;
         }
         setCopied({ weekStart: week.weekStart, days: structuredClone(week.days) });
-        setNotice(`Copied ${weekLabel(week.weekStart)}. Paste it on another week.`);
+        // Start a fresh selection: the weeks tapped next are where it gets pasted.
+        setSelectedWeeks([]);
+        setNotice(`Copied ${weekLabel(week.weekStart)}. Select the weeks to paste it into.`);
     }, []);
 
     // Pastes the copied week's activities into each target week (keeping their notes).
@@ -563,38 +558,11 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 <span className="is-size-7 has-text-grey">
                     {notice ?? (editable
                         ? (compact
-                            ? 'Tap a day to plan it.'
-                            : 'Click a day to plan it. Ctrl/⌘+C and Ctrl/⌘+V copy and paste the focused week.')
+                            ? 'Tap a day to plan it, or a week to copy and paste it.'
+                            : 'Click a day to plan it, or a week to copy and paste it (or Ctrl/⌘+C, Ctrl/⌘+V).')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
-                <div className="buttons are-small is-flex-wrap-nowrap mb-0 ml-2">
-                    {weeks.length > 0 && (
-                        <a
-                            className="button is-small mb-0"
-                            href={`${apiUrl}.csv?from=${weeks[0].weekStart}&weeks=${weeks.length}`}
-                            title="Download the weeks shown as a CSV, to open in Google Sheets, Excel or Numbers"
-                            download
-                        >
-                            <span className="icon"><i className="fas fa-file-arrow-down" /></span>
-                            <span>Export</span>
-                        </a>
-                    )}
-                    {editable && (
-                        <>
-                            <button
-                                type="button"
-                                className={`button is-small mb-0${loading ? ' is-loading' : ''}`}
-                                title="Upload a CSV (e.g. the export, edited in a spreadsheet)"
-                                onClick={() => importInput.current?.click()}
-                            >
-                                <span className="icon"><i className="fas fa-file-arrow-up" /></span>
-                                <span>Import</span>
-                            </button>
-                            <input ref={importInput} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
-                        </>
-                    )}
-                    {!editable && <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>}
-                </div>
+                {!editable && <a href={connectUrl} className="button is-small mb-0 ml-2">Connect to edit</a>}
             </div>
             <div className="has-text-centered pb-3">
                 <button type="button" className="button is-small" onClick={() => loadMore('later')} disabled={loading}>
@@ -645,6 +613,35 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                     Load more
                 </button>
             </div>
+            <div className="buttons is-centered are-small">
+                {weeks.length > 0 && (
+                    <a
+                        className="button is-small mb-0"
+                        href={`${apiUrl}.csv?from=${weeks[0].weekStart}&weeks=${weeks.length}`}
+                        title="Download the weeks shown as a CSV, to open in Google Sheets, Excel or Numbers"
+                        download
+                    >
+                        <span className="icon"><i className="fas fa-file-arrow-down" /></span>
+                        <span>Export</span>
+                    </a>
+                )}
+                {editable && (
+                    <>
+                        <button
+                            type="button"
+                            className={`button is-small mb-0${loading ? ' is-loading' : ''}`}
+                            title="Upload a CSV (e.g. the export, edited in a spreadsheet)"
+                            onClick={() => importInput.current?.click()}
+                        >
+                            <span className="icon"><i className="fas fa-file-arrow-up" /></span>
+                            <span>Import</span>
+                        </button>
+                        <input ref={importInput} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
+                    </>
+                )}
+            </div>
+            {/* Room for the floating week bar, so it doesn't cover the last rows. */}
+            {selection.length > 0 && <div style={{ height: '6rem' }} />}
         </div>
     );
 };
