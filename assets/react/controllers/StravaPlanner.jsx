@@ -1,4 +1,31 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import {
+    CellStyleModule,
+    ClientSideRowModelModule,
+    colorSchemeDark,
+    CustomEditorModule,
+    LargeTextEditorModule,
+    ModuleRegistry,
+    RenderApiModule,
+    RowStyleModule,
+    themeQuartz,
+    TooltipModule,
+    ValidationModule,
+} from 'ag-grid-community';
+import { AgGridReact, useGridCellEditor } from 'ag-grid-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+// Only the features this grid uses (clipboard / range selection are Enterprise; copy & paste of
+// weeks is implemented below).
+ModuleRegistry.registerModules([
+    ClientSideRowModelModule,
+    CustomEditorModule,
+    LargeTextEditorModule,
+    RenderApiModule,
+    RowStyleModule,
+    CellStyleModule,
+    TooltipModule,
+    ...(import.meta.env?.DEV ? [ValidationModule] : []),
+]);
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -11,6 +38,7 @@ const SPORTS = [
 ];
 
 const LOAD_MORE_WEEKS = 8;
+const MAX_MILES = 300;
 
 const round1 = (value) => Math.round(value * 10) / 10;
 
@@ -29,183 +57,221 @@ const weekLabel = (weekStart) => {
 const relativeMiles = (sports) =>
     SPORTS.reduce((total, sport) => total + (Number(sports?.[sport.type]) || 0) * sport.factor, 0);
 
-// Editor state: strings per day and sport, so partially typed numbers ("1.") survive.
-const toDraft = (week) => ({
-    notes: week.notes ?? '',
-    days: Object.fromEntries(DAYS.map((day) => [
-        day,
-        Object.fromEntries(SPORTS.map((sport) => [sport.type, week.days?.[day]?.[sport.type]?.toString() ?? ''])),
-    ])),
-});
+const weekTotal = (days) => DAYS.reduce((total, day) => total + relativeMiles(days?.[day]), 0);
 
-const fromDraft = (draft) => ({
-    notes: draft.notes,
-    days: Object.fromEntries(DAYS.map((day) => [
-        day,
-        Object.fromEntries(SPORTS
-            .filter((sport) => draft.days[day][sport.type] !== '')
-            .map((sport) => [sport.type, Number(draft.days[day][sport.type])])),
-    ])),
-});
+const hasPlan = (week) => DAYS.some((day) => relativeMiles(week.days?.[day]) > 0);
 
-const DayCell = ({ sports, miles }) => {
-    if (!miles) {
-        return <td />;
+// The API returns [] for a week without plan; the grid always works with an object.
+const normalizeWeek = (week) => ({ ...week, days: Array.isArray(week.days) ? {} : { ...week.days } });
+
+const usePrefersDark = () => {
+    const query = typeof window !== 'undefined' ? window.matchMedia?.('(prefers-color-scheme: dark)') : null;
+    const [dark, setDark] = useState(query?.matches ?? false);
+    useEffect(() => {
+        if (!query) {
+            return undefined;
+        }
+        const onChange = (event) => setDark(event.matches);
+        query.addEventListener('change', onChange);
+        return () => query.removeEventListener('change', onChange);
+    }, [query]);
+    return dark;
+};
+
+/** Day cell: relative miles and the icons of the planned sports. */
+const DayCellRenderer = ({ value }) => {
+    const miles = relativeMiles(value);
+    if (miles <= 0) {
+        return null;
     }
-
-    const planned = SPORTS.filter((sport) => sports?.[sport.type] > 0);
+    const planned = SPORTS.filter((sport) => value?.[sport.type] > 0);
 
     return (
-        <td title={planned.map((sport) => `${sport.type}: ${sports[sport.type]} mi`).join('\n')}>
-            <span className="icon-text">
-                <span>{round1(miles)}{planned.length > 1 && <span className="is-hidden-tablet">*</span>}</span>
-                {planned.map((sport) => (
-                    <span key={sport.type} className="icon is-hidden-mobile">
-                        <i className={`fas fa-${sport.icon}`} />
-                    </span>
-                ))}
-            </span>
-        </td>
+        <span className="icon-text is-flex-wrap-nowrap">
+            <span>{round1(miles)}</span>
+            {planned.map((sport) => (
+                <span key={sport.type} className="icon is-small ml-1">
+                    <i className={`fas fa-${sport.icon}`} />
+                </span>
+            ))}
+        </span>
     );
 };
 
-const WeekEditor = ({ week, onSaved, onCancel, apiUrl }) => {
-    const [draft, setDraft] = useState(() => toDraft(week));
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
+const dayTooltip = ({ value }) => {
+    const planned = SPORTS.filter((sport) => value?.[sport.type] > 0);
+    return planned.length ? planned.map((sport) => `${sport.type}: ${value[sport.type]} mi`).join('\n') : undefined;
+};
 
-    const setMiles = (day, sport, value) => setDraft((current) => ({
-        ...current,
-        days: { ...current.days, [day]: { ...current.days[day], [sport]: value } },
-    }));
+/** Popup editor of one day: miles per sport. Enter saves, Escape cancels. */
+const DayEditor = ({ value, onValueChange, stopEditing, colDef, data }) => {
+    const [draft, setDraft] = useState(() =>
+        Object.fromEntries(SPORTS.map((sport) => [sport.type, value?.[sport.type]?.toString() ?? ''])));
+    const firstInput = useRef(null);
 
-    const total = DAYS.reduce((sum, day) => sum + relativeMiles(fromDraft(draft).days[day]), 0);
+    useGridCellEditor({ isPopup: () => true });
 
-    const save = async (event) => {
-        event.preventDefault();
-        setSaving(true);
-        setError(null);
-        try {
-            const response = await fetch(`${apiUrl}/${week.weekStart}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify(fromDraft(draft)),
-            });
-            const body = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(body.error ?? `Saving failed (${response.status})`);
-            }
-            onSaved(body);
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setSaving(false);
-        }
+    useEffect(() => {
+        firstInput.current?.focus();
+        firstInput.current?.select();
+    }, []);
+
+    const update = (type, input) => {
+        const next = { ...draft, [type]: input };
+        setDraft(next);
+        onValueChange(Object.fromEntries(SPORTS
+            .map((sport) => [sport.type, Math.min(MAX_MILES, Math.max(0, Number(next[sport.type]) || 0))])
+            .filter(([, miles]) => miles > 0)));
+    };
+
+    const clear = () => {
+        setDraft(Object.fromEntries(SPORTS.map((sport) => [sport.type, ''])));
+        onValueChange({});
     };
 
     return (
-        <tr>
-            <td colSpan={11} className="has-text-left">
-                <form onSubmit={save} className="py-2">
-                    {error && <div className="notification is-danger is-light py-2">{error}</div>}
-                    <div className="table-container">
-                        <table className="table is-narrow is-fullwidth has-text-centered mb-3">
-                            <thead>
-                                <tr>
-                                    <th />
-                                    {DAYS.map((day) => <th key={day}>{day}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {SPORTS.map((sport) => (
-                                    <tr key={sport.type}>
-                                        <th title={sport.type}>
-                                            <span className="icon"><i className={`fas fa-${sport.icon}`} /></span>
-                                            <span className="is-hidden-mobile is-size-7">{sport.type}</span>
-                                        </th>
-                                        {DAYS.map((day) => (
-                                            <td key={day}>
-                                                <input
-                                                    className="input is-small has-text-centered"
-                                                    style={{ minWidth: '3.5rem' }}
-                                                    type="number"
-                                                    inputMode="decimal"
-                                                    min="0"
-                                                    max="300"
-                                                    step="0.1"
-                                                    aria-label={`${sport.type} miles on ${day}`}
-                                                    value={draft.days[day][sport.type]}
-                                                    onChange={(e) => setMiles(day, sport.type, e.target.value)}
-                                                />
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="field">
-                        <div className="control">
-                            <textarea
-                                className="textarea is-small"
-                                rows={2}
-                                maxLength={2000}
-                                placeholder="Notes (e.g. long run Saturday, recovery week)"
-                                value={draft.notes}
-                                onChange={(e) => setDraft((current) => ({ ...current, notes: e.target.value }))}
-                            />
-                        </div>
-                    </div>
-                    <div className="is-flex is-align-items-center is-justify-content-space-between">
-                        <span className="is-size-7 has-text-grey">
-                            Relative total: <b>{round1(total)} mi</b> (bike ÷3, swim ×4, tennis ×2)
-                        </span>
-                        <div className="buttons mb-0">
-                            <button type="button" className="button is-small mb-0" onClick={onCancel} disabled={saving}>
-                                Cancel
-                            </button>
-                            <button type="submit" className={`button is-small is-link mb-0${saving ? ' is-loading' : ''}`}>
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </td>
-        </tr>
+        <div className="box p-3 mb-0" style={{ width: '15rem' }}>
+            <p className="has-text-weight-semibold mb-2">
+                {colDef.headerName} {weekLabel(data.weekStart)}
+            </p>
+            {SPORTS.map((sport, index) => (
+                <div key={sport.type} className="field is-horizontal mb-2">
+                    <label className="is-flex is-align-items-center" style={{ width: '6rem' }} htmlFor={`plan-${sport.type}`}>
+                        <span className="icon"><i className={`fas fa-${sport.icon}`} /></span>
+                        <span className="is-size-7">{sport.type}</span>
+                    </label>
+                    <input
+                        id={`plan-${sport.type}`}
+                        ref={index === 0 ? firstInput : undefined}
+                        className="input is-small"
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        max={MAX_MILES}
+                        step="0.1"
+                        placeholder="mi"
+                        value={draft[sport.type]}
+                        onChange={(e) => update(sport.type, e.target.value)}
+                    />
+                </div>
+            ))}
+            <div className="is-flex is-justify-content-space-between is-align-items-center mt-3">
+                <span className="is-size-7 has-text-grey">{round1(relativeMiles(draft))} rel. mi</span>
+                <div className="buttons mb-0">
+                    <button type="button" className="button is-small mb-0" onClick={clear}>Clear</button>
+                    <button type="button" className="button is-small is-link mb-0" onClick={() => stopEditing()}>Done</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/** Copy / Paste of the whole week's activities. */
+const ActionsCellRenderer = ({ data, context }) => {
+    const { copied, copyWeek, pasteWeek } = context;
+    const isSource = copied?.weekStart === data.weekStart;
+
+    return (
+        <div className="buttons are-small has-addons is-flex-wrap-nowrap mb-0" style={{ height: '100%' }}>
+            <button
+                type="button"
+                className={`button is-small mb-0${isSource ? ' is-link is-light' : ''}`}
+                title="Copy this week's plan (Ctrl/⌘+C)"
+                onClick={() => copyWeek(data)}
+                disabled={!hasPlan(data)}
+            >
+                <span className="icon"><i className="fas fa-copy" /></span>
+            </button>
+            <button
+                type="button"
+                className="button is-small mb-0"
+                title={copied ? `Paste the plan of ${weekLabel(copied.weekStart)} (Ctrl/⌘+V)` : 'Copy a week first'}
+                onClick={() => pasteWeek(data)}
+                disabled={!copied || isSource}
+            >
+                <span className="icon"><i className="fas fa-paste" /></span>
+            </button>
+        </div>
     );
 };
 
 const StravaPlanner = ({ apiUrl, connectUrl }) => {
+    const gridRef = useRef(null);
     const [weeks, setWeeks] = useState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
-    const [editing, setEditing] = useState(null);
+    const [copied, setCopied] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [notice, setNotice] = useState(null);
+    const dark = usePrefersDark();
 
-    const fetchWeeks = useCallback(async (query = '') => {
-        const response = await fetch(`${apiUrl}${query}`, {
-            headers: { Accept: 'application/json' },
+    const theme = useMemo(() => (dark ? themeQuartz.withPart(colorSchemeDark) : themeQuartz), [dark]);
+
+    const request = useCallback(async (path, options = {}) => {
+        const response = await fetch(`${apiUrl}${path}`, {
             credentials: 'same-origin',
+            ...options,
+            headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}) },
         });
         const body = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(body.error ?? `Loading the plan failed (${response.status})`);
+            throw new Error(body.error ?? `Request failed (${response.status})`);
         }
         return body;
     }, [apiUrl]);
 
     useEffect(() => {
-        fetchWeeks()
+        request('')
             .then((body) => {
-                setWeeks(body.weeks);
+                setWeeks(body.weeks.map(normalizeWeek));
                 setCurrentWeek(body.currentWeek);
                 setEditable(body.editable);
             })
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
-    }, [fetchWeeks]);
+    }, [request]);
+
+    const replaceWeek = (saved) => {
+        const week = normalizeWeek(saved);
+        setWeeks((current) => current.map((row) => (row.weekStart === week.weekStart ? week : row)));
+    };
+
+    const saveWeek = useCallback(async (weekStart, days, notes) => {
+        setError(null);
+        try {
+            replaceWeek(await request(`/${weekStart}`, {
+                method: 'PUT',
+                body: JSON.stringify({ days, notes: notes ?? null }),
+            }));
+            return true;
+        } catch (e) {
+            setError(e.message);
+            // Revert the row to what is stored.
+            request(`/${weekStart}`).then(replaceWeek).catch(() => {});
+            return false;
+        }
+    }, [request]);
+
+    const copyWeek = useCallback((week) => {
+        if (!hasPlan(week)) {
+            return;
+        }
+        setCopied({ weekStart: week.weekStart, days: structuredClone(week.days) });
+        setNotice(`Copied ${weekLabel(week.weekStart)}. Paste it on another week.`);
+    }, []);
+
+    const pasteWeek = useCallback(async (week) => {
+        if (!copied || copied.weekStart === week.weekStart) {
+            return;
+        }
+        if (hasPlan(week) && !window.confirm(`Replace the plan of ${weekLabel(week.weekStart)} with ${weekLabel(copied.weekStart)}?`)) {
+            return;
+        }
+        if (await saveWeek(week.weekStart, copied.days, week.notes)) {
+            setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${weekLabel(week.weekStart)}.`);
+        }
+    }, [copied, saveWeek]);
 
     // Weeks are kept oldest first; prepend earlier or append later weeks.
     const loadMore = async (direction) => {
@@ -217,8 +283,9 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             const from = direction === 'earlier'
                 ? addWeeks(weeks[0].weekStart, -LOAD_MORE_WEEKS)
                 : addWeeks(weeks[weeks.length - 1].weekStart, 1);
-            const body = await fetchWeeks(`?from=${from}&weeks=${LOAD_MORE_WEEKS}`);
-            setWeeks((current) => (direction === 'earlier' ? [...body.weeks, ...current] : [...current, ...body.weeks]));
+            const body = await request(`?from=${from}&weeks=${LOAD_MORE_WEEKS}`);
+            const loaded = body.weeks.map(normalizeWeek);
+            setWeeks((current) => (direction === 'earlier' ? [...loaded, ...current] : [...current, ...loaded]));
         } catch (e) {
             setError(e.message);
         } finally {
@@ -226,93 +293,159 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
         }
     };
 
-    const onSaved = (saved) => {
-        setWeeks((current) => current.map((week) => (week.weekStart === saved.weekStart ? saved : week)));
-        setEditing(null);
-    };
+    const columnDefs = useMemo(() => [
+        {
+            headerName: 'Week',
+            field: 'weekStart',
+            pinned: 'left',
+            width: 80,
+            valueFormatter: ({ value }) => weekLabel(value),
+            cellClass: 'has-text-weight-bold',
+        },
+        ...DAYS.map((day) => ({
+            headerName: day,
+            colId: day,
+            minWidth: 70,
+            flex: 1,
+            editable,
+            cellClass: 'is-flex is-align-items-center',
+            valueGetter: ({ data }) => data.days[day] ?? {},
+            valueSetter: ({ data, newValue }) => {
+                data.days = { ...data.days };
+                if (Object.keys(newValue ?? {}).length === 0) {
+                    delete data.days[day];
+                } else {
+                    data.days[day] = newValue;
+                }
+                return true;
+            },
+            equals: (a, b) => JSON.stringify(a ?? {}) === JSON.stringify(b ?? {}),
+            cellRenderer: DayCellRenderer,
+            tooltipValueGetter: dayTooltip,
+            cellEditor: DayEditor,
+            cellEditorPopup: true,
+            cellEditorPopupPosition: 'under',
+            // Tab moves between the inputs of the popup, not to the next cell.
+            suppressKeyboardEvent: ({ editing, event }) => editing && event.key === 'Tab',
+        })),
+        {
+            headerName: 'Plan',
+            colId: 'plan',
+            width: 75,
+            valueGetter: ({ data }) => round1(weekTotal(data.days)),
+            valueFormatter: ({ value }) => (value > 0 ? `${value} mi` : ''),
+            cellClass: 'has-text-weight-bold',
+        },
+        {
+            headerName: 'Actual',
+            colId: 'actual',
+            width: 75,
+            valueGetter: ({ data }) => data.actual?.totalMiles ?? null,
+            valueFormatter: ({ value }) => (value === null ? '' : `${value} mi`),
+        },
+        {
+            headerName: '±',
+            colId: 'diff',
+            width: 55,
+            valueGetter: ({ data }) => {
+                const plan = weekTotal(data.days);
+                return data.actual && plan > 0 ? round1(data.actual.totalMiles - plan) : null;
+            },
+            valueFormatter: ({ value }) => (value === null ? '' : `${value > 0 ? '+' : ''}${value}`),
+            cellClassRules: {
+                'has-text-success': ({ value }) => value !== null && value >= 0,
+                'has-text-danger': ({ value }) => value !== null && value < 0,
+            },
+        },
+        {
+            headerName: 'Notes',
+            field: 'notes',
+            minWidth: 100,
+            flex: 1,
+            editable,
+            tooltipField: 'notes',
+            cellEditor: 'agLargeTextCellEditor',
+            cellEditorPopup: true,
+            cellEditorParams: { maxLength: 2000, rows: 5, cols: 40 },
+        },
+        ...(editable ? [{
+            headerName: '',
+            colId: 'actions',
+            width: 84,
+            pinned: 'right',
+            cellRenderer: ActionsCellRenderer,
+            sortable: false,
+        }] : []),
+    ], [editable]);
 
-    if (error && weeks.length === 0) {
-        return <div className="notification is-danger">{error}</div>;
-    }
+    const onCellValueChanged = useCallback(({ data }) => {
+        saveWeek(data.weekStart, data.days, data.notes);
+    }, [saveWeek]);
+
+    // Ctrl/⌘+C copies the focused week, Ctrl/⌘+V pastes onto it.
+    const onCellKeyDown = useCallback(({ event, data, api }) => {
+        if (!editable || !event || !(event.ctrlKey || event.metaKey) || api.getEditingCells().length > 0) {
+            return;
+        }
+        const key = event.key.toLowerCase();
+        if (key === 'c') {
+            copyWeek(data);
+        } else if (key === 'v') {
+            event.preventDefault();
+            pasteWeek(data);
+        }
+    }, [editable, copyWeek, pasteWeek]);
+
+    // Newest first, like the stats table.
+    const rows = useMemo(() => [...weeks].reverse(), [weeks]);
+    const context = useMemo(() => ({ copied, copyWeek, pasteWeek }), [copied, copyWeek, pasteWeek]);
+
+    // The actions column reads `copied` from the context: redraw it when that changes.
+    useEffect(() => {
+        gridRef.current?.api?.refreshCells({ columns: ['actions'], force: true });
+    }, [context]);
 
     if (loading && weeks.length === 0) {
         return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
     }
 
-    // Newest first, like the stats table.
-    const rows = [...weeks].reverse();
+    if (error && weeks.length === 0) {
+        return <div className="notification is-danger">{error}</div>;
+    }
 
     return (
         <div>
-            {error && <div className="notification is-danger is-light">{error}</div>}
+            {error && <div className="notification is-danger is-light py-2">{error}</div>}
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">
-                    Relative miles: bike ÷3, swim ×4, tennis ×2.
-                    {editable ? ' Click a week to edit its plan.' : ''}
+                    {notice ?? (editable
+                        ? 'Click a day to plan it. Copy a week and paste it onto another (or Ctrl/⌘+C, Ctrl/⌘+V).'
+                        : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
-                {!editable && (
-                    <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>
-                )}
+                {!editable && <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>}
             </div>
             <div className="has-text-centered pb-3">
                 <button type="button" className="button is-small" onClick={() => loadMore('later')} disabled={loading}>
                     Later weeks
                 </button>
             </div>
-            <div className="table-container">
-                <table className="table is-hoverable is-striped is-narrow-mobile has-text-centered is-fullwidth">
-                    <thead>
-                        <tr>
-                            <th>Week</th>
-                            {DAYS.map((day) => <th key={day}>{day}</th>)}
-                            <th>plan</th>
-                            <th>actual</th>
-                            <th />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map((week) => {
-                            const isCurrent = week.weekStart === currentWeek;
-                            const isEditing = editing === week.weekStart;
-                            const diff = week.actual && week.totalMiles > 0
-                                ? round1(week.actual.totalMiles - week.totalMiles)
-                                : null;
-
-                            return (
-                                <React.Fragment key={week.weekStart}>
-                                    <tr
-                                        className={isCurrent ? 'is-selected' : undefined}
-                                        style={editable ? { cursor: 'pointer' } : undefined}
-                                        onClick={editable ? () => setEditing(isEditing ? null : week.weekStart) : undefined}
-                                        title={week.notes ?? undefined}
-                                    >
-                                        <th>
-                                            {weekLabel(week.weekStart)}
-                                            {week.notes && <span className="icon is-small ml-1"><i className="fas fa-note-sticky" /></span>}
-                                        </th>
-                                        {DAYS.map((day) => (
-                                            <DayCell key={day} sports={week.days[day]} miles={week.dailyMiles[day]} />
-                                        ))}
-                                        <td><b>{week.totalMiles > 0 ? round1(week.totalMiles) : ''}<span className="is-hidden-mobile">{week.totalMiles > 0 ? ' mi' : ''}</span></b></td>
-                                        <td>{week.actual ? <>{week.actual.totalMiles}<span className="is-hidden-mobile"> mi</span></> : ''}</td>
-                                        <td className={diff === null ? '' : diff >= 0 ? 'has-text-success' : 'has-text-danger'}>
-                                            {diff === null ? '' : `${diff > 0 ? '+' : ''}${diff}`}
-                                        </td>
-                                    </tr>
-                                    {isEditing && (
-                                        <WeekEditor
-                                            week={week}
-                                            apiUrl={apiUrl}
-                                            onSaved={onSaved}
-                                            onCancel={() => setEditing(null)}
-                                        />
-                                    )}
-                                </React.Fragment>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+            <AgGridReact
+                ref={gridRef}
+                theme={theme}
+                rowData={rows}
+                columnDefs={columnDefs}
+                defaultColDef={{ sortable: false, resizable: false, suppressMovable: true }}
+                getRowId={({ data }) => data.weekStart}
+                rowClassRules={{ 'strava-plan-current-week': ({ data }) => data.weekStart === currentWeek }}
+                context={context}
+                domLayout="autoHeight"
+                singleClickEdit
+                stopEditingWhenCellsLoseFocus
+                popupParent={typeof document !== 'undefined' ? document.body : undefined}
+                tooltipShowDelay={300}
+                onCellValueChanged={onCellValueChanged}
+                onCellKeyDown={onCellKeyDown}
+            />
             <div className="has-text-centered py-4">
                 <button type="button" className="button" onClick={() => loadMore('earlier')} disabled={loading}>
                     Load more

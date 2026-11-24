@@ -152,3 +152,8 @@ h6:hover .heading-permalink,
   width: calc(100% * var(--chart-weeks, 10) / 10);
   min-width: 100%;
 }
+
+// Plan page (StravaPlanner, AG Grid): highlight the current week.
+.ag-row.strava-plan-current-week {
+  background-color: rgba(57, 135, 229, 0.14);
+}
