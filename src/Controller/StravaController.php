@@ -24,6 +24,7 @@ class StravaController extends BaseController
 
         return $this->render('strava/metrics.html.twig', [
             'initialWeeks' => StravaStatsController::DEFAULT_WEEKS,
+            'chartWeeks' => StravaStatsController::DEFAULT_CHART_WEEKS,
         ]);
     }
 

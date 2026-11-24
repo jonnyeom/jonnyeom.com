@@ -4,6 +4,11 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
+                <div {{ react_component('StravaWeeklyChart', {
+                    url: path('strava_stats_chart'),
+                    weeks: chartWeeks,
+                }) }}></div>
+
                 <div
                     data-controller="strava-stats"
                     data-strava-stats-table-url-value="{{ path('strava_stats_table') }}"

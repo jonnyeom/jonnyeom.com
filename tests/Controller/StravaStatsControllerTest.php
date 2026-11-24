@@ -111,6 +111,53 @@ final class StravaStatsControllerTest extends WebTestCase
         self::assertSelectorTextContains('.notification.is-danger', 'Please connect to Strava');
     }
 
+    public function testChartReturnsTheLastTenWeeksOldestFirst(): void
+    {
+        $thisWeek = $this->weekWithRun('2026-11-23', 16093.4);
+        $thisWeek->setFiveWeekAverage(8046.7);
+        $lastWeek = $this->weekWithRun('2026-11-16', 3218.68);
+        $lastWeek->setFiveWeekAverage(3218.68);
+
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('getStoredWeeklyStats')
+            ->with(10)
+            ->willReturn([$thisWeek, $lastWeek]); // Newest first, like the provider.
+        $this->stravaDataProvider->expects($this->never())->method('refresh');
+
+        $this->client->request('GET', '/strava/stats/chart');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['weeks' => [
+            ['weekStart' => '2026-11-16', 'totalMiles' => 2.0, 'fiveWeekAverageMiles' => 2.0],
+            ['weekStart' => '2026-11-23', 'totalMiles' => 10.0, 'fiveWeekAverageMiles' => 5.0],
+        ]], $this->json());
+    }
+
+    public function testChartClampsTheNumberOfWeeks(): void
+    {
+        $this->stravaDataProvider
+            ->expects($this->once())
+            ->method('getStoredWeeklyStats')
+            ->with(104)
+            ->willReturn([]);
+
+        $this->client->request('GET', '/strava/stats/chart?weeks=1000');
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(['weeks' => []], $this->json());
+    }
+
+    public function testChartWhenNotConnected(): void
+    {
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willThrowException(new AccessTokenMissing());
+
+        $this->client->request('GET', '/strava/stats/chart');
+
+        self::assertResponseStatusCodeSame(401);
+        self::assertSame(['error' => 'No access token. Please connect to Strava.'], $this->json());
+    }
+
     public function testRefreshUpdatesTheLatestWeek(): void
     {
         $this->stravaDataProvider->expects($this->once())->method('refresh')->willReturn([]);
@@ -201,6 +248,14 @@ final class StravaStatsControllerTest extends WebTestCase
         $data = json_decode((string) $this->client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
         return $data;
+    }
+
+    private function weekWithRun(string $monday, float $meters): WeeklyStat
+    {
+        $week = new WeeklyStat($monday);
+        $week->addStravaActivity(['sport_type' => 'Run', 'distance' => $meters, 'start_date_local' => $monday . 'T08:00:00Z']);
+
+        return $week;
     }
 
     /**

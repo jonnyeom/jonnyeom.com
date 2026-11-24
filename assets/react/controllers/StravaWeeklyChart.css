@@ -1,0 +1,228 @@
+/* Weekly mileage chart (StravaWeeklyChart.jsx). Colors are roles; dark mode swaps them in one place. */
+.strava-chart {
+    --chart-text-primary: #0b0b0b;
+    --chart-text-secondary: #52514e;
+    --chart-text-muted: #898781;
+    --chart-grid: #e1e0d9;
+    --chart-baseline: #c3c2b7;
+    --chart-surface: #ffffff;
+    --chart-tooltip-surface: #ffffff;
+    --chart-tooltip-border: rgba(11, 11, 11, 0.10);
+    --series-miles: #2a78d6;   /* categorical slot 1, validated on #ffffff */
+    --series-average: #eb6834; /* categorical slot 2 */
+
+    position: relative;
+    margin-bottom: 1.5rem;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--chart-text-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .strava-chart {
+        --chart-text-primary: #f0efec;
+        --chart-text-secondary: #c3c2b7;
+        --chart-grid: #2c2c2a;
+        --chart-baseline: #383835;
+        --chart-surface: #14161a;      /* Bulma dark page background */
+        --chart-tooltip-surface: #1a1a19;
+        --chart-tooltip-border: rgba(255, 255, 255, 0.10);
+        --series-miles: #3987e5;       /* validated on #14161a */
+        --series-average: #d95926;
+    }
+}
+
+:root[data-theme="dark"] .strava-chart {
+    --chart-text-primary: #f0efec;
+    --chart-text-secondary: #c3c2b7;
+    --chart-grid: #2c2c2a;
+    --chart-baseline: #383835;
+    --chart-surface: #14161a;
+    --chart-tooltip-surface: #1a1a19;
+    --chart-tooltip-border: rgba(255, 255, 255, 0.10);
+    --series-miles: #3987e5;
+    --series-average: #d95926;
+}
+
+.strava-chart__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.strava-chart .strava-chart__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--chart-text-primary);
+}
+
+.strava-chart .strava-chart__legend {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8125rem;
+    color: var(--chart-text-secondary);
+}
+
+.strava-chart .strava-chart__legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0;
+}
+
+.strava-chart__key {
+    display: inline-block;
+    flex: none;
+}
+
+/* Legend mirrors the mark: a rect for columns, a line for the line. */
+.strava-chart__key--bar {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--series-miles);
+}
+
+.strava-chart__key--line,
+.strava-chart__key--bar-line {
+    width: 14px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--series-average);
+}
+
+/* Tooltip rows key every series with a short stroke. */
+.strava-chart__key--bar-line {
+    background: var(--series-miles);
+}
+
+.strava-chart__empty {
+    color: var(--chart-text-secondary);
+    font-size: 0.875rem;
+}
+
+.strava-chart__plot {
+    position: relative;
+    min-height: 240px;
+    transition: opacity 150ms ease;
+}
+
+/* Refetch keeps the frame: hold the previous render, dimmed. */
+.strava-chart__plot.is-reloading {
+    opacity: 0.5;
+}
+
+.strava-chart svg {
+    display: block;
+    overflow: visible;
+}
+
+.strava-chart__grid {
+    stroke: var(--chart-grid);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.strava-chart__baseline {
+    stroke: var(--chart-baseline);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.strava-chart__tick {
+    fill: var(--chart-text-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.strava-chart__bar {
+    fill: var(--series-miles);
+    transition: opacity 120ms ease;
+}
+
+.strava-chart__bar.is-active {
+    opacity: 0.8;
+}
+
+.strava-chart__line {
+    fill: none;
+    stroke: var(--series-average);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+/* End-markers: >= 8px, with a 2px ring in the surface color. */
+.strava-chart__dot {
+    fill: var(--series-average);
+    stroke: var(--chart-surface);
+    stroke-width: 2;
+}
+
+.strava-chart__value {
+    fill: var(--chart-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.strava-chart__value--secondary {
+    fill: var(--chart-text-secondary);
+    font-weight: 500;
+}
+
+.strava-chart__crosshair {
+    stroke: var(--chart-baseline);
+    stroke-width: 1;
+    shape-rendering: crispEdges;
+}
+
+.strava-chart__hit {
+    fill: transparent;
+    cursor: crosshair;
+    outline: none;
+}
+
+.strava-chart__hit:focus-visible {
+    stroke: var(--chart-text-secondary);
+    stroke-width: 1;
+}
+
+.strava-chart__tooltip {
+    position: absolute;
+    top: 24px;
+    box-sizing: border-box;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--chart-tooltip-border);
+    border-radius: 6px;
+    background: var(--chart-tooltip-surface);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    font-size: 0.8125rem;
+    pointer-events: none;
+}
+
+.strava-chart__tooltip-title {
+    margin-bottom: 0.25rem;
+    color: var(--chart-text-secondary);
+}
+
+.strava-chart__tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--chart-text-secondary);
+    white-space: nowrap;
+}
+
+/* Values lead, labels follow. */
+.strava-chart__tooltip-row strong {
+    min-width: 4.5em;
+    color: var(--chart-text-primary);
+    font-variant-numeric: tabular-nums;
+}

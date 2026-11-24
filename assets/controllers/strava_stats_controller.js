@@ -8,6 +8,9 @@ import { Controller } from '@hotwired/stimulus';
  *   refresh():  POST refreshUrl        -> fetches the latest week(s) from Strava, then reloads the table
  *   reset():    POST resetUrl          -> reloads the whole history from Strava, then reloads the table
  *
+ * After a successful refresh/reset it dispatches "strava-stats:updated" on window, so other
+ * views of the data (e.g. the StravaWeeklyChart React component) reload too.
+ *
  * Endpoints: src/Controller/StravaStatsController.php
  */
 const LOAD_MORE_SIZE = 10;
@@ -98,6 +101,7 @@ export default class extends Controller {
             }
 
             this.showNotice(data.message ?? 'Updated.');
+            this.dispatch('updated', { target: window });
             await this.load();
         } catch {
             this.showNotice('Could not reach the server. Please try again.', true);

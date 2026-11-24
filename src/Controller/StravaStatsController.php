@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Exception\Strava\AccessTokenMissing;
+use App\Model\Strava\WeeklyStat;
 use App\Service\Strava\StravaDataProvider;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use Psr\Log\LoggerInterface;
@@ -15,9 +16,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Throwable;
 
+use function array_map;
+use function array_reverse;
 use function count;
 use function max;
 use function min;
+use function round;
 use function sprintf;
 
 /**
@@ -29,6 +33,12 @@ class StravaStatsController extends AbstractController
     public const int DEFAULT_WEEKS = 20;
 
     private const int MAX_WEEKS = 520;
+
+    public const int DEFAULT_CHART_WEEKS = 10;
+
+    private const int MAX_CHART_WEEKS = 104;
+
+    private const float METERS_PER_MILE = 1609.34;
 
     public function __construct(
         private readonly StravaDataProvider $stravaDataProvider,
@@ -57,6 +67,32 @@ class StravaStatsController extends AbstractController
             'weeks' => $weeks,
             // Fewer stored weeks than requested: the whole stored history is shown.
             'hasMore' => count($weeklyStats) >= $weeks,
+        ]);
+    }
+
+    /**
+     * Weekly mileage and 5-week average for the chart (JSON, oldest week first), read from the
+     * database only.
+     */
+    #[Route('/chart', name: 'strava_stats_chart', methods: ['GET'])]
+    public function chart(Request $request): JsonResponse
+    {
+        $weeks = max(1, min(self::MAX_CHART_WEEKS, $request->query->getInt('weeks', self::DEFAULT_CHART_WEEKS)));
+
+        try {
+            $weeklyStats = $this->stravaDataProvider->getStoredWeeklyStats($weeks);
+        } catch (Throwable $e) {
+            [$message, $status] = $this->describeError($e);
+
+            return new JsonResponse(['error' => $message], $status);
+        }
+
+        return new JsonResponse([
+            'weeks' => array_map(static fn (WeeklyStat $stat): array => [
+                'weekStart' => $stat->getFirstDayOfWeek()->format('Y-m-d'),
+                'totalMiles' => $stat->getTotalMiles(),
+                'fiveWeekAverageMiles' => round($stat->getFiveWeekAverage() / self::METERS_PER_MILE, 1),
+            ], array_reverse($weeklyStats)),
         ]);
     }
 
