@@ -228,18 +228,13 @@ const WeekActionBar = ({ selection, copied, compact, onCopy, onPaste, onClear, o
         title = week ? `Week of ${weekLabel(week.weekStart)}` : `${selection.length} weeks selected`;
     }
 
-    let pasteLabel = 'Paste';
-    if (copied && pasteTargets.length > 0) {
-        pasteLabel = `Paste ${weekLabel(copied.weekStart)}${pasteTargets.length > 1 ? ` into ${pasteTargets.length}` : ''}`;
-    }
-
     return (
         <div className="strava-plan-actions box px-3 py-2 mb-3">
             <div className="is-flex is-align-items-center is-flex-wrap-wrap" style={{ gap: '0.5rem' }}>
                 <span className="has-text-weight-semibold mr-auto">{title}</span>
                 <div className="buttons are-small mb-0 is-flex-wrap-nowrap" style={{ gap: '0.25rem' }}>
                     {selection.length <= 1 && button('Copy', 'copy', () => onCopy(week), !week || !hasPlan(week), week && isSource(week) ? ' is-link is-light' : '')}
-                    {button(pasteLabel, 'paste', () => onPaste(pasteTargets), !copied || pasteTargets.length === 0)}
+                    {button('Paste', 'paste', () => onPaste(pasteTargets), !copied || pasteTargets.length === 0)}
                     {button(compact ? '' : 'Clear', 'eraser', () => onClear(clearTargets), clearTargets.length === 0)}
                     {selection.length <= 1 && button(compact ? '' : 'Notes', 'note-sticky', () => setNotesOpen((open) => !open), !week, notesOpen ? ' is-link is-light' : '')}
                     {selection.length > 0 && (
