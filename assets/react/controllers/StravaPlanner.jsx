@@ -65,27 +65,31 @@ const hasPlan = (week) => DAYS.some((day) => relativeMiles(week.days?.[day]) > 0
 // The API returns [] for a week without plan; the grid always works with an object.
 const normalizeWeek = (week) => ({ ...week, days: Array.isArray(week.days) ? {} : { ...week.days } });
 
-const usePrefersDark = () => {
-    const query = typeof window !== 'undefined' ? window.matchMedia?.('(prefers-color-scheme: dark)') : null;
-    const [dark, setDark] = useState(query?.matches ?? false);
+const useMediaQuery = (media) => {
+    const query = useMemo(() => (typeof window !== 'undefined' ? window.matchMedia?.(media) : null), [media]);
+    const [matches, setMatches] = useState(query?.matches ?? false);
     useEffect(() => {
         if (!query) {
             return undefined;
         }
-        const onChange = (event) => setDark(event.matches);
+        const onChange = (event) => setMatches(event.matches);
         query.addEventListener('change', onChange);
         return () => query.removeEventListener('change', onChange);
     }, [query]);
-    return dark;
+    return matches;
 };
 
-/** Day cell: relative miles and the icons of the planned sports. */
-const DayCellRenderer = ({ value }) => {
+/** Day cell: relative miles and the icons of the planned sports (on phones: "*" for several sports). */
+const DayCellRenderer = ({ value, context }) => {
     const miles = relativeMiles(value);
     if (miles <= 0) {
         return null;
     }
     const planned = SPORTS.filter((sport) => value?.[sport.type] > 0);
+
+    if (context.compact) {
+        return <span>{round1(miles)}{planned.length > 1 && '*'}</span>;
+    }
 
     return (
         <span className="icon-text is-flex-wrap-nowrap">
@@ -104,8 +108,28 @@ const dayTooltip = ({ value }) => {
     return planned.length ? planned.map((sport) => `${sport.type}: ${value[sport.type]} mi`).join('\n') : undefined;
 };
 
+/** Week cell: the week; on phones also "planned/actual" miles (their columns are hidden). */
+const WeekCellRenderer = ({ data, context }) => {
+    if (!context.compact) {
+        return <span>{weekLabel(data.weekStart)}{data.notes && <span className="icon is-small ml-1 has-text-grey"><i className="fas fa-note-sticky" /></span>}</span>;
+    }
+    const plan = round1(weekTotal(data.days));
+
+    return (
+        <div className="is-flex is-flex-direction-column is-justify-content-center" style={{ height: '100%', lineHeight: 1.2 }}>
+            <span>{weekLabel(data.weekStart)}{data.notes && <span className="has-text-grey"> •</span>}</span>
+            <span className="is-size-7 has-text-weight-normal has-text-grey">
+                {plan > 0 ? plan : '–'}{data.actual ? `/${data.actual.totalMiles}` : ''}
+            </span>
+        </div>
+    );
+};
+
+// Inputs of at least 16px, so phones don't zoom in when one is focused.
+const inputSize = (compact) => (compact ? '' : ' is-small');
+
 /** Popup editor of one day: miles per sport. Enter saves, Escape cancels. */
-const DayEditor = ({ value, onValueChange, stopEditing, colDef, data }) => {
+const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, context }) => {
     const [draft, setDraft] = useState(() =>
         Object.fromEntries(SPORTS.map((sport) => [sport.type, value?.[sport.type]?.toString() ?? ''])));
     const firstInput = useRef(null);
@@ -131,20 +155,20 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data }) => {
     };
 
     return (
-        <div className="box p-3 mb-0" style={{ width: '15rem' }}>
+        <div className="box p-3 mb-0" style={{ width: '16rem', maxWidth: 'calc(100vw - 2rem)' }}>
             <p className="has-text-weight-semibold mb-2">
                 {colDef.headerName} {weekLabel(data.weekStart)}
             </p>
             {SPORTS.map((sport, index) => (
-                <div key={sport.type} className="field is-horizontal mb-2">
-                    <label className="is-flex is-align-items-center" style={{ width: '6rem' }} htmlFor={`plan-${sport.type}`}>
+                <div key={sport.type} className="is-flex is-align-items-center mb-2">
+                    <label className="is-flex is-align-items-center is-flex-shrink-0" style={{ width: '6rem' }} htmlFor={`plan-${sport.type}`}>
                         <span className="icon"><i className={`fas fa-${sport.icon}`} /></span>
                         <span className="is-size-7">{sport.type}</span>
                     </label>
                     <input
                         id={`plan-${sport.type}`}
                         ref={index === 0 ? firstInput : undefined}
-                        className="input is-small"
+                        className={`input${inputSize(context.compact)}`}
                         type="number"
                         inputMode="decimal"
                         min="0"
@@ -167,31 +191,63 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data }) => {
     );
 };
 
-/** Copy / Paste of the whole week's activities. */
-const ActionsCellRenderer = ({ data, context }) => {
-    const { copied, copyWeek, pasteWeek } = context;
+/**
+ * Popup of a week (tap / click the week): copy the week, paste a copied week onto it, notes, clear.
+ * It acts through the context; the cell value itself is never edited.
+ */
+const WeekMenu = ({ data, stopEditing, context }) => {
+    const { copied, copyWeek, pasteWeek, saveWeek, compact } = context;
+    const [notes, setNotes] = useState(data.notes ?? '');
     const isSource = copied?.weekStart === data.weekStart;
 
+    useGridCellEditor({ isPopup: () => true });
+
+    const close = () => stopEditing(true);
+    const run = (action) => () => {
+        close();
+        action();
+    };
+
     return (
-        <div className="buttons are-small has-addons is-flex-wrap-nowrap mb-0" style={{ height: '100%' }}>
-            <button
-                type="button"
-                className={`button is-small mb-0${isSource ? ' is-link is-light' : ''}`}
-                title="Copy this week's plan (Ctrl/⌘+C)"
-                onClick={() => copyWeek(data)}
-                disabled={!hasPlan(data)}
-            >
-                <span className="icon"><i className="fas fa-copy" /></span>
-            </button>
-            <button
-                type="button"
-                className="button is-small mb-0"
-                title={copied ? `Paste the plan of ${weekLabel(copied.weekStart)} (Ctrl/⌘+V)` : 'Copy a week first'}
-                onClick={() => pasteWeek(data)}
-                disabled={!copied || isSource}
-            >
-                <span className="icon"><i className="fas fa-paste" /></span>
-            </button>
+        <div className="box p-3 mb-0" style={{ width: '16rem', maxWidth: 'calc(100vw - 2rem)' }}>
+            <p className="has-text-weight-semibold mb-2">Week of {weekLabel(data.weekStart)}</p>
+            <div className="buttons mb-2">
+                <button type="button" className="button is-small mb-0" onClick={run(() => copyWeek(data))} disabled={!hasPlan(data)}>
+                    <span className="icon"><i className="fas fa-copy" /></span>
+                    <span>Copy</span>
+                </button>
+                <button type="button" className="button is-small mb-0" onClick={run(() => pasteWeek(data))} disabled={!copied || isSource}>
+                    <span className="icon"><i className="fas fa-paste" /></span>
+                    <span>{copied && !isSource ? `Paste ${weekLabel(copied.weekStart)}` : 'Paste'}</span>
+                </button>
+                <button
+                    type="button"
+                    className="button is-small mb-0"
+                    onClick={run(() => window.confirm(`Clear the plan of ${weekLabel(data.weekStart)}?`) && saveWeek(data.weekStart, {}, data.notes))}
+                    disabled={!hasPlan(data)}
+                >
+                    <span className="icon"><i className="fas fa-eraser" /></span>
+                    <span>Clear</span>
+                </button>
+            </div>
+            <textarea
+                className={`textarea${inputSize(compact)} mb-2`}
+                rows={3}
+                maxLength={2000}
+                placeholder="Notes (e.g. long run Saturday, recovery week)"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+            />
+            <div className="buttons is-right mb-0">
+                <button type="button" className="button is-small mb-0" onClick={close}>Cancel</button>
+                <button
+                    type="button"
+                    className="button is-small is-link mb-0"
+                    onClick={run(() => notes !== (data.notes ?? '') && saveWeek(data.weekStart, data.days, notes))}
+                >
+                    Done
+                </button>
+            </div>
         </div>
     );
 };
@@ -205,7 +261,9 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notice, setNotice] = useState(null);
-    const dark = usePrefersDark();
+    const dark = useMediaQuery('(prefers-color-scheme: dark)');
+    // Phones: all 7 days fit; totals go under the week, the other columns are hidden.
+    const compact = useMediaQuery('(max-width: 768px)');
 
     const theme = useMemo(() => (dark ? themeQuartz.withPart(colorSchemeDark) : themeQuartz), [dark]);
 
@@ -296,20 +354,26 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
 
     const columnDefs = useMemo(() => [
         {
-            headerName: 'Week',
+            headerName: compact ? 'Wk' : 'Week',
             field: 'weekStart',
             pinned: 'left',
             width: 80,
-            valueFormatter: ({ value }) => weekLabel(value),
-            cellClass: 'has-text-weight-bold',
+            cellClass: compact ? 'has-text-weight-bold px-2' : 'has-text-weight-bold',
+            headerClass: compact ? 'px-2' : undefined,
+            cellRenderer: WeekCellRenderer,
+            editable,
+            cellEditor: WeekMenu,
+            cellEditorPopup: true,
+            cellEditorPopupPosition: 'under',
         },
         ...DAYS.map((day) => ({
             headerName: day,
             colId: day,
-            minWidth: 70,
+            minWidth: compact ? 38 : 70,
             flex: 1,
             editable,
-            cellClass: 'is-flex is-align-items-center',
+            cellClass: compact ? 'is-flex is-align-items-center px-1' : 'is-flex is-align-items-center',
+            headerClass: compact ? 'px-1' : undefined,
             valueGetter: ({ data }) => data.days[day] ?? {},
             valueSetter: ({ data, newValue }) => {
                 data.days = { ...data.days };
@@ -329,7 +393,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             // Tab moves between the inputs of the popup, not to the next cell.
             suppressKeyboardEvent: ({ editing, event }) => editing && event.key === 'Tab',
         })),
-        {
+        ...(compact ? [] : [{
             headerName: 'Plan',
             colId: 'plan',
             width: 75,
@@ -368,16 +432,8 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             cellEditor: 'agLargeTextCellEditor',
             cellEditorPopup: true,
             cellEditorParams: { maxLength: 2000, rows: 5, cols: 40 },
-        },
-        ...(editable ? [{
-            headerName: '',
-            colId: 'actions',
-            width: 84,
-            pinned: 'right',
-            cellRenderer: ActionsCellRenderer,
-            sortable: false,
-        }] : []),
-    ], [editable]);
+        }]),
+    ], [editable, compact]);
 
     const onCellValueChanged = useCallback(({ data }) => {
         saveWeek(data.weekStart, data.days, data.notes);
@@ -400,12 +456,15 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
     // Newest first, like the stats table.
     const rows = useMemo(() => [...weeks].reverse(), [weeks]);
     const chartWeeks = useMemo(() => weeks.map((week) => ({ ...week, planMiles: round1(weekTotal(week.days)) })), [weeks]);
-    const context = useMemo(() => ({ copied, copyWeek, pasteWeek }), [copied, copyWeek, pasteWeek]);
+    const context = useMemo(
+        () => ({ copied, copyWeek, pasteWeek, saveWeek, compact }),
+        [copied, copyWeek, pasteWeek, saveWeek, compact],
+    );
 
-    // The actions column reads `copied` from the context: redraw it when that changes.
+    // Day and week cells read `compact` from the context.
     useEffect(() => {
-        gridRef.current?.api?.refreshCells({ columns: ['actions'], force: true });
-    }, [context]);
+        gridRef.current?.api?.refreshCells({ force: true });
+    }, [compact]);
 
     if (loading && weeks.length === 0) {
         return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
@@ -422,7 +481,9 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">
                     {notice ?? (editable
-                        ? 'Click a day to plan it. Copy a week and paste it onto another (or Ctrl/⌘+C, Ctrl/⌘+V).'
+                        ? (compact
+                            ? 'Tap a day to plan it. Tap a week to copy, paste or add notes.'
+                            : 'Click a day to plan it. Click a week to copy, paste or add notes (or Ctrl/⌘+C, Ctrl/⌘+V).')
                         : 'Relative miles: bike ÷3, swim ×4, tennis ×2.')}
                 </span>
                 {!editable && <a href={connectUrl} className="button is-small mb-0">Connect to edit</a>}
@@ -439,6 +500,7 @@ const StravaPlanner = ({ apiUrl, connectUrl }) => {
                 columnDefs={columnDefs}
                 defaultColDef={{ sortable: false, resizable: false, suppressMovable: true }}
                 getRowId={({ data }) => data.weekStart}
+                rowHeight={compact ? 48 : undefined}
                 rowClassRules={{ 'strava-plan-current-week': ({ data }) => data.weekStart === currentWeek }}
                 context={context}
                 domLayout="autoHeight"

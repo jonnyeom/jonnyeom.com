@@ -22,6 +22,12 @@ const COLOR_PLAN = '#199e70';
 const COLOR_MUTED = '#898781';
 const COLOR_GRID = 'rgba(137, 135, 129, 0.25)';
 
+const LEGEND = [
+    { label: 'Planned', color: COLOR_PLAN },
+    { label: 'Actual', color: COLOR_ACTUAL },
+    { label: '5-week average', color: COLOR_AVERAGE, line: true },
+];
+
 const BAR = {
     borderRadius: { topLeft: 4, topRight: 4 },
     borderSkipped: 'start',
@@ -32,13 +38,16 @@ const BAR = {
 
 /**
  * Planned vs actual weekly miles (columns) and the 5-week average (line), oldest first.
- * Scrolls horizontally like the Progress chart, starting at the latest weeks; about 10 are visible.
+ * Scrolls horizontally like the Progress chart, opening at the current week; about 10 weeks are
+ * visible (6 on phones).
  *
  * Props: weeks (oldest first, with planMiles), currentWeek, label(weekStart).
  */
 export default function PlanChart({ weeks, currentWeek, label }) {
+    const containerRef = useRef(null);
     const canvasRef = useRef(null);
     const chartRef = useRef(null);
+    const scrolledRef = useRef(false);
 
     const data = useMemo(() => ({
         labels: weeks.map((week) => label(week.weekStart)),
@@ -85,11 +94,8 @@ export default function PlanChart({ weeks, currentWeek, label }) {
                 // One tooltip listing every series of the hovered week.
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: {
-                        position: 'top',
-                        align: 'end',
-                        labels: { color: COLOR_MUTED, boxWidth: 12, boxHeight: 12 },
-                    },
+                    // Drawn in HTML above the chart, so it stays visible while the chart scrolls.
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: (item) => (item.raw === null ? null : `${item.dataset.label}: ${item.raw} mi`),
@@ -97,9 +103,8 @@ export default function PlanChart({ weeks, currentWeek, label }) {
                     },
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: COLOR_MUTED } },
+                    x: { grid: { display: false }, ticks: { color: COLOR_MUTED, maxRotation: 0, autoSkip: false } },
                     y: {
-                        // On the right: the chart opens scrolled to the latest weeks.
                         position: 'right',
                         beginAtZero: true,
                         grid: { color: COLOR_GRID },
@@ -122,10 +127,34 @@ export default function PlanChart({ weeks, currentWeek, label }) {
         // The current week's label is bold.
         chart.options.scales.x.ticks.font = (context) => ({ weight: context.index === currentIndex ? 'bold' : 'normal' });
         chart.update();
+
+        // Open scrolled to the current week (about a third from the left), not to the last
+        // (future) weeks: on phones only ~6 weeks are visible.
+        const container = containerRef.current;
+        if (!scrolledRef.current && currentIndex >= 0 && container) {
+            scrolledRef.current = true;
+            const weekX = canvasRef.current.getBoundingClientRect().left + chart.scales.x.getPixelForValue(currentIndex);
+            const box = container.getBoundingClientRect();
+            container.scrollBy({ left: weekX - (box.left + box.width / 3) });
+        }
     }, [data, currentIndex]);
 
     return (
-        <div className="strava-weekly-chart mb-5" tabIndex={0} aria-label="Weekly mileage plan chart, scroll left for older weeks">
+        <>
+        <div className="is-flex is-justify-content-flex-end is-flex-wrap-wrap is-size-7 mb-1" style={{ gap: '0.25rem 1rem', color: COLOR_MUTED }}>
+            {LEGEND.map(({ label: name, color, line }) => (
+                <span key={name} className="is-flex is-align-items-center" style={{ gap: '0.375rem' }}>
+                    <span
+                        aria-hidden="true"
+                        style={line
+                            ? { width: 14, height: 2, background: color, borderRadius: 1 }
+                            : { width: 10, height: 10, background: color, borderRadius: 2 }}
+                    />
+                    {name}
+                </span>
+            ))}
+        </div>
+        <div ref={containerRef} className="strava-weekly-chart mb-5" tabIndex={0} aria-label="Weekly mileage plan chart, scroll for other weeks">
             <div className="strava-weekly-chart__inner" style={{ '--chart-weeks': Math.max(weeks.length, 1) }}>
                 <canvas
                     ref={canvasRef}
@@ -134,5 +163,6 @@ export default function PlanChart({ weeks, currentWeek, label }) {
                 />
             </div>
         </div>
+        </>
     );
 }

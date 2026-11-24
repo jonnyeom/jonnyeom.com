@@ -151,6 +151,12 @@ h6:hover .heading-permalink,
   height: 260px;
   width: calc(100% * var(--chart-weeks, 10) / 10);
   min-width: 100%;
+
+  // Phones: about 6 weeks visible, so the week labels don't need to rotate.
+  @media (max-width: 768px) {
+    height: 220px;
+    width: calc(100% * var(--chart-weeks, 6) / 6);
+  }
 }
 
 // Plan page (StravaPlanner, AG Grid): highlight the current week.
