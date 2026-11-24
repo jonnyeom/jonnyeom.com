@@ -215,13 +215,12 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     const [weeks, setWeeks, weeksRef] = useLatestState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
-    const [copied, setCopied] = useState(null);
-    // The copied day: { cell, sports }. Copying a day forgets the copied week and the other way round.
-    const [copiedDay, setCopiedDay, copiedDayRef] = useLatestState(null);
+    // What was copied last: { week } or { cell, sports } (a day).
+    const [copied, setCopied, copiedRef] = useLatestState(null);
     const [selectedCells, setSelectedCells, selectedCellsRef] = useLatestState([]);
     // Where Shift+click selects from.
     const anchorCell = useRef(null);
-    const [selectedWeeks, setSelectedWeeks] = useState([]);
+    const [selectedWeeks, setSelectedWeeks, selectedWeeksRef] = useLatestState([]);
     // Dragging a day's corner: { from, to }, the cells it is dragged from and to.
     const [fill, setFill] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -275,8 +274,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     };
 
     const copyWeek = (week) => {
-        setCopied(week);
-        setCopiedDay(null);
+        setCopied({ week });
         setSelectedCells([]);
         // Start a fresh selection: the weeks tapped next are where it gets pasted.
         setSelectedWeeks([]);
@@ -284,32 +282,39 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     };
 
     const copyDay = (cell) => {
-        setCopiedDay({ cell, sports: sportsOf(cell) });
-        setCopied(null);
+        const sports = sportsOf(cell);
+        // Pasting nothing would delete the plans of the days it is pasted into.
+        if (relativeMiles(sports) <= 0) {
+            setNotice(`Nothing is planned on ${cellLabel(cell)} to copy.`);
+            return;
+        }
+        setCopied({ cell, sports });
         // Like copyWeek(): the days selected next are where it gets pasted.
         setSelectedCells([]);
         anchorCell.current = cell;
         setNotice(`Copied ${cellLabel(cell)}. Ctrl/⌘/Shift+click the days to paste it into.`);
     };
 
-    // Pastes the copied week's activities into each target week (keeping their notes).
-    const pasteWeeks = async (targets) => {
+    // Pastes the activities of a copied week into each target week (keeping their notes).
+    const pasteWeeks = async (source, targets) => {
         const planned = targets.filter(hasPlan).map((week) => weekLabel(week.weekStart));
-        if (planned.length > 0 && !window.confirm(`Replace the plan of ${planned.join(', ')} with ${weekLabel(copied.weekStart)}?`)) {
+        if (planned.length > 0 && !window.confirm(`Replace the plan of ${planned.join(', ')} with ${weekLabel(source.weekStart)}?`)) {
             return;
         }
-        const saved = await Promise.all(targets.map((week) => updateWeek(week.weekStart, () => ({ days: copied.days }))));
+        const saved = await Promise.all(targets.map((week) => updateWeek(week.weekStart, () => ({ days: source.days }))));
         const pasted = targets.filter((week, index) => saved[index]).map((week) => weekLabel(week.weekStart));
         if (pasted.length > 0) {
-            setNotice(`Pasted ${weekLabel(copied.weekStart)} into ${pasted.join(', ')}.`);
+            setNotice(`Pasted ${weekLabel(source.weekStart)} into ${pasted.join(', ')}.`);
         }
     };
+
+    const isShown = ({ weekStart }) => weeksRef.current.some((week) => week.weekStart === weekStart);
 
     const sportsOf = ({ weekStart, day }) => weeksRef.current.find((week) => week.weekStart === weekStart)?.days[day] ?? {};
 
     // Copies the sports of a day into each cell ({ weekStart, day }); saves every changed week once.
     const fillCells = async (source, sports, cells) => {
-        const changed = cells.filter((cell) => !sameSports(sportsOf(cell), sports));
+        const changed = cells.filter((cell) => isShown(cell) && !sameSports(sportsOf(cell), sports));
         if (changed.length === 0) {
             return;
         }
@@ -356,7 +361,8 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                 body: await file.text(),
             });
             failed = 'Imported, but the weeks could not be reloaded';
-            const body = await api(`${apiUrl}?from=${weeks[0].weekStart}&weeks=${weeks.length}`);
+            const shown = weeksRef.current;
+            const body = await api(`${apiUrl}?from=${shown[0].weekStart}&weeks=${shown.length}`);
             setWeeks(() => body.weeks.map(normalizeWeek));
             setNotice(`Imported ${imported} week${imported === 1 ? '' : 's'}.`);
         } catch (e) {
@@ -502,35 +508,54 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             : [...current, weekStart]));
     };
 
-    // Ctrl/⌘+C copies the focused day, or the focused week in the other columns. Ctrl/⌘+V pastes a day into
-    // the selected days (or the focused day when none are), and a week into the selected weeks (or the
-    // focused week when it isn't selected). Left alone in an open editor, where they copy and paste text.
-    // Escape unselects the days.
+    // Where a copied week gets pasted: the selected weeks, else the weeks of the selected days, else the
+    // focused week.
+    const pasteTargets = (focused) => {
+        const selectedDays = selectedCellsRef.current.map((cell) => cell.weekStart);
+        let targets = [focused];
+        if (selectedWeeksRef.current.includes(focused)) {
+            targets = selectedWeeksRef.current;
+        } else if (selectedDays.length > 0) {
+            targets = selectedDays;
+        }
+        return weeksRef.current.toReversed().filter((week) => targets.includes(week.weekStart));
+    };
+
+    // Ctrl/⌘+C copies the focused day, or the focused week in the other columns. Ctrl/⌘+V pastes what was
+    // copied last: a day into the selected days (or the focused day when none are), a week as above.
+    // Escape unselects the days and forgets what was copied. Left alone in an open editor, where they
+    // copy and paste text.
     const onCellKeyDown = ({ event, data, colDef, api: grid }) => {
         if (!editable || grid.getEditingCells().length > 0) {
             return;
         }
         if (event.key === 'Escape') {
             setSelectedCells([]);
-            setCopiedDay(null);
+            setCopied(null);
+            setNotice(null);
             return;
         }
-        if (!(event.ctrlKey || event.metaKey)) {
+        // E.g. Ctrl+Shift+C opens the developer tools; a key held down pastes once.
+        if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey || event.repeat) {
             return;
         }
-        const cell = isDay(colDef) ? { weekStart: data.weekStart, day: colDef.colId } : null;
+        const { weekStart } = data;
+        const cell = isDay(colDef) ? { weekStart, day: colDef.colId } : null;
         const key = event.key.toLowerCase();
         if (key === 'c' && cell) {
             copyDay(cell);
-        } else if (key === 'c' && hasPlan(data)) {
-            copyWeek(data);
-        } else if (key === 'v' && copiedDayRef.current) {
-            const { cell: source, sports } = copiedDayRef.current;
+        } else if (key === 'c') {
+            const week = weeksRef.current.find((other) => other.weekStart === weekStart);
+            if (week && hasPlan(week)) {
+                copyWeek(week);
+            }
+        } else if (key === 'v' && copiedRef.current?.week) {
+            const { week: source } = copiedRef.current;
+            pasteWeeks(source, pasteTargets(weekStart).filter((week) => week.weekStart !== source.weekStart));
+        } else if (key === 'v' && copiedRef.current) {
+            const { cell: source, sports } = copiedRef.current;
             const focused = cell ? [cell] : [];
             fillCells(source, sports, selectedCellsRef.current.length > 0 ? selectedCellsRef.current : focused);
-        } else if (key === 'v' && copied) {
-            const targets = selectedWeeks.includes(data.weekStart) ? selection : [data];
-            pasteWeeks(targets.filter((week) => week.weekStart !== copied.weekStart));
         }
     };
 
@@ -550,16 +575,17 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         setFill({ from, to: from });
     };
 
-    const fillTo = (event) => {
-        const weekStart = weekAt(event);
-        return weekStart ? { ...fill.from, weekStart } : fill.to;
-    };
-
     const onFillMove = (event) => {
-        if (fill) {
-            // Without the button down, the end of the drag was missed (e.g. the corner disappeared).
-            setFill(event.buttons === 0 ? null : { from: fill.from, to: fillTo(event) });
+        // Without the button down, the end of the drag was missed.
+        if (event.buttons === 0) {
+            setFill(null);
+            return;
         }
+        const weekStart = weekAt(event);
+        // Only a change of week renders again.
+        setFill((current) => (!current || !weekStart || weekStart === current.to.weekStart
+            ? current
+            : { ...current, to: { ...current.to, weekStart } }));
     };
 
     const onFillEnd = (event) => {
@@ -567,8 +593,35 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             return;
         }
         setFill(null);
-        fillCells(fill.from, sportsOf(fill.from), cellsBetween(rows, fill.from, fillTo(event)));
+        const sports = sportsOf(fill.from);
+        // Empty when the day was cleared in its popup just before the drag.
+        if (relativeMiles(sports) > 0) {
+            const to = { ...fill.to, weekStart: weekAt(event) ?? fill.to.weekStart };
+            fillCells(fill.from, sports, cellsBetween(rows, fill.from, to));
+        }
     };
+
+    // Escape cancels the drag, and so does losing the corner (when its day is cleared).
+    const dragging = fill !== null;
+    useEffect(() => {
+        if (!dragging) {
+            return undefined;
+        }
+        const cancel = () => setFill(null);
+        const onKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                // Only the drag: the copied and selected days stay.
+                event.stopPropagation();
+                cancel();
+            }
+        };
+        document.addEventListener('keydown', onKeyDown, true);
+        document.addEventListener('lostpointercapture', cancel);
+        return () => {
+            document.removeEventListener('keydown', onKeyDown, true);
+            document.removeEventListener('lostpointercapture', cancel);
+        };
+    }, [dragging]);
 
     if (loading && weeks.length === 0) {
         return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
@@ -604,10 +657,10 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     <WeekActionBar
                         key={selectedWeeks.join(',')}
                         selection={selection}
-                        copied={copied}
+                        copied={copied?.week}
                         compact={compact}
                         onCopy={copyWeek}
-                        onPaste={pasteWeeks}
+                        onPaste={(targets) => pasteWeeks(copied.week, targets)}
                         onClear={clearWeeks}
                         onSaveNotes={(week, notes) => updateWeek(week.weekStart, () => ({ notes }))}
                         onClose={() => setSelectedWeeks([])}
@@ -623,9 +676,9 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     {`${highlightedCells.map(cellSelector).join(', ')} { background-color: rgba(57, 135, 229, 0.28); }`}
                 </style>
             )}
-            {copiedDay && (
+            {copied?.cell && (
                 <style>
-                    {`${cellSelector(copiedDay.cell)} { outline: 2px dashed #3987e5; outline-offset: -2px; }`}
+                    {`${cellSelector(copied.cell)} { outline: 2px dashed #3987e5; outline-offset: -2px; }`}
                 </style>
             )}
             <div
@@ -677,6 +730,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                             className={`button is-small mb-0${loading ? ' is-loading' : ''}`}
                             title="Upload a CSV (e.g. the export, edited in a spreadsheet)"
                             onClick={() => importInput.current.click()}
+                            disabled={loading}
                         >
                             <span className="icon"><i className="fas fa-file-arrow-up" /></span>
                             <span>Import</span>

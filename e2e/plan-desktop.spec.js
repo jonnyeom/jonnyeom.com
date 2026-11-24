@@ -33,6 +33,10 @@ test('drags the corner of a day to copy it', async ({ page }) => {
 
     await plan(page, day(weeks[3], 'Sun'), '6');
 
+    const saves = [];
+    const recordSave = (request) => request.method() === 'PUT' && saves.push(request.url());
+    page.on('request', recordSave);
+
     const corner = day(weeks[3], 'Sun').locator('.strava-plan-fill');
     const drag = async (to) => {
         await day(weeks[3], 'Sun').hover();
@@ -50,7 +54,14 @@ test('drags the corner of a day to copy it', async ({ page }) => {
     await expect(popup).toBeHidden();
     await expect(day(weeks[1], 'Sun')).toHaveText('');
 
-    // Up, to the later weeks.
+    // Cancelled with Escape.
+    await drag(weeks[1]);
+    await page.keyboard.press('Escape');
+    await expect(day(weeks[1], 'Sun')).not.toHaveCSS('background-color', 'rgba(57, 135, 229, 0.28)');
+    await page.mouse.up();
+
+    // Up, to the later weeks. The first save since: the drags above saved nothing.
+    expect(saves).toEqual([]);
     await drag(weeks[1]);
     await page.mouse.up();
     await expect(page.getByText(/^Copied Sun/)).toBeVisible();
@@ -85,7 +96,8 @@ test('copies a day into the days selected with the keyboard held', async ({ page
     await page.keyboard.press('ControlOrMeta+c');
     await day(weeks[0], 'Wed').click({ modifiers: ['ControlOrMeta'] });
     await day(weeks[0], 'Fri').click({ modifiers: ['ControlOrMeta'] });
-    const saved = page.waitForResponse((response) => response.request().method() === 'PUT');
+    const saved = page.waitForResponse((response) => response.request().method() === 'PUT'
+        && response.url().endsWith(weeks[0]));
     await page.keyboard.press('ControlOrMeta+v');
     await saved;
     await expect(page.getByLabel('Run')).toBeHidden();
