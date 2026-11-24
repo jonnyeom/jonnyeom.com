@@ -4,7 +4,43 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
-                {{ component('WeeklyStatsTable') }}
+                <div
+                    data-controller="strava-stats"
+                    data-strava-stats-table-url-value="{{ path('strava_stats_table') }}"
+                    data-strava-stats-refresh-url-value="{{ path('strava_stats_refresh') }}"
+                    data-strava-stats-reset-url-value="{{ path('strava_stats_reset') }}"
+                    data-strava-stats-weeks-value="{{ initialWeeks }}"
+                >
+                    <div class="is-flex is-align-items-center is-justify-content-flex-end mb-3">
+                        <span class="is-size-7 mr-3" data-strava-stats-target="notice" role="status" aria-live="polite"></span>
+                        <div class="buttons has-addons mb-0">
+                            <button
+                                type="button"
+                                data-action="strava-stats#refresh"
+                                data-strava-stats-target="button"
+                                class="button is-small mb-0"
+                                title="Fetch the latest week from Strava"
+                            >
+                                <span class="icon"><i class="fas fa-arrows-rotate"></i></span>
+                                <span>Refresh</span>
+                            </button>
+                            <button
+                                type="button"
+                                data-action="strava-stats#reset"
+                                data-strava-stats-target="button"
+                                class="button is-small mb-0"
+                                title="Delete the stored stats and reload your whole history from Strava"
+                            >
+                                <span class="icon"><i class="fas fa-clock-rotate-left"></i></span>
+                                <span>Reset</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div data-strava-stats-target="table" aria-busy="true">
+                        <progress class="progress is-small" max="100">Loading…</progress>
+                    </div>
+                </div>
 
                 <div class=" is-flex is-align-items-center is-justify-content-center mt-5">
                     <img src="{{ asset('images/strava/api/powered by Strava/pwrdBy_strava_light/api_logo_pwrdBy_strava_horiz_light.svg') }}" alt="Powered by Strava" width="150"/>

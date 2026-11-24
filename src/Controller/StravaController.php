@@ -22,7 +22,9 @@ class StravaController extends BaseController
         $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
         $this->setSeoKeywords('strava,running,metrics,mileage');
 
-        return $this->render('strava/metrics.html.twig');
+        return $this->render('strava/metrics.html.twig', [
+            'initialWeeks' => StravaStatsController::DEFAULT_WEEKS,
+        ]);
     }
 
     #[Route('/strava/plan', name: 'strava_plan')]
