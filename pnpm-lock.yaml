@@ -17,6 +17,9 @@ importers:
       bulma:
         specifier: ^1.0.4
         version: 1.0.4
+      chart.js:
+        specifier: ^4.6.1
+        version: 4.6.1
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
@@ -27,6 +30,9 @@ importers:
       '@symfony/stimulus-bridge':
         specifier: 4.0.1
         version: 4.0.1(@hotwired/stimulus@3.2.2)
+      '@symfony/ux-chartjs':
+        specifier: file:vendor/symfony/ux-chartjs/assets
+        version: file:vendor/symfony/ux-chartjs/assets(@hotwired/stimulus@3.2.2)(chart.js@4.6.1)
       '@symfony/ux-live-component':
         specifier: file:vendor/symfony/ux-live-component/assets
         version: file:vendor/symfony/ux-live-component/assets(@hotwired/stimulus@3.2.2)
@@ -335,6 +341,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
+  '@kurkle/color@0.3.4':
+    resolution: {integrity: sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w==}
+
   '@napi-rs/wasm-runtime@1.2.6':
     resolution: {integrity: sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
@@ -570,6 +579,12 @@ packages:
     peerDependencies:
       '@hotwired/stimulus': ^3.0
 
+  '@symfony/ux-chartjs@file:vendor/symfony/ux-chartjs/assets':
+    resolution: {directory: vendor/symfony/ux-chartjs/assets, type: directory}
+    peerDependencies:
+      '@hotwired/stimulus': ^3.0.0
+      chart.js: ^3.4.1 || ^4.0
+
   '@symfony/ux-live-component@file:vendor/symfony/ux-live-component/assets':
     resolution: {directory: vendor/symfony/ux-live-component/assets, type: directory}
     peerDependencies:
@@ -792,6 +807,10 @@ packages:
   change-file-extension@0.1.1:
     resolution: {integrity: sha512-lB0j9teu8JtDPDHRfU8pNH33w4wMu5bOaKoT4PxH+AKugBrIfpiJMTTKIm0TErNeJPkeQEgvH31YpccTwOKPRg==}
     engines: {node: '>=18'}
+
+  chart.js@4.6.1:
+    resolution: {integrity: sha512-hJyniucsFmq//EvXYvJ6c6mahPoI3kaxdjVH8awTaJ/fDNWeSqqqArixMJWkWNN6fcYvPU3HneSANFNYtRi61g==}
+    engines: {pnpm: '>=8'}
 
   chokidar@5.0.0:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
@@ -2643,6 +2662,8 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  '@kurkle/color@0.3.4': {}
+
   '@napi-rs/wasm-runtime@1.2.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
     dependencies:
       '@emnapi/core': 1.11.1
@@ -2795,6 +2816,11 @@ snapshots:
       '@types/webpack-env': 1.18.8
       loader-utils: 3.3.1
       schema-utils: 4.3.3
+
+  '@symfony/ux-chartjs@file:vendor/symfony/ux-chartjs/assets(@hotwired/stimulus@3.2.2)(chart.js@4.6.1)':
+    dependencies:
+      '@hotwired/stimulus': 3.2.2
+      chart.js: 4.6.1
 
   '@symfony/ux-live-component@file:vendor/symfony/ux-live-component/assets(@hotwired/stimulus@3.2.2)':
     dependencies:
@@ -3057,6 +3083,10 @@ snapshots:
   chalk@5.6.2: {}
 
   change-file-extension@0.1.1: {}
+
+  chart.js@4.6.1:
+    dependencies:
+      '@kurkle/color': 0.3.4
 
   chokidar@5.0.0:
     dependencies:

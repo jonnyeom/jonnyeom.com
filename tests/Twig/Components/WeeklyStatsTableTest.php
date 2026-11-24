@@ -15,9 +15,12 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Symfony\UX\Chartjs\Builder\ChartBuilder;
+use Symfony\UX\Chartjs\Model\Chart;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 
+use function array_fill;
 use function sprintf;
 
 final class WeeklyStatsTableTest extends KernelTestCase
@@ -87,9 +90,66 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringContainsString('Showing all stored weeks', $rendered);
     }
 
+    public function testInitialRenderIncludesTheChart(): void
+    {
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn($this->buildWeeklyStats(3));
+
+        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
+
+        $this->assertStringContainsString('Weekly mileage, last 3 weeks', $rendered);
+        $this->assertStringContainsString('data-controller="symfony--ux-chartjs--chart"', $rendered);
+    }
+
+    public function testChartShowsTheLatestTenWeeksOldestFirst(): void
+    {
+        // Provider order: newest first. Week i (0 = this week) runs i + 1 miles.
+        $weeks = [];
+        for ($i = 0; $i < 20; $i++) {
+            $monday = new DateTime('monday this week');
+            $monday->modify(sprintf('-%d weeks', $i));
+
+            $week = new WeeklyStat($monday->format('Y-m-d'));
+            $week->addStravaActivity([
+                'sport_type' => 'Run',
+                'distance' => ($i + 1) * 1609.34,
+                'start_date_local' => $monday->format('Y-m-d') . 'T08:00:00Z',
+            ]);
+            $week->setFiveWeekAverage(2 * 1609.34);
+            $weeks[] = $week;
+        }
+
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn($weeks);
+
+        $chart = (new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class), new ChartBuilder()))->getChart();
+
+        $this->assertInstanceOf(Chart::class, $chart);
+        $this->assertSame(Chart::TYPE_BAR, $chart->getType());
+
+        $data = $chart->getData();
+        $this->assertCount(10, $data['labels']);
+        $this->assertSame($weeks[9]->getDate(), $data['labels'][0]);
+        $this->assertSame($weeks[0]->getDate(), $data['labels'][9]);
+
+        [$average, $miles] = $data['datasets'];
+        $this->assertSame('line', $average['type']);
+        $this->assertSame('5-week average', $average['label']);
+        $this->assertSame(array_fill(0, 10, 2.0), $average['data']);
+        $this->assertSame('Weekly miles', $miles['label']);
+        $this->assertSame([10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0], $miles['data']);
+    }
+
+    public function testNoChartWithoutStoredWeeks(): void
+    {
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn([]);
+
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class), new ChartBuilder());
+
+        $this->assertNull($component->getChart());
+    }
+
     public function testLoadMoreIncreasesLimit(): void
     {
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class));
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class), new ChartBuilder());
 
         $this->assertSame(20, $component->visibleWeeks);
 
@@ -170,7 +230,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->method('error')
             ->with($this->stringContains('database is down'));
 
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger);
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger, new ChartBuilder());
 
         $this->assertSame('Application error: database is down', $component->getError());
     }
@@ -187,11 +247,11 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())->method('error');
 
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger);
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger, new ChartBuilder());
         $component->refresh();
         $this->assertStringContainsString('Strava access error', (string) $component->getError());
 
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger);
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger, new ChartBuilder());
         $this->assertStringContainsString('No access token', (string) $component->getError());
     }
 
