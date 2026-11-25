@@ -6,9 +6,11 @@ namespace App\Tests\Service\Strava;
 
 use App\Exception\Strava\InvalidPlan;
 use App\Service\Strava\WeeklyPlanCsv;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
 use function explode;
 use function str_repeat;
 use function str_replace;
@@ -32,6 +34,18 @@ final class WeeklyPlanCsvTest extends TestCase
         self::assertStringEndsWith('"Sun Tennis",Notes', $lines[0]);
         self::assertStringNotContainsString('20.5', $csv);
         self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,"Build, ""hard"" week"', $lines[1]);
+    }
+
+    public function testExampleHasTwoWeeksThatImport(): void
+    {
+        $csv   = new WeeklyPlanCsv();
+        $plans = $csv->parse($csv->example(new DateTimeImmutable('2026-11-30')));
+
+        self::assertSame(['2026-11-30', '2026-12-07'], array_keys($plans));
+        foreach ($plans as $plan) {
+            self::assertNotSame([], $plan['days']);
+            self::assertNotNull($plan['notes']);
+        }
     }
 
     public function testExportedCsvImportsBack(): void

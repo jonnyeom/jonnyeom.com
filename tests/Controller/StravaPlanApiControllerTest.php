@@ -19,6 +19,7 @@ use function explode;
 use function json_decode;
 use function json_encode;
 use function str_repeat;
+use function trim;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -136,6 +137,18 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $this->putJson('/api/strava/plans/2026-11-24', ['days' => []]);
 
         self::assertResponseStatusCodeSame(422);
+    }
+
+    public function testExampleIsATwoWeekCsvDownload(): void
+    {
+        $this->client->request('GET', '/api/strava/plans/example.csv');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=strava-plan-example.csv');
+        $lines = explode("\n", trim((string) $this->client->getResponse()->getContent()));
+        self::assertCount(3, $lines);
+        self::assertStringStartsWith('Week,"Mon Run"', $lines[0]);
     }
 
     public function testExportIsACsvDownload(): void

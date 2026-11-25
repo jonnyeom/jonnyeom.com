@@ -736,6 +736,15 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                             <span>Import</span>
                         </button>
                         <input ref={importInput} type="file" accept=".csv,text/csv" hidden onChange={importCsv} />
+                        <a
+                            className="button is-small mb-0"
+                            href={`${apiUrl}/example.csv`}
+                            title="Download a two-week example CSV to fill in and import"
+                            download
+                        >
+                            <span className="icon"><i className="fas fa-file-csv" /></span>
+                            <span>Example import</span>
+                        </a>
                     </>
                 )}
             </div>

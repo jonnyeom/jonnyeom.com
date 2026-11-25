@@ -80,14 +80,22 @@ class StravaPlanApiController extends AbstractController
             return $this->error($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
 
-        $response = new Response($this->planCsv->export($this->planManager->getWeeks($from, $this->weeksParameter($request))));
-        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
-        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
-            HeaderUtils::DISPOSITION_ATTACHMENT,
+        return $this->csvDownload(
+            $this->planCsv->export($this->planManager->getWeeks($from, $this->weeksParameter($request))),
             sprintf('strava-plan-%s.csv', $from->format('Y-m-d')),
-        ));
+        );
+    }
 
-        return $response;
+    /**
+     * GET /api/strava/plans/example.csv: a two-week example CSV to fill in and import, for the two
+     * weeks after the current one (so importing it as is never replaces past plans).
+     */
+    #[Route('/example.csv', name: 'example', methods: ['GET'], format: 'csv')]
+    public function example(): Response
+    {
+        $firstWeek = WeeklyPlanManager::weekStartOf(new DateTimeImmutable())->modify('+1 week');
+
+        return $this->csvDownload($this->planCsv->example($firstWeek), 'strava-plan-example.csv');
     }
 
     /**
@@ -179,6 +187,15 @@ class StravaPlanApiController extends AbstractController
     {
         // Without a session cookie the visitor can't be connected; don't start a session for them.
         return $request->hasPreviousSession() && $this->athleteGuard->isConnected($request->getSession());
+    }
+
+    private function csvDownload(string $csv, string $filename): Response
+    {
+        $response = new Response($csv);
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename));
+
+        return $response;
     }
 
     private function error(string $message, int $status): JsonResponse

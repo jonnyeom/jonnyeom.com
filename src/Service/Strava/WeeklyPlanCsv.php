@@ -69,6 +69,41 @@ class WeeklyPlanCsv
     }
 
     /**
+     * A two-week example to start a CSV from: the weeks from $firstWeek (a Monday), with a mix of
+     * days and sports, empty (rest) days and notes.
+     */
+    public function example(DateTimeImmutable $firstWeek): string
+    {
+        return $this->export([
+            [
+                'weekStart' => $firstWeek->format('Y-m-d'),
+                'days' => [
+                    'Tue' => ['Run' => 5.0],
+                    'Wed' => ['Bike' => 20.0],
+                    'Thu' => ['Run' => 6.0, 'Swim' => 1.0],
+                    'Sat' => ['Run' => 10.0, 'Tennis' => 2.0],
+                    'Sun' => ['Bike' => 30.0],
+                ],
+                'notes' => 'Base week: easy pace. Empty cells are rest.',
+                'actual' => null,
+            ],
+            [
+                'weekStart' => $firstWeek->modify('+1 week')->format('Y-m-d'),
+                'days' => [
+                    'Mon' => ['Swim' => 1.5],
+                    'Tue' => ['Run' => 6.0],
+                    'Wed' => ['Bike' => 25.0],
+                    'Thu' => ['Run' => 7.0],
+                    'Sat' => ['Run' => 12.0],
+                    'Sun' => ['Bike' => 35.0, 'Tennis' => 1.5],
+                ],
+                'notes' => 'Build week: long run 12 mi.',
+                'actual' => null,
+            ],
+        ]);
+    }
+
+    /**
      * Parses and validates a CSV. Every row replaces that week's plan; an empty row clears it.
      *
      * @return array<string, ImportedPlan> keyed by week start (Y-m-d)
