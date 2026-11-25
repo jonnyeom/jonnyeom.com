@@ -28,18 +28,17 @@ use function trim;
  * Weekly plans as CSV, to edit them in a spreadsheet (Google Sheets, Excel, Numbers).
  *
  * One row per week: Week (the Monday), then the miles of each day and sport ("Mon Run", "Mon Bike",
- * ... "Sun Tennis"), then Notes. Export also adds the "Actual" Strava miles, which import ignores,
- * like any other unknown column. Import needs all the others: a row replaces its week's plan, so a
- * missing column would silently clear data.
+ * ... "Sun Tennis"), then Notes. Only the planned activities: no Strava actuals or other computed
+ * values. Import ignores unknown columns (e.g. "Actual (mi)" from older exports), but needs all of
+ * these: a row replaces its week's plan, so a missing column would silently clear data.
  *
  * @phpstan-import-type WeekPlanView from WeeklyPlanManager
  * @phpstan-type ImportedPlan array{days: array<string, array<string, float>>, notes: string|null}
  */
 class WeeklyPlanCsv
 {
-    private const string WEEK   = 'Week';
-    private const string NOTES  = 'Notes';
-    private const string ACTUAL = 'Actual (mi)';
+    private const string WEEK  = 'Week';
+    private const string NOTES = 'Notes';
 
     /** @param list<WeekPlanView> $weeks */
     public function export(array $weeks): string
@@ -49,7 +48,7 @@ class WeeklyPlanCsv
             return '';
         }
 
-        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::ACTUAL, self::NOTES], escape: '');
+        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::NOTES], escape: '');
 
         foreach ($weeks as $week) {
             $row = [$week['weekStart']];
@@ -59,7 +58,6 @@ class WeeklyPlanCsv
                 }
             }
 
-            $row[] = $week['actual'] === null ? '' : self::formatMiles($week['actual']['totalMiles']);
             $row[] = $week['notes'] ?? '';
 
             fputcsv($stream, $row, escape: '');

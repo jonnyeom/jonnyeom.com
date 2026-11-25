@@ -29,8 +29,9 @@ final class WeeklyPlanCsvTest extends TestCase
 
         $lines = explode("\n", $csv);
         self::assertStringStartsWith('Week,"Mon Run","Mon Bike","Mon Swim","Mon Tennis","Tue Run"', $lines[0]);
-        self::assertStringEndsWith('"Sun Tennis","Actual (mi)",Notes', $lines[0]);
-        self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,20.5,"Build, ""hard"" week"', $lines[1]);
+        self::assertStringEndsWith('"Sun Tennis",Notes', $lines[0]);
+        self::assertStringNotContainsString('20.5', $csv);
+        self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,"Build, ""hard"" week"', $lines[1]);
     }
 
     public function testExportedCsvImportsBack(): void
