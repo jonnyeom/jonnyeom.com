@@ -48,14 +48,14 @@ final class StravaTokenManagerDatabaseTest extends KernelTestCase
     public function testStoredTokenIsReadBack(): void
     {
         $expires = time() + 3600;
-        $this->manager->store('12345', new AccessToken([
+        $this->manager->store(12345, new AccessToken([
             'access_token' => 'access',
             'refresh_token' => 'refresh',
             'expires' => $expires,
         ]));
         $this->entityManager->clear();
 
-        $token = $this->manager->getValidToken('12345');
+        $token = $this->manager->getValidToken(12345);
 
         self::assertSame('access', $token->getToken());
         self::assertSame('refresh', $token->getRefreshToken());
@@ -64,14 +64,14 @@ final class StravaTokenManagerDatabaseTest extends KernelTestCase
 
     public function testStoringAgainUpdatesTheSingleRowPerAthlete(): void
     {
-        $this->manager->store('12345', new AccessToken(['access_token' => 'first', 'refresh_token' => 'r1', 'expires' => time() + 60]));
+        $this->manager->store(12345, new AccessToken(['access_token' => 'first', 'refresh_token' => 'r1', 'expires' => time() + 60]));
         $this->entityManager->clear();
-        $this->manager->store('12345', new AccessToken(['access_token' => 'second', 'refresh_token' => 'r2', 'expires' => time() + 3600]));
-        $this->manager->store('67890', new AccessToken(['access_token' => 'other', 'refresh_token' => 'r3', 'expires' => time() + 3600]));
+        $this->manager->store(12345, new AccessToken(['access_token' => 'second', 'refresh_token' => 'r2', 'expires' => time() + 3600]));
+        $this->manager->store(9876543210, new AccessToken(['access_token' => 'other', 'refresh_token' => 'r3', 'expires' => time() + 3600]));
         $this->entityManager->clear();
 
         self::assertSame(2, $this->repository->count([]));
-        self::assertSame('r2', $this->repository->findForAthlete('12345')?->getRefreshToken());
-        self::assertSame('second', $this->manager->getValidToken('12345')->getToken());
+        self::assertSame('r2', $this->repository->findForAthlete(12345)?->getRefreshToken());
+        self::assertSame('second', $this->manager->getValidToken(12345)->getToken());
     }
 }

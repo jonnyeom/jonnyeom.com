@@ -64,9 +64,14 @@ class StravaDataProvider
      */
     public function getStoredWeeklyStats(int $limit): array
     {
+        $athleteId = $this->athleteGuard->getAllowedAthleteId();
+        if ($athleteId === null) {
+            return [];
+        }
+
         return array_map(
             static fn (StravaWeeklyStat $stat): WeeklyStat => $stat->toWeeklyStat(),
-            $this->weeklyStatRepository->findLatestForAthlete($this->athleteGuard->getAllowedAthleteId(), $limit),
+            $this->weeklyStatRepository->findLatestForAthlete($athleteId, $limit),
         );
     }
 
@@ -80,7 +85,9 @@ class StravaDataProvider
      */
     public function refresh(): array
     {
-        return $this->refreshLatestWeeks($this->getApiToken());
+        $athleteId = $this->getConnectedAthleteId();
+
+        return $this->refreshLatestWeeks($athleteId, $this->getApiToken($athleteId));
     }
 
     /**
@@ -93,7 +100,9 @@ class StravaDataProvider
      */
     public function reset(): array
     {
-        return $this->reloadAllWeeks($this->getApiToken());
+        $athleteId = $this->getConnectedAthleteId();
+
+        return $this->reloadAllWeeks($athleteId, $this->getApiToken($athleteId));
     }
 
     /**
@@ -102,14 +111,17 @@ class StravaDataProvider
      *
      * @return array<int, WeeklyStat> the refreshed weeks, newest first
      *
-     * @throws AccessTokenMissing When no token is stored (connect at /strava first).
+     * @throws AccessTokenMissing When no athlete is allowed or no token is stored (connect at /strava first).
      * @throws IdentityProviderException
      */
     public function refreshLatestStats(): array
     {
-        $accessToken = $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
+        $athleteId = $this->athleteGuard->getAllowedAthleteId();
+        if ($athleteId === null) {
+            throw new AccessTokenMissing();
+        }
 
-        return $this->refreshLatestWeeks($accessToken);
+        return $this->refreshLatestWeeks($athleteId, $this->tokenManager->getValidToken($athleteId));
     }
 
     /**
@@ -118,7 +130,7 @@ class StravaDataProvider
      */
     public function confirmConnection(): bool
     {
-        $this->getApiToken();
+        $this->getApiToken($this->getConnectedAthleteId());
 
         return true;
     }
@@ -180,12 +192,11 @@ class StravaDataProvider
      *
      * @throws IdentityProviderException
      */
-    private function refreshLatestWeeks(AccessToken $accessToken): array
+    private function refreshLatestWeeks(int $athleteId, AccessToken $accessToken): array
     {
-        $athleteId    = $this->athleteGuard->getAllowedAthleteId();
         $latestStored = $this->weeklyStatRepository->findLatestForAthlete($athleteId, 1)[0] ?? null;
         if (! $latestStored instanceof StravaWeeklyStat) {
-            return $this->reloadAllWeeks($accessToken);
+            return $this->reloadAllWeeks($athleteId, $accessToken);
         }
 
         $firstMonday = $latestStored->getWeekStart();
@@ -213,7 +224,7 @@ class StravaDataProvider
      *
      * @throws IdentityProviderException
      */
-    private function reloadAllWeeks(AccessToken $accessToken): array
+    private function reloadAllWeeks(int $athleteId, AccessToken $accessToken): array
     {
         $activities = $this->sortByStartDate($this->fetchActivities('0', $accessToken));
 
@@ -221,7 +232,7 @@ class StravaDataProvider
             ? []
             : $this->calculateWeeklyStats($activities, $this->mondayOf((string) $activities[0]['start_date_local']), []);
 
-        $this->weeklyStatRecorder->replaceAll($this->athleteGuard->getAllowedAthleteId(), $weeklyStats);
+        $this->weeklyStatRecorder->replaceAll($athleteId, $weeklyStats);
 
         return $weeklyStats;
     }
@@ -311,20 +322,24 @@ class StravaDataProvider
     }
 
     /**
-     * Checks the session belongs to the allowed, connected athlete, without calling Strava.
+     * Checks the session belongs to the allowed, connected athlete, without calling Strava, and
+     * returns that athlete's ID.
      *
      * @throws AccessTokenMissing
      */
-    private function assertConnectedAthlete(): void
+    private function getConnectedAthleteId(): int
     {
-        $session = $this->getSession();
+        $session   = $this->getSession();
+        $athleteId = $this->athleteGuard->getAllowedAthleteId();
 
         // Only the configured athlete (STRAVA_ATHLETE_ID) may use the integration.
-        if (! $this->athleteGuard->isConnected($session)) {
+        if ($athleteId === null || ! $this->athleteGuard->isConnected($session)) {
             $this->athleteGuard->disconnect($session);
 
             throw new AccessTokenMissing();
         }
+
+        return $athleteId;
     }
 
     private function getSession(): SessionInterface
@@ -344,12 +359,10 @@ class StravaDataProvider
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    private function getApiToken(): AccessToken
+    private function getApiToken(int $athleteId): AccessToken
     {
-        $this->assertConnectedAthlete();
-
         try {
-            return $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
+            return $this->tokenManager->getValidToken($athleteId);
         } catch (Throwable $e) {
             // Connected, but no token is stored or Strava rejected it: disconnect so the connect
             // page offers a new login instead of redirecting back.

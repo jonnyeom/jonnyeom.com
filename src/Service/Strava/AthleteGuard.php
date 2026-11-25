@@ -8,17 +8,20 @@ use League\OAuth2\Client\Token\AccessTokenInterface;
 use League\OAuth2\Client\Token\ResourceOwnerAccessTokenInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
-use function hash_equals;
+use function ctype_digit;
+use function filter_var;
 use function is_array;
 use function is_int;
 use function is_string;
 use function trim;
 
+use const FILTER_VALIDATE_INT;
+
 /**
  * Restricts the Strava integration to a single athlete (the site owner).
  *
  * The allowed athlete ID comes from the STRAVA_ATHLETE_ID environment variable.
- * If it is empty, no athlete is allowed (fail closed).
+ * If it is empty or not an athlete ID, no athlete is allowed (fail closed).
  */
 final readonly class AthleteGuard
 {
@@ -31,20 +34,17 @@ final readonly class AthleteGuard
     /** Session key used before the token moved to the database; only ever removed now. */
     public const string LEGACY_TOKEN_SESSION_KEY = 'access_token';
 
-    private string $allowedAthleteId;
+    private int|null $allowedAthleteId;
 
     public function __construct(string $allowedAthleteId)
     {
-        $this->allowedAthleteId = trim($allowedAthleteId);
+        $this->allowedAthleteId = self::parseAthleteId($allowedAthleteId);
     }
 
     public function isAllowed(mixed $athleteId): bool
     {
-        if ($this->allowedAthleteId === '' || ! (is_int($athleteId) || is_string($athleteId))) {
-            return false;
-        }
-
-        return hash_equals($this->allowedAthleteId, trim((string) $athleteId));
+        // Sessions from before the ID was an int hold it as a string.
+        return $this->allowedAthleteId !== null && self::parseAthleteId($athleteId) === $this->allowedAthleteId;
     }
 
     /** Whether the session belongs to the allowed athlete (who completed the Strava login). */
@@ -65,7 +65,8 @@ final readonly class AthleteGuard
         $session->remove(self::LEGACY_TOKEN_SESSION_KEY);
     }
 
-    public function getAllowedAthleteId(): string
+    /** Null when no athlete is allowed. */
+    public function getAllowedAthleteId(): int|null
     {
         return $this->allowedAthleteId;
     }
@@ -76,20 +77,34 @@ final readonly class AthleteGuard
      * Strava returns the athlete in the authorization_code token response (`athlete.id`),
      * but not on refresh, so this should be called on the initial token exchange.
      */
-    public static function resolveAthleteId(AccessTokenInterface $accessToken): string|null
+    public static function resolveAthleteId(AccessTokenInterface $accessToken): int|null
     {
         if ($accessToken instanceof ResourceOwnerAccessTokenInterface) {
             $ownerId = $accessToken->getResourceOwnerId();
             if ($ownerId !== null && $ownerId !== '') {
-                return (string) $ownerId;
+                return self::parseAthleteId($ownerId);
             }
         }
 
         $athlete = $accessToken->getValues()['athlete'] ?? null;
-        if (is_array($athlete) && isset($athlete['id']) && (is_int($athlete['id']) || is_string($athlete['id']))) {
-            return (string) $athlete['id'];
+
+        return is_array($athlete) ? self::parseAthleteId($athlete['id'] ?? null) : null;
+    }
+
+    /** Strict: only plain digits, so a malformed ID is never read as another athlete's. */
+    private static function parseAthleteId(mixed $athleteId): int|null
+    {
+        if (is_string($athleteId)) {
+            $athleteId = trim($athleteId);
+            if (! ctype_digit($athleteId)) {
+                return null;
+            }
+        } elseif (! is_int($athleteId)) {
+            return null;
         }
 
-        return null;
+        $parsed = filter_var($athleteId, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+
+        return $parsed === false ? null : $parsed;
     }
 }

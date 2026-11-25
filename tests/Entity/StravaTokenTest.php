@@ -15,7 +15,7 @@ final class StravaTokenTest extends TestCase
     public function testStoresTheTokenAndConvertsBack(): void
     {
         $expires = time() + 3600;
-        $stored  = new StravaToken('12345', new AccessToken([
+        $stored  = new StravaToken(12345, new AccessToken([
             'access_token' => 'access',
             'refresh_token' => 'refresh',
             'expires' => $expires,
@@ -23,7 +23,7 @@ final class StravaTokenTest extends TestCase
 
         $token = $stored->toAccessToken();
 
-        self::assertSame('12345', $stored->getAthleteId());
+        self::assertSame(12345, $stored->getAthleteId());
         self::assertSame('access', $token->getToken());
         self::assertSame('refresh', $token->getRefreshToken());
         self::assertSame($expires, $token->getExpires());
@@ -33,7 +33,7 @@ final class StravaTokenTest extends TestCase
 
     public function testUpdateRotatesTheRefreshToken(): void
     {
-        $stored = new StravaToken('12345', new AccessToken([
+        $stored = new StravaToken(12345, new AccessToken([
             'access_token' => 'old-access',
             'refresh_token' => 'old-refresh',
             'expires' => time() - 60,
@@ -52,7 +52,7 @@ final class StravaTokenTest extends TestCase
 
     public function testUpdateKeepsTheRefreshTokenWhenNoneIsReturned(): void
     {
-        $stored = new StravaToken('12345', new AccessToken([
+        $stored = new StravaToken(12345, new AccessToken([
             'access_token' => 'old-access',
             'refresh_token' => 'kept-refresh',
             'expires' => time() + 60,
@@ -65,7 +65,7 @@ final class StravaTokenTest extends TestCase
 
     public function testTokenWithoutExpiryIsTreatedAsExpired(): void
     {
-        $stored = new StravaToken('12345', new AccessToken(['access_token' => 'access', 'refresh_token' => 'refresh']));
+        $stored = new StravaToken(12345, new AccessToken(['access_token' => 'access', 'refresh_token' => 'refresh']));
 
         self::assertTrue($stored->toAccessToken()->hasExpired());
     }

@@ -19,6 +19,9 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 #[Group('database')]
 final class UnchangedEntitiesDatabaseTest extends KernelTestCase
 {
+    /** Larger than 32 bits, and not used by other tests: they leave rows behind. */
+    private const int ATHLETE_ID = 9876543211;
+
     public function testReadingEntitiesDoesNotChangeThem(): void
     {
         self::bootKernel();
@@ -30,12 +33,12 @@ final class UnchangedEntitiesDatabaseTest extends KernelTestCase
 
         try {
             $monday = new DateTimeImmutable('2035-01-01');
-            $stat   = new StravaWeeklyStat('9876543210', $monday);
+            $stat   = new StravaWeeklyStat(self::ATHLETE_ID, $monday);
             $stat->update(1.5, 2.5, ['2035-01-01' => 1.5], 1);
 
             $entities = [
-                new StravaToken('9876543210', new AccessToken(['access_token' => 'a', 'refresh_token' => 'r', 'expires' => 1])),
-                new StravaWeeklyPlan('9876543210', $monday),
+                new StravaToken(self::ATHLETE_ID, new AccessToken(['access_token' => 'a', 'refresh_token' => 'r', 'expires' => 1])),
+                new StravaWeeklyPlan(self::ATHLETE_ID, $monday),
                 $stat,
             ];
             foreach ($entities as $entity) {
@@ -49,7 +52,7 @@ final class UnchangedEntitiesDatabaseTest extends KernelTestCase
             foreach ($entities as $entity) {
                 $read = $entityManager->find($entity::class, $entity->getId());
                 self::assertNotNull($read);
-                self::assertSame('9876543210', $read->getAthleteId());
+                self::assertSame(self::ATHLETE_ID, $read->getAthleteId());
 
                 $unitOfWork->computeChangeSets();
                 self::assertSame([], $unitOfWork->getEntityChangeSet($read), $entity::class);

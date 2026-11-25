@@ -27,7 +27,7 @@ class WeeklyStatRecorder
      *
      * @param WeeklyStat[] $weeklyStats
      */
-    public function replaceAll(string $athleteId, array $weeklyStats): void
+    public function replaceAll(int $athleteId, array $weeklyStats): void
     {
         $this->entityManager->wrapInTransaction(function () use ($athleteId, $weeklyStats): void {
             $this->repository->deleteForAthlete($athleteId);
@@ -38,7 +38,7 @@ class WeeklyStatRecorder
     }
 
     /** @param WeeklyStat[] $weeklyStats */
-    public function record(string $athleteId, array $weeklyStats): void
+    public function record(int $athleteId, array $weeklyStats): void
     {
         if ($weeklyStats === []) {
             return;

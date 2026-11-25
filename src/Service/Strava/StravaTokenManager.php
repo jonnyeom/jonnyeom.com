@@ -28,7 +28,7 @@ class StravaTokenManager
     ) {
     }
 
-    public function store(string $athleteId, AccessTokenInterface $token): void
+    public function store(int $athleteId, AccessTokenInterface $token): void
     {
         $stored = $this->repository->findForAthlete($athleteId);
         if ($stored instanceof StravaToken) {
@@ -46,7 +46,7 @@ class StravaTokenManager
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    public function getValidToken(string $athleteId): AccessToken
+    public function getValidToken(int $athleteId): AccessToken
     {
         $token = $this->getStoredToken($athleteId)->toAccessToken();
 
@@ -60,7 +60,7 @@ class StravaTokenManager
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    public function refresh(string $athleteId): AccessToken
+    public function refresh(int $athleteId): AccessToken
     {
         $stored = $this->getStoredToken($athleteId);
 
@@ -90,7 +90,7 @@ class StravaTokenManager
     }
 
     /** @throws AccessTokenMissing */
-    private function getStoredToken(string $athleteId): StravaToken
+    private function getStoredToken(int $athleteId): StravaToken
     {
         $stored = $this->repository->findForAthlete($athleteId);
         if (! $stored instanceof StravaToken) {

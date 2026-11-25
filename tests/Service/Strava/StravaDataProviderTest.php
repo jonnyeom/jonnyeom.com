@@ -37,7 +37,7 @@ use function time;
 
 final class StravaDataProviderTest extends TestCase
 {
-    private const string ALLOWED_ATHLETE_ID = '12345';
+    private const int ALLOWED_ATHLETE_ID = 12345;
 
     private const int WEEK = 7 * 86400;
 
@@ -88,7 +88,7 @@ final class StravaDataProviderTest extends TestCase
         $this->provider = new StravaDataProvider(
             $requestStack,
             $this->clientProvider,
-            new AthleteGuard(self::ALLOWED_ATHLETE_ID),
+            new AthleteGuard((string) self::ALLOWED_ATHLETE_ID),
             $this->recorder,
             $this->repository,
             $this->tokenManager,
@@ -210,6 +210,24 @@ final class StravaDataProviderTest extends TestCase
         return $cases;
     }
 
+    public function testWithoutAnAllowedAthleteThereAreNoStatsAndNothingIsRefreshed(): void
+    {
+        $this->repository->expects($this->never())->method('findLatestForAthlete');
+        $this->tokenManager->expects($this->never())->method('getValidToken');
+
+        $provider = new StravaDataProvider(
+            new RequestStack(),
+            $this->clientProvider,
+            new AthleteGuard(''),
+            $this->recorder,
+            $this->repository,
+            $this->tokenManager,
+        );
+
+        self::assertSame([], $provider->getStoredWeeklyStats(20));
+        $this->assertThrowsAccessTokenMissing(static fn () => $provider->refreshLatestStats());
+    }
+
     public function testRefreshOnlyFetchesFromTheLatestStoredWeek(): void
     {
         $this->connectAllowedAthlete();
@@ -249,7 +267,7 @@ final class StravaDataProviderTest extends TestCase
             ->with(self::ALLOWED_ATHLETE_ID, $this->anything())
             ->willReturnCallback(
                 /** @param WeeklyStat[] $stats */
-                static function (string $athleteId, array $stats) use (&$stored): void {
+                static function (int $athleteId, array $stats) use (&$stored): void {
                     $stored = $stats;
                 },
             );
@@ -344,7 +362,7 @@ final class StravaDataProviderTest extends TestCase
             ->method('replaceAll')
             ->willReturnCallback(
                 /** @param WeeklyStat[] $stats */
-                static function (string $athleteId, array $stats) use (&$replaced): void {
+                static function (int $athleteId, array $stats) use (&$replaced): void {
                     $replaced = $stats;
                 },
             );

@@ -59,16 +59,12 @@ class StravaWeeklyStat
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeImmutable $updatedAt;
 
-    /** An int, as DBAL reads BIGINT columns: a string would look changed on every flush. */
-    #[ORM\Column(type: Types::BIGINT)]
-    private int $athleteId;
-
     public function __construct(
-        string $athleteId,
+        #[ORM\Column(type: Types::BIGINT)]
+        private int $athleteId,
         #[ORM\Column(type: Types::DATE_IMMUTABLE)]
         private DateTimeImmutable $weekStart,
     ) {
-        $this->athleteId = (int) $athleteId;
         $this->updatedAt = new DateTimeImmutable();
     }
 
@@ -111,9 +107,9 @@ class StravaWeeklyStat
         return $this->id;
     }
 
-    public function getAthleteId(): string
+    public function getAthleteId(): int
     {
-        return (string) $this->athleteId;
+        return $this->athleteId;
     }
 
     public function getWeekStart(): DateTimeImmutable

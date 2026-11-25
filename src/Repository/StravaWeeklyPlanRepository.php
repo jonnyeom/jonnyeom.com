@@ -17,7 +17,7 @@ class StravaWeeklyPlanRepository extends ServiceEntityRepository
         parent::__construct($registry, StravaWeeklyPlan::class);
     }
 
-    public function findOneByAthleteAndWeek(string $athleteId, DateTimeImmutable $weekStart): StravaWeeklyPlan|null
+    public function findOneByAthleteAndWeek(int $athleteId, DateTimeImmutable $weekStart): StravaWeeklyPlan|null
     {
         return $this->findOneBy(['athleteId' => $athleteId, 'weekStart' => $weekStart]);
     }
@@ -27,7 +27,7 @@ class StravaWeeklyPlanRepository extends ServiceEntityRepository
      *
      * @return array<string, StravaWeeklyPlan> keyed by week start (Y-m-d), oldest first
      */
-    public function findBetween(string $athleteId, DateTimeImmutable $from, DateTimeImmutable $to): array
+    public function findBetween(int $athleteId, DateTimeImmutable $from, DateTimeImmutable $to): array
     {
         /** @var StravaWeeklyPlan[] $results */
         $results = $this->createQueryBuilder('p')

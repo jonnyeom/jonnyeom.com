@@ -21,7 +21,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 #[Group('database')]
 final class WeeklyStatRecorderTest extends KernelTestCase
 {
-    private const string ATHLETE_ID = '12345';
+    private const int ATHLETE_ID = 12345;
 
     private EntityManagerInterface $entityManager;
 
@@ -128,14 +128,14 @@ final class WeeklyStatRecorderTest extends KernelTestCase
         $this->recorder->record(self::ATHLETE_ID, [
             $this->weeklyStat('2026-11-16', [['Run', 5000.0, '2026-11-16T08:00:00Z']], 5000.0),
         ]);
-        $this->recorder->record('67890', [
+        $this->recorder->record(9876543210, [
             $this->weeklyStat('2026-11-16', [['Run', 1000.0, '2026-11-16T08:00:00Z']], 1000.0),
         ]);
         $this->entityManager->clear();
 
         self::assertSame(2, $this->repository->count([]));
         self::assertSame(5000.0, $this->findWeek(self::ATHLETE_ID, '2026-11-16')->getTotalDistance());
-        self::assertSame(1000.0, $this->findWeek('67890', '2026-11-16')->getTotalDistance());
+        self::assertSame(1000.0, $this->findWeek(9876543210, '2026-11-16')->getTotalDistance());
     }
 
     public function testDatabaseRejectsDuplicateAthleteWeek(): void
@@ -156,7 +156,7 @@ final class WeeklyStatRecorderTest extends KernelTestCase
             $this->weeklyStat('2026-11-16', [], 0.0),
             $this->weeklyStat('2026-11-09', [], 0.0),
         ]);
-        $this->recorder->record('67890', [$this->weeklyStat('2026-11-23', [], 0.0)]);
+        $this->recorder->record(9876543210, [$this->weeklyStat('2026-11-23', [], 0.0)]);
         $this->entityManager->clear();
 
         $latest = $this->repository->findLatestForAthlete(self::ATHLETE_ID, 2);
@@ -172,7 +172,7 @@ final class WeeklyStatRecorderTest extends KernelTestCase
             $this->weeklyStat('2026-11-02', [], 0.0),
             $this->weeklyStat('2026-11-09', [['Run', 1000.0, '2026-11-09T08:00:00Z']], 1000.0),
         ]);
-        $this->recorder->record('67890', [$this->weeklyStat('2026-11-09', [], 0.0)]);
+        $this->recorder->record(9876543210, [$this->weeklyStat('2026-11-09', [], 0.0)]);
         $this->entityManager->clear();
 
         $this->recorder->replaceAll(self::ATHLETE_ID, [
@@ -188,7 +188,7 @@ final class WeeklyStatRecorderTest extends KernelTestCase
         self::assertSame(9000.0, $weeks[1]->getTotalDistance());
 
         // Other athletes are untouched.
-        self::assertCount(1, $this->repository->findLatestForAthlete('67890', 10));
+        self::assertCount(1, $this->repository->findLatestForAthlete(9876543210, 10));
     }
 
     public function testFindBeforeWeekReturnsTheWeeksRightBeforeNewestFirst(): void
@@ -200,7 +200,7 @@ final class WeeklyStatRecorderTest extends KernelTestCase
             $this->weeklyStat('2026-11-09', [], 0.0),
             $this->weeklyStat('2026-11-16', [], 0.0),
         ]);
-        $this->recorder->record('67890', [$this->weeklyStat('2026-11-09', [], 0.0)]);
+        $this->recorder->record(9876543210, [$this->weeklyStat('2026-11-09', [], 0.0)]);
         $this->entityManager->clear();
 
         $before = $this->repository->findBeforeWeek(self::ATHLETE_ID, new DateTimeImmutable('2026-11-16'), 3);
@@ -211,7 +211,7 @@ final class WeeklyStatRecorderTest extends KernelTestCase
         self::assertSame('2026-10-26', $before[2]->getWeekStart()->format('Y-m-d'));
     }
 
-    private function findWeek(string $athleteId, string $weekStart): StravaWeeklyStat
+    private function findWeek(int $athleteId, string $weekStart): StravaWeeklyStat
     {
         $stat = $this->repository->findByAthleteAndWeeks($athleteId, [$weekStart])[$weekStart] ?? null;
         self::assertInstanceOf(StravaWeeklyStat::class, $stat, 'Week ' . $weekStart . ' was not stored.');

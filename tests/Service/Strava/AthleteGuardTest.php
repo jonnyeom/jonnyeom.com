@@ -6,6 +6,7 @@ namespace App\Tests\Service\Strava;
 
 use App\Service\Strava\AthleteGuard;
 use League\OAuth2\Client\Token\AccessToken;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
@@ -32,6 +33,50 @@ final class AthleteGuardTest extends TestCase
         $this->assertFalse($guard->isAllowed('12345'));
     }
 
+    #[DataProvider('invalidAthleteIds')]
+    public function testFailsClosedWhenConfiguredWithAnInvalidId(string $invalid): void
+    {
+        $guard = new AthleteGuard($invalid);
+
+        self::assertNull($guard->getAllowedAthleteId());
+        self::assertFalse($guard->isAllowed($invalid));
+        self::assertFalse($guard->isAllowed(0));
+        self::assertFalse($guard->isAllowed(null));
+    }
+
+    #[DataProvider('invalidAthleteIds')]
+    public function testAnInvalidIdIsNeverReadAsTheAllowedAthlete(string $invalid): void
+    {
+        self::assertFalse((new AthleteGuard('12345'))->isAllowed($invalid));
+        self::assertNull(AthleteGuard::resolveAthleteId(new AccessToken(['access_token' => 'abc', 'athlete' => ['id' => $invalid]])));
+    }
+
+    /** @return array<string, array{string}> */
+    public static function invalidAthleteIds(): array
+    {
+        return [
+            'empty' => [''],
+            'text' => ['abc'],
+            'trailing text' => ['12345abc'],
+            'zero' => ['0'],
+            'negative' => ['-12345'],
+            'signed' => ['+12345'],
+            'decimal' => ['12345.0'],
+            'exponent' => ['12345e0'],
+            'leading zero' => ['012345'],
+            'larger than 64 bits' => ['99999999999999999999'],
+        ];
+    }
+
+    /** Sessions from before the ID was an int. */
+    public function testASessionWithTheIdAsAStringStaysConnected(): void
+    {
+        $session = new Session(new MockArraySessionStorage());
+        $session->set(AthleteGuard::SESSION_KEY, '12345');
+
+        self::assertTrue((new AthleteGuard('12345'))->isConnected($session));
+    }
+
     public function testConnectStoresOnlyTheAthleteIdInTheSession(): void
     {
         $guard   = new AthleteGuard('12345');
@@ -43,7 +88,7 @@ final class AthleteGuardTest extends TestCase
         $guard->connect($session);
 
         self::assertTrue($guard->isConnected($session));
-        self::assertSame(['strava_athlete_id' => '12345'], $session->all());
+        self::assertSame(['strava_athlete_id' => 12345], $session->all());
     }
 
     public function testDisconnectClearsTheSession(): void
@@ -71,14 +116,14 @@ final class AthleteGuardTest extends TestCase
     {
         $token = new AccessToken(['access_token' => 'abc', 'athlete' => ['id' => 12345]]);
 
-        $this->assertSame('12345', AthleteGuard::resolveAthleteId($token));
+        $this->assertSame(12345, AthleteGuard::resolveAthleteId($token));
     }
 
     public function testResolvesAthleteIdFromResourceOwner(): void
     {
         $token = new AccessToken(['access_token' => 'abc', 'resource_owner_id' => 777]);
 
-        $this->assertSame('777', AthleteGuard::resolveAthleteId($token));
+        $this->assertSame(777, AthleteGuard::resolveAthleteId($token));
     }
 
     public function testReturnsNullWithoutAthlete(): void

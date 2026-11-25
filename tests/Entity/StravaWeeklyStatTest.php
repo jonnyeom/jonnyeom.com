@@ -15,10 +15,10 @@ final class StravaWeeklyStatTest extends TestCase
         $weekStart = new DateTimeImmutable('2026-11-16');
         $before    = new DateTimeImmutable();
 
-        $stat = new StravaWeeklyStat('12345', $weekStart);
+        $stat = new StravaWeeklyStat(12345, $weekStart);
 
         self::assertNull($stat->getId());
-        self::assertSame('12345', $stat->getAthleteId());
+        self::assertSame(12345, $stat->getAthleteId());
         self::assertSame($weekStart, $stat->getWeekStart());
         self::assertSame(0.0, $stat->getTotalDistance());
         self::assertSame(0.0, $stat->getTotalMiles());
@@ -31,7 +31,7 @@ final class StravaWeeklyStatTest extends TestCase
 
     public function testUpdateStoresMetrics(): void
     {
-        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat = new StravaWeeklyStat(12345, new DateTimeImmutable('2026-11-16'));
 
         $daily = ['Mon' => 5000.0, 'Tue' => 0.0, 'Wed' => 8046.7, 'Thu' => 0.0, 'Fri' => 0.0, 'Sat' => 16093.4, 'Sun' => 0.0];
         $stat->update(29140.1, 25000.0, $daily, 3);
@@ -44,7 +44,7 @@ final class StravaWeeklyStatTest extends TestCase
 
     public function testUpdateOverwritesPreviousValues(): void
     {
-        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat = new StravaWeeklyStat(12345, new DateTimeImmutable('2026-11-16'));
 
         $stat->update(1000.0, 1000.0, ['Mon' => 1000.0], 1);
         $firstUpdatedAt = $stat->getUpdatedAt();
@@ -60,7 +60,7 @@ final class StravaWeeklyStatTest extends TestCase
 
     public function testToWeeklyStatRebuildsTheDisplayModelFromStoredActivities(): void
     {
-        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat = new StravaWeeklyStat(12345, new DateTimeImmutable('2026-11-16'));
         $stat->update(9000.0, 7000.0, [], 2, [
             ['sport_type' => 'Run', 'distance' => 5000.0, 'start_date_local' => '2026-11-16T08:00:00Z'],
             ['sport_type' => 'Swim', 'distance' => 1000.0, 'start_date_local' => '2026-11-18T07:00:00Z'],
@@ -78,7 +78,7 @@ final class StravaWeeklyStatTest extends TestCase
 
     public function testToWeeklyStatCountsRidesAsBiking(): void
     {
-        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat = new StravaWeeklyStat(12345, new DateTimeImmutable('2026-11-16'));
         $stat->update(0.0, 0.0, [], 1, [
             ['sport_type' => 'Ride', 'distance' => 30000.0, 'start_date_local' => '2026-11-16T08:00:00Z'],
         ]);
@@ -91,7 +91,7 @@ final class StravaWeeklyStatTest extends TestCase
 
     public function testToWeeklyStatWithoutActivitiesIsAnEmptyWeek(): void
     {
-        $weeklyStat = (new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16')))->toWeeklyStat();
+        $weeklyStat = (new StravaWeeklyStat(12345, new DateTimeImmutable('2026-11-16')))->toWeeklyStat();
 
         self::assertSame(0.0, $weeklyStat->getTotalDistance());
         self::assertSame(0, $weeklyStat->getActivityCount());
@@ -99,7 +99,7 @@ final class StravaWeeklyStatTest extends TestCase
 
     public function testTotalMilesConvertsMetersAndRoundsToOneDecimal(): void
     {
-        $stat = new StravaWeeklyStat('12345', new DateTimeImmutable('2026-11-16'));
+        $stat = new StravaWeeklyStat(12345, new DateTimeImmutable('2026-11-16'));
 
         $stat->update(16093.4, 0.0, [], 1);
         self::assertSame(10.0, $stat->getTotalMiles());

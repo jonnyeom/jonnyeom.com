@@ -16,7 +16,7 @@ class StravaTokenRepository extends ServiceEntityRepository
         parent::__construct($registry, StravaToken::class);
     }
 
-    public function findForAthlete(string $athleteId): StravaToken|null
+    public function findForAthlete(int $athleteId): StravaToken|null
     {
         return $this->findOneBy(['athleteId' => $athleteId]);
     }
