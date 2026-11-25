@@ -85,7 +85,7 @@ class StravaConnectController extends AbstractController
 
         // Only the site owner's Strava account (STRAVA_ATHLETE_ID) may connect.
         $athleteId = AthleteGuard::resolveAthleteId($accessToken);
-        if (! $this->athleteGuard->isAllowed($athleteId)) {
+        if ($athleteId === null || ! $this->athleteGuard->isAllowed($athleteId)) {
             $logger->warning('Rejected Strava connection from non-allowed athlete.', ['athlete_id' => $athleteId]);
 
             $this->addFlash('error', 'This Strava account is not allowed to connect to this site.');
@@ -95,7 +95,7 @@ class StravaConnectController extends AbstractController
 
         // The token is only stored in the database (also used by app:strava:refresh-stats);
         // the session just remembers that the allowed athlete is connected.
-        $this->tokenManager->store($this->athleteGuard->getAllowedAthleteId(), $accessToken);
+        $this->tokenManager->store($athleteId, $accessToken);
         $this->athleteGuard->connect($request->getSession());
 
         return $this->redirectToRoute('strava_metrics');

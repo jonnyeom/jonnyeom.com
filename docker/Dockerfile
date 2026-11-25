@@ -1,10 +1,10 @@
-FROM php:8.4-fpm-alpine
+FROM php:8.5-fpm-alpine
 
 # System deps + PHP extensions
 # postgresql-dev is only needed to compile pdo_pgsql; remove it after, keep runtime libpq
 RUN apk add --no-cache nginx nodejs npm icu-dev curl \
     && apk add --no-cache --virtual .build-deps postgresql-dev \
-    && docker-php-ext-install pdo pdo_pgsql intl opcache \
+    && docker-php-ext-install pdo pdo_pgsql intl \
     && apk del .build-deps \
     && apk add --no-cache libpq
 

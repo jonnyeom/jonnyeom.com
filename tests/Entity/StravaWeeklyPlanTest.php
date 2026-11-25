@@ -16,10 +16,10 @@ final class StravaWeeklyPlanTest extends TestCase
 {
     public function testNewPlanIsEmpty(): void
     {
-        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan = new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-23'));
 
         self::assertNull($plan->getId());
-        self::assertSame('12345', $plan->getAthleteId());
+        self::assertSame(12345, $plan->getAthleteId());
         self::assertSame('2026-11-23', $plan->getWeekStart()->format('Y-m-d'));
         self::assertSame([], $plan->getDays());
         self::assertNull($plan->getNotes());
@@ -30,12 +30,12 @@ final class StravaWeeklyPlanTest extends TestCase
     {
         $this->expectException(InvalidPlan::class);
 
-        new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-24'));
+        new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-24'));
     }
 
     public function testUpdateNormalizesDays(): void
     {
-        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan = new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-23'));
 
         $plan->update([
             'Sat' => ['Run' => 10],
@@ -56,7 +56,7 @@ final class StravaWeeklyPlanTest extends TestCase
 
     public function testUpdateReplacesThePreviousPlan(): void
     {
-        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan = new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-23'));
         $plan->update(['Mon' => ['Run' => 5]], 'notes');
 
         $plan->update(['Tue' => ['Run' => 3]]);
@@ -80,7 +80,7 @@ final class StravaWeeklyPlanTest extends TestCase
     #[DataProvider('invalidDays')]
     public function testUpdateRejectsInvalidDays(array $days): void
     {
-        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan = new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-23'));
 
         $this->expectException(InvalidPlan::class);
 
@@ -89,7 +89,7 @@ final class StravaWeeklyPlanTest extends TestCase
 
     public function testInvalidUpdateChangesNothing(): void
     {
-        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan = new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-23'));
         $plan->update(['Mon' => ['Run' => 5]], 'notes');
 
         try {
@@ -104,7 +104,7 @@ final class StravaWeeklyPlanTest extends TestCase
 
     public function testUpdateRejectsTooLongNotes(): void
     {
-        $plan = new StravaWeeklyPlan('12345', new DateTimeImmutable('2026-11-23'));
+        $plan = new StravaWeeklyPlan(12345, new DateTimeImmutable('2026-11-23'));
 
         $this->expectException(InvalidPlan::class);
 

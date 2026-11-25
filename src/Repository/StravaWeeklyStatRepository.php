@@ -23,7 +23,7 @@ class StravaWeeklyStatRepository extends ServiceEntityRepository
      *
      * @return array<string, StravaWeeklyStat> keyed by week start (Y-m-d)
      */
-    public function findByAthleteAndWeeks(string $athleteId, array $weekStarts): array
+    public function findByAthleteAndWeeks(int $athleteId, array $weekStarts): array
     {
         if ($weekStarts === []) {
             return [];
@@ -51,7 +51,7 @@ class StravaWeeklyStatRepository extends ServiceEntityRepository
      *
      * @return StravaWeeklyStat[] newest first
      */
-    public function findBeforeWeek(string $athleteId, DateTimeImmutable $weekStart, int $limit): array
+    public function findBeforeWeek(int $athleteId, DateTimeImmutable $weekStart, int $limit): array
     {
         /** @var StravaWeeklyStat[] $results */
         $results = $this->createQueryBuilder('s')
@@ -67,7 +67,7 @@ class StravaWeeklyStatRepository extends ServiceEntityRepository
         return $results;
     }
 
-    public function deleteForAthlete(string $athleteId): void
+    public function deleteForAthlete(int $athleteId): void
     {
         $this->createQueryBuilder('s')
             ->delete()
@@ -78,7 +78,7 @@ class StravaWeeklyStatRepository extends ServiceEntityRepository
     }
 
     /** @return StravaWeeklyStat[] newest first */
-    public function findLatestForAthlete(string $athleteId, int $limit): array
+    public function findLatestForAthlete(int $athleteId, int $limit): array
     {
         /** @var StravaWeeklyStat[] $results */
         $results = $this->createQueryBuilder('s')

@@ -44,7 +44,7 @@ class StravaToken
 
     public function __construct(
         #[ORM\Column(type: Types::BIGINT)]
-        private string $athleteId,
+        private int $athleteId,
         AccessTokenInterface $token,
     ) {
         $this->refreshToken = '';
@@ -69,7 +69,7 @@ class StravaToken
             'access_token' => $this->accessToken,
             'refresh_token' => $this->refreshToken,
             'expires' => $this->expiresAt,
-            'resource_owner_id' => $this->athleteId,
+            'resource_owner_id' => (string) $this->athleteId,
         ]);
     }
 
@@ -78,7 +78,7 @@ class StravaToken
         return $this->id;
     }
 
-    public function getAthleteId(): string
+    public function getAthleteId(): int
     {
         return $this->athleteId;
     }

@@ -176,7 +176,7 @@ class WeeklyPlanCsv
                 }
 
                 // Validates the row (distances, notes) like a PUT of the week would.
-                $plan = new StravaWeeklyPlan('0', $weekStart);
+                $plan = new StravaWeeklyPlan(0, $weekStart);
                 $plan->update($days, $cell(self::NOTES));
 
                 $plans[$key] = ['days' => $plan->getDays(), 'notes' => $plan->getNotes()];

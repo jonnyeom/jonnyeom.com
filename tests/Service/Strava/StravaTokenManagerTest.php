@@ -22,7 +22,7 @@ use function time;
 
 final class StravaTokenManagerTest extends TestCase
 {
-    private const string ATHLETE_ID = '12345';
+    private const int ATHLETE_ID = 12345;
 
     /** @var MockObject&EntityManagerInterface */
     private MockObject $entityManager;

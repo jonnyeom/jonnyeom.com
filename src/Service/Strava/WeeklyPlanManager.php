@@ -12,6 +12,7 @@ use App\Repository\StravaWeeklyStatRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use LogicException;
 
 use function array_map;
 use function count;
@@ -87,8 +88,13 @@ class WeeklyPlanManager
             $weekStarts[] = $from->modify(sprintf('+%d weeks', $i));
         }
 
-        $plans = $this->planRepository->findBetween($athleteId, $from, $from->modify(sprintf('+%d weeks', $weeks - 1)));
-        $stats = $this->statRepository->findByAthleteAndWeeks(
+        // Without an allowed athlete there is nothing to read: every week is empty.
+        $plans = $athleteId === null ? [] : $this->planRepository->findBetween(
+            $athleteId,
+            $from,
+            $from->modify(sprintf('+%d weeks', $weeks - 1)),
+        );
+        $stats = $athleteId === null ? [] : $this->statRepository->findByAthleteAndWeeks(
             $athleteId,
             array_map(static fn (DateTimeImmutable $week): string => $week->format('Y-m-d'), $weekStarts),
         );
@@ -149,7 +155,8 @@ class WeeklyPlanManager
      */
     private function apply(DateTimeImmutable $weekStart, array $days, string|null $notes): void
     {
-        $athleteId = $this->athleteGuard->getAllowedAthleteId();
+        $athleteId = $this->athleteGuard->getAllowedAthleteId()
+            ?? throw new LogicException('Plans can only be saved for an allowed athlete.');
         $plan      = $this->planRepository->findOneByAthleteAndWeek($athleteId, $weekStart);
 
         if (! $plan instanceof StravaWeeklyPlan) {

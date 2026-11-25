@@ -65,7 +65,7 @@ class StravaWeeklyPlan
     /** @throws InvalidPlan when $weekStart is not a Monday. */
     public function __construct(
         #[ORM\Column(type: Types::BIGINT)]
-        private string $athleteId,
+        private int $athleteId,
         #[ORM\Column(type: Types::DATE_IMMUTABLE)]
         private DateTimeImmutable $weekStart,
     ) {
@@ -105,7 +105,7 @@ class StravaWeeklyPlan
         return $this->id;
     }
 
-    public function getAthleteId(): string
+    public function getAthleteId(): int
     {
         return $this->athleteId;
     }

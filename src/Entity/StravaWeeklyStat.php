@@ -61,7 +61,7 @@ class StravaWeeklyStat
 
     public function __construct(
         #[ORM\Column(type: Types::BIGINT)]
-        private string $athleteId,
+        private int $athleteId,
         #[ORM\Column(type: Types::DATE_IMMUTABLE)]
         private DateTimeImmutable $weekStart,
     ) {
@@ -107,7 +107,7 @@ class StravaWeeklyStat
         return $this->id;
     }
 
-    public function getAthleteId(): string
+    public function getAthleteId(): int
     {
         return $this->athleteId;
     }

@@ -7,9 +7,12 @@ namespace App\Tests\Service\Strava;
 use App\Entity\StravaWeeklyStat;
 use App\Exception\Strava\InvalidPlan;
 use App\Repository\StravaWeeklyPlanRepository;
+use App\Repository\StravaWeeklyStatRepository;
+use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\WeeklyPlanManager;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use LogicException;
 use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
@@ -19,7 +22,7 @@ use function array_column;
 #[Group('database')]
 final class WeeklyPlanManagerTest extends KernelTestCase
 {
-    private const string ATHLETE_ID = '12345';
+    private const int ATHLETE_ID = 12345;
 
     private EntityManagerInterface $entityManager;
 
@@ -46,6 +49,24 @@ final class WeeklyPlanManagerTest extends KernelTestCase
 
         $this->entityManager->getConnection()->executeStatement('DELETE FROM strava_weekly_plan');
         $this->entityManager->getConnection()->executeStatement('DELETE FROM strava_weekly_stat');
+    }
+
+    public function testWithoutAnAllowedAthleteWeeksAreEmptyAndNothingIsSaved(): void
+    {
+        $week = new DateTimeImmutable('2026-11-23');
+        $this->manager->save($week, ['Mon' => ['Run' => 5]], null);
+
+        $statRepository = self::getContainer()->get(StravaWeeklyStatRepository::class);
+        self::assertInstanceOf(StravaWeeklyStatRepository::class, $statRepository);
+        $manager = new WeeklyPlanManager($this->entityManager, $this->repository, $statRepository, new AthleteGuard(''));
+
+        self::assertSame(
+            [['weekStart' => '2026-11-23', 'days' => [], 'notes' => null, 'actual' => null]],
+            $manager->getWeeks($week, 1),
+        );
+
+        $this->expectException(LogicException::class);
+        $manager->save($week, ['Mon' => ['Run' => 9]], null);
     }
 
     public function testSaveCreatesThenReplacesTheWeeksPlan(): void

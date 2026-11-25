@@ -40,8 +40,8 @@ final class StravaRefreshStatsCommand extends Command
         $io        = new SymfonyStyle($input, $output);
         $athleteId = $this->athleteGuard->getAllowedAthleteId();
 
-        if ($athleteId === '') {
-            $io->error('STRAVA_ATHLETE_ID is not set.');
+        if ($athleteId === null) {
+            $io->error('STRAVA_ATHLETE_ID is not set to an athlete ID.');
 
             return Command::FAILURE;
         }
@@ -49,7 +49,7 @@ final class StravaRefreshStatsCommand extends Command
         try {
             $weeklyStats = $this->stravaDataProvider->refreshLatestStats();
         } catch (AccessTokenMissing) {
-            $io->error(sprintf('No Strava token is stored for athlete %s. Connect to Strava at /strava first.', $athleteId));
+            $io->error(sprintf('No Strava token is stored for athlete %d. Connect to Strava at /strava first.', $athleteId));
 
             return Command::FAILURE;
         } catch (IdentityProviderException $e) {
@@ -65,7 +65,7 @@ final class StravaRefreshStatsCommand extends Command
         }
 
         $io->success(sprintf(
-            'Refreshed %d week(s) of Strava stats for athlete %s. This week: %s mi (5-week average %s mi).',
+            'Refreshed %d week(s) of Strava stats for athlete %d. This week: %s mi (5-week average %s mi).',
             count($weeklyStats),
             $athleteId,
             $weeklyStats[0]->getTotalMiles(),
