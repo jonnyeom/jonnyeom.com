@@ -11,7 +11,9 @@
         "schedule:weekends",
         "schedule:automergeEarlyMondays"
     ],
-    "dependencyDashboard": true,
+    "dependencyDashboard": {
+        "enabled": true
+    },
     "timezone": "America/New_York",
     "rangeStrategy": "bump",
     "automergeType": "branch",
