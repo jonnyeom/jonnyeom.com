@@ -6,9 +6,11 @@ namespace App\Tests\Service\Strava;
 
 use App\Exception\Strava\InvalidPlan;
 use App\Service\Strava\WeeklyPlanCsv;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
+use function array_keys;
 use function explode;
 use function str_repeat;
 use function str_replace;
@@ -29,8 +31,21 @@ final class WeeklyPlanCsvTest extends TestCase
 
         $lines = explode("\n", $csv);
         self::assertStringStartsWith('Week,"Mon Run","Mon Bike","Mon Swim","Mon Tennis","Tue Run"', $lines[0]);
-        self::assertStringEndsWith('"Sun Tennis","Actual (mi)",Notes', $lines[0]);
-        self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,20.5,"Build, ""hard"" week"', $lines[1]);
+        self::assertStringEndsWith('"Sun Tennis",Notes', $lines[0]);
+        self::assertStringNotContainsString('20.5', $csv);
+        self::assertSame('2026-11-23,5,30,,,,,,,,,1,,,,,,,,,,,,,,,,,,"Build, ""hard"" week"', $lines[1]);
+    }
+
+    public function testExampleHasTwoWeeksThatImport(): void
+    {
+        $csv   = new WeeklyPlanCsv();
+        $plans = $csv->parse($csv->example(new DateTimeImmutable('2026-11-30')));
+
+        self::assertSame(['2026-11-30', '2026-12-07'], array_keys($plans));
+        foreach ($plans as $plan) {
+            self::assertNotSame([], $plan['days']);
+            self::assertNotNull($plan['notes']);
+        }
     }
 
     public function testExportedCsvImportsBack(): void
@@ -59,8 +74,8 @@ final class WeeklyPlanCsvTest extends TestCase
         // unknown columns.
         $header = str_replace(['Week,', ',Notes'], ['week,', ',NOTES,My column'], self::header());
         $csv    = "\u{FEFF}Unknown," . $header . "\r\n"
-            . 'x,11/23/2026,,,,1.5' . str_repeat(',', 26) . "Long run,y\r\n"
-            . str_repeat(',', 32) . "\r\n"
+            . 'x,11/23/2026,,,,1.5' . str_repeat(',', 25) . "Long run,y\r\n"
+            . str_repeat(',', 31) . "\r\n"
             . "x,2026/12/7\r\n";
 
         self::assertSame([
@@ -82,7 +97,8 @@ final class WeeklyPlanCsvTest extends TestCase
         yield 'not a number' => [self::header() . "\n2026-11-23,abc\n", 'Row 2: Run miles on Mon must be a number.'];
         yield 'too many miles' => [self::header() . "\n2026-11-23,400\n", 'Row 2: Run miles on Mon must be between 0 and 300'];
         yield 'week twice' => [self::header() . "\n2026-11-23,5\n11/23/2026,6\n", 'Row 3: Week 2026-11-23 is listed twice.'];
-        yield 'notes too long' => [self::header() . "\n2026-11-23" . str_repeat(',', 30) . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];
+        yield 'shifted row' => [self::header() . "\n2026-11-23,5" . str_repeat(',', 28) . "20.5,Easy\n", 'Row 2: There are more cells than columns'];
+        yield 'notes too long' => [self::header() . "\n2026-11-23" . str_repeat(',', 29) . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];
     }
 
     #[DataProvider('invalidCsv')]

@@ -647,6 +647,7 @@ describe('StravaPlanner', () => {
 
         expect(screen.getByRole('link', { name: 'Connect to edit' })).toHaveAttribute('href', '/strava/connect/entry');
         expect(screen.queryByRole('button', { name: 'Import' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('link', { name: 'Example import' })).not.toBeInTheDocument();
 
         expect(fillHandle('2026-11-16', 'Mon')).toBeNull();
         tap(weekCell('2026-11-16'));
@@ -661,5 +662,13 @@ describe('StravaPlanner', () => {
 
         expect(screen.getByRole('link', { name: 'Export' }))
             .toHaveAttribute('href', '/api/strava/plans.csv?from=2026-11-16&weeks=3');
+    });
+
+    it('links to the example import', async () => {
+        mockApi();
+        await renderPlanner();
+
+        expect(screen.getByRole('link', { name: 'Example import' }))
+            .toHaveAttribute('href', '/api/strava/plans/example.csv');
     });
 });

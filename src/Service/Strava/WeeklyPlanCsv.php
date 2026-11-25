@@ -11,6 +11,8 @@ use DateTimeImmutable;
 
 use function array_filter;
 use function array_key_exists;
+use function array_slice;
+use function count;
 use function fgetcsv;
 use function fopen;
 use function fputcsv;
@@ -28,18 +30,17 @@ use function trim;
  * Weekly plans as CSV, to edit them in a spreadsheet (Google Sheets, Excel, Numbers).
  *
  * One row per week: Week (the Monday), then the miles of each day and sport ("Mon Run", "Mon Bike",
- * ... "Sun Tennis"), then Notes. Export also adds the "Actual" Strava miles, which import ignores,
- * like any other unknown column. Import needs all the others: a row replaces its week's plan, so a
- * missing column would silently clear data.
+ * ... "Sun Tennis"), then Notes. Only the planned activities: no Strava actuals or other computed
+ * values. Import ignores unknown columns, but needs all of these: a row replaces its week's plan, so
+ * a missing column would silently clear data.
  *
  * @phpstan-import-type WeekPlanView from WeeklyPlanManager
  * @phpstan-type ImportedPlan array{days: array<string, array<string, float>>, notes: string|null}
  */
 class WeeklyPlanCsv
 {
-    private const string WEEK   = 'Week';
-    private const string NOTES  = 'Notes';
-    private const string ACTUAL = 'Actual (mi)';
+    private const string WEEK  = 'Week';
+    private const string NOTES = 'Notes';
 
     /** @param list<WeekPlanView> $weeks */
     public function export(array $weeks): string
@@ -49,7 +50,7 @@ class WeeklyPlanCsv
             return '';
         }
 
-        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::ACTUAL, self::NOTES], escape: '');
+        fputcsv($stream, [self::WEEK, ...self::dayColumns(), self::NOTES], escape: '');
 
         foreach ($weeks as $week) {
             $row = [$week['weekStart']];
@@ -59,7 +60,6 @@ class WeeklyPlanCsv
                 }
             }
 
-            $row[] = $week['actual'] === null ? '' : self::formatMiles($week['actual']['totalMiles']);
             $row[] = $week['notes'] ?? '';
 
             fputcsv($stream, $row, escape: '');
@@ -68,6 +68,41 @@ class WeeklyPlanCsv
         rewind($stream);
 
         return (string) stream_get_contents($stream);
+    }
+
+    /**
+     * A two-week example to start a CSV from: the weeks from $firstWeek (a Monday), with a mix of
+     * days and sports, empty (rest) days and notes.
+     */
+    public function example(DateTimeImmutable $firstWeek): string
+    {
+        return $this->export([
+            [
+                'weekStart' => $firstWeek->format('Y-m-d'),
+                'days' => [
+                    'Tue' => ['Run' => 5.0],
+                    'Wed' => ['Bike' => 20.0],
+                    'Thu' => ['Run' => 6.0, 'Swim' => 1.0],
+                    'Sat' => ['Run' => 10.0, 'Tennis' => 2.0],
+                    'Sun' => ['Bike' => 30.0],
+                ],
+                'notes' => 'Base week: easy pace. Empty cells are rest.',
+                'actual' => null,
+            ],
+            [
+                'weekStart' => $firstWeek->modify('+1 week')->format('Y-m-d'),
+                'days' => [
+                    'Mon' => ['Swim' => 1.5],
+                    'Tue' => ['Run' => 6.0],
+                    'Wed' => ['Bike' => 25.0],
+                    'Thu' => ['Run' => 7.0],
+                    'Sat' => ['Run' => 12.0],
+                    'Sun' => ['Bike' => 35.0, 'Tennis' => 1.5],
+                ],
+                'notes' => 'Build week: long run 12 mi.',
+                'actual' => null,
+            ],
+        ]);
     }
 
     /**
@@ -125,6 +160,12 @@ class WeeklyPlanCsv
                 $key       = $weekStart->format('Y-m-d');
                 if (array_key_exists($key, $plans)) {
                     throw new InvalidPlan(sprintf('Week %s is listed twice.', $key));
+                }
+
+                // Values past the last column mean the row is shifted (e.g. pasted from a file with
+                // other columns): its cells would land in the wrong columns, or be lost.
+                if (trim(implode('', array_slice($row, count($header)))) !== '') {
+                    throw new InvalidPlan('There are more cells than columns; check that they line up with the header.');
                 }
 
                 $days = [];

@@ -19,6 +19,7 @@ use function explode;
 use function json_decode;
 use function json_encode;
 use function str_repeat;
+use function trim;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -138,6 +139,22 @@ final class StravaPlanApiControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
     }
 
+    public function testExampleIsACsvDownloadOfTheNextTwoWeeks(): void
+    {
+        $currentWeek = WeeklyPlanManager::weekStartOf(new DateTimeImmutable());
+
+        $this->client->request('GET', '/api/strava/plans/example.csv');
+
+        self::assertResponseIsSuccessful();
+        self::assertResponseHeaderSame('Content-Type', 'text/csv; charset=UTF-8');
+        self::assertResponseHeaderSame('Content-Disposition', 'attachment; filename=strava-plan-example.csv');
+        $lines = explode("\n", trim((string) $this->client->getResponse()->getContent()));
+        self::assertCount(3, $lines);
+        self::assertStringStartsWith('Week,"Mon Run"', $lines[0]);
+        self::assertStringStartsWith($currentWeek->modify('+1 week')->format('Y-m-d') . ',', $lines[1]);
+        self::assertStringStartsWith($currentWeek->modify('+2 weeks')->format('Y-m-d') . ',', $lines[2]);
+    }
+
     public function testExportIsACsvDownload(): void
     {
         $this->planManager
@@ -195,7 +212,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
             ])
             ->willReturn(2);
 
-        $this->postCsv('2026-11-23,5' . str_repeat(',', 29) . "Easy\n2026-11-30\n");
+        $this->postCsv('2026-11-23,5' . str_repeat(',', 28) . "Easy\n2026-11-30\n");
 
         self::assertResponseIsSuccessful();
         self::assertSame(['imported' => 2], $this->responseJson());
