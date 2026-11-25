@@ -39,8 +39,8 @@ const BAR = {
 
 /**
  * Planned vs actual weekly miles (columns) and the 5-week average (line), oldest first.
- * Scrolls horizontally like the Progress chart, opening at the current week; about 10 weeks are
- * visible (6 on phones).
+ * Scrolls horizontally like the Progress chart, opening at the current week; as many weeks are
+ * visible as fit, 25 on a wide screen (6 on phones).
  *
  * Props: weeks (oldest first, as the API returns them), currentWeek.
  */
@@ -70,7 +70,7 @@ export default function PlanChart({ weeks, currentWeek }) {
                     },
                 },
                 scales: {
-                    x: { grid: { display: false }, ticks: { color: COLOR_MUTED, maxRotation: 0, autoSkip: false } },
+                    x: { grid: { display: false }, ticks: { color: COLOR_MUTED, maxRotation: 0, autoSkipPadding: 2 } },
                     y: {
                         position: 'right',
                         beginAtZero: true,
@@ -156,12 +156,12 @@ export default function PlanChart({ weeks, currentWeek }) {
             tabIndex={0}
             aria-label="Weekly mileage plan chart, scroll for other weeks"
         >
-            <div className="strava-weekly-chart__inner" style={{ '--chart-weeks': Math.max(weeks.length, 1) }}>
+            <div className="strava-weekly-chart__inner strava-weekly-chart__inner--plan" style={{ '--chart-weeks': Math.max(weeks.length, 1) }}>
                 <canvas
                     ref={canvasRef}
                     // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- Chart.js draws on a canvas; role="img" + aria-label describes it.
                     role="img"
-                    aria-label={`Planned and actual weekly miles and the 5-week average for ${weeks.length} weeks. The table below lists every value.`}
+                    aria-label={`Planned and actual weekly miles and the 5-week average for ${weeks.length} weeks. The table below lists the values; load more for earlier weeks.`}
                 />
             </div>
         </section>
