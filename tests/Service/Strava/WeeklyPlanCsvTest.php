@@ -74,8 +74,8 @@ final class WeeklyPlanCsvTest extends TestCase
         // unknown columns.
         $header = str_replace(['Week,', ',Notes'], ['week,', ',NOTES,My column'], self::header());
         $csv    = "\u{FEFF}Unknown," . $header . "\r\n"
-            . 'x,11/23/2026,,,,1.5' . str_repeat(',', 26) . "Long run,y\r\n"
-            . str_repeat(',', 32) . "\r\n"
+            . 'x,11/23/2026,,,,1.5' . str_repeat(',', 25) . "Long run,y\r\n"
+            . str_repeat(',', 31) . "\r\n"
             . "x,2026/12/7\r\n";
 
         self::assertSame([
@@ -97,7 +97,7 @@ final class WeeklyPlanCsvTest extends TestCase
         yield 'not a number' => [self::header() . "\n2026-11-23,abc\n", 'Row 2: Run miles on Mon must be a number.'];
         yield 'too many miles' => [self::header() . "\n2026-11-23,400\n", 'Row 2: Run miles on Mon must be between 0 and 300'];
         yield 'week twice' => [self::header() . "\n2026-11-23,5\n11/23/2026,6\n", 'Row 3: Week 2026-11-23 is listed twice.'];
-        yield 'notes too long' => [self::header() . "\n2026-11-23" . str_repeat(',', 30) . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];
+        yield 'notes too long' => [self::header() . "\n2026-11-23" . str_repeat(',', 29) . str_repeat('a', 2001) . "\n", 'Row 2: Notes must be at most 2000 characters.'];
     }
 
     #[DataProvider('invalidCsv')]

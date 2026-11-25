@@ -208,7 +208,7 @@ final class StravaPlanApiControllerTest extends WebTestCase
             ])
             ->willReturn(2);
 
-        $this->postCsv('2026-11-23,5' . str_repeat(',', 29) . "Easy\n2026-11-30\n");
+        $this->postCsv('2026-11-23,5' . str_repeat(',', 28) . "Easy\n2026-11-30\n");
 
         self::assertResponseIsSuccessful();
         self::assertSame(['imported' => 2], $this->responseJson());
