@@ -4,7 +4,7 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content pb-2">
-                <div {{ react_component('StravaPlanner') }}>
+                <div {{ react_component('StravaPlanner', {apiUrl: path('strava_plan_api_list'), connectUrl: path('strava_connect_entry')}) }}>
                     Loading... <i class="fas fa-cog fa-spin fa-3x"></i>
                 </div>
             </div>

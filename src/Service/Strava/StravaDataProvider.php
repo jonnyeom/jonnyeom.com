@@ -4,100 +4,112 @@ declare(strict_types=1);
 
 namespace App\Service\Strava;
 
+use App\Entity\StravaWeeklyStat;
 use App\Exception\Strava\AccessTokenMissing;
 use App\Model\Strava\WeeklyStat;
+use App\Repository\StravaWeeklyStatRepository;
 use DateTime;
+use DateTimeImmutable;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use League\OAuth2\Client\Token\AccessToken;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Throwable;
 
-use function array_filter;
 use function array_key_exists;
+use function array_map;
 use function array_merge;
 use function array_reverse;
-use function array_slice;
 use function array_values;
 use function assert;
 use function count;
 use function date;
 use function min;
-use function sprintf;
 use function strcmp;
 use function strtotime;
 use function usort;
 
+/**
+ * Reads the weekly stats from the database, and refreshes them from Strava on demand.
+ *
+ * The database is the source of truth for the stats page. Strava is only called to:
+ * - refresh the latest week(s): refresh() (Refresh button) and refreshLatestStats()
+ *   (app:strava:refresh-stats command);
+ * - reload the whole history: reset() (Reset button).
+ */
 class StravaDataProvider
 {
-    private const int CURRENT_WEEK_TTL = 43200;   // 12 hours
+    /** Strava's maximum page size for GET /athlete/activities. */
+    private const int ACTIVITIES_PER_PAGE = 200;
 
-    private const int PAST_WEEK_TTL = 2592000;    // 30 days
-
-    /** Number of weeks fetched in a single Strava API call on a past-week cache miss. */
-    private const int PREFETCH_WEEKS = 50;
-
-    /**
-     * Request-level activity cache keyed by neededWeeks.
-     * Prevents redundant processing when multiple methods are called in the same request.
-     *
-     * @var array<int, array<int, mixed>>
-     */
-    private array $activitiesCache = [];
+    /** Previous weeks needed for the 5-week average. */
+    private const int HISTORY_WEEKS = 4;
 
     public function __construct(
         private readonly RequestStack $requestStack,
         private readonly ClientProvider $clientProvider,
-        private readonly CacheInterface $cache,
+        private readonly AthleteGuard $athleteGuard,
+        private readonly WeeklyStatRecorder $weeklyStatRecorder,
+        private readonly StravaWeeklyStatRepository $weeklyStatRepository,
+        private readonly StravaTokenManager $tokenManager,
     ) {
     }
 
     /**
-     * Returns the newest $limit weeks (display order: newest first).
-     * Only fetches ($limit + 4) weeks from the Strava API cache, keeping 5-week averages accurate.
+     * Returns the newest $limit stored weeks of the allowed athlete (newest first), read from the
+     * database only. Never calls Strava, and needs no Strava connection: the stats page is public.
      *
      * @return array<int, WeeklyStat>
+     */
+    public function getStoredWeeklyStats(int $limit): array
+    {
+        return array_map(
+            static fn (StravaWeeklyStat $stat): WeeklyStat => $stat->toWeeklyStat(),
+            $this->weeklyStatRepository->findLatestForAthlete($this->athleteGuard->getAllowedAthleteId(), $limit),
+        );
+    }
+
+    /**
+     * Refresh button: refreshes the latest week(s) from Strava, for the allowed athlete's session.
+     *
+     * @return array<int, WeeklyStat> the refreshed weeks, newest first
      *
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    public function getWeeklyStatsPaged(int $limit): array
+    public function refresh(): array
     {
-        $allActivities = $this->getAllActivities($limit + 4);
+        return $this->refreshLatestWeeks($this->getApiToken());
+    }
 
-        if ($allActivities === []) {
-            return [];
-        }
+    /**
+     * Reset button: deletes the stored weeks and reloads the whole history from Strava.
+     *
+     * @return array<int, WeeklyStat> all stored weeks, newest first
+     *
+     * @throws AccessTokenMissing
+     * @throws IdentityProviderException
+     */
+    public function reset(): array
+    {
+        return $this->reloadAllWeeks($this->getApiToken());
+    }
 
-        $allWeekKeys = $this->buildAllWeekKeys($allActivities);
-        $totalWeeks  = count($allWeekKeys);
+    /**
+     * Refreshes the latest week(s) without a browser session, for the app:strava:refresh-stats
+     * command. Uses the token stored in the database for the allowed athlete (STRAVA_ATHLETE_ID).
+     *
+     * @return array<int, WeeklyStat> the refreshed weeks, newest first
+     *
+     * @throws AccessTokenMissing When no token is stored (connect at /strava first).
+     * @throws IdentityProviderException
+     */
+    public function refreshLatestStats(): array
+    {
+        $accessToken = $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
 
-        // Extra 4 weeks of history so the oldest displayed week has a full 5-week average.
-        $needed   = min($totalWeeks, $limit + 4);
-        $startIdx = $totalWeeks - $needed;
-
-        $selectedKeys = array_slice($allWeekKeys, $startIdx, null, true);
-
-        $weeklyStats = [];
-        foreach ($selectedKeys as $weekKey => $firstDayOfWeek) {
-            $weeklyStats[$weekKey] = new WeeklyStat($firstDayOfWeek);
-        }
-
-        foreach ($allActivities as $item) {
-            $date    = new DateTime($item['start_date_local']);
-            $weekKey = $date->format('o.W');
-            if (! array_key_exists($weekKey, $weeklyStats)) {
-                continue;
-            }
-
-            $weeklyStats[$weekKey]->addStravaActivity($item);
-        }
-
-        static::calculateWeeklyMetrics($weeklyStats);
-
-        // Reverse to newest-first, then take the requested slice.
-        return array_slice(array_reverse(array_values($weeklyStats)), 0, $limit);
+        return $this->refreshLatestWeeks($accessToken);
     }
 
     /**
@@ -158,232 +170,194 @@ class StravaDataProvider
     }
 
     /**
-     * Loads and sorts enough activities to cover $neededWeeks.
-     * Activities are cached per individual ISO week, so historical data is never invalidated
-     * when the current week changes. On a cache miss the Strava API is called once for a
-     * bulk window of PREFETCH_WEEKS weeks, and every week in that window is pre-warmed.
+     * Refreshes every week from the latest stored week up to this week: usually just this week,
+     * but also any week that ended since the last refresh (e.g. a Sunday run before a Monday
+     * refresh). The 5-week averages use the stored weeks before them.
      *
-     * @return array<int, mixed>
+     * Nothing stored yet: loads the whole history instead.
      *
-     * @throws AccessTokenMissing
+     * @return array<int, WeeklyStat> the refreshed weeks, newest first
+     *
      * @throws IdentityProviderException
      */
-    private function getAllActivities(int $neededWeeks): array
+    private function refreshLatestWeeks(AccessToken $accessToken): array
     {
-        if (isset($this->activitiesCache[$neededWeeks])) {
-            return $this->activitiesCache[$neededWeeks];
+        $athleteId    = $this->athleteGuard->getAllowedAthleteId();
+        $latestStored = $this->weeklyStatRepository->findLatestForAthlete($athleteId, 1)[0] ?? null;
+        if (! $latestStored instanceof StravaWeeklyStat) {
+            return $this->reloadAllWeeks($accessToken);
         }
 
-        $accessToken    = $this->getApiToken();
-        $today          = new DateTime();
-        $mondayThisWeek = strtotime('monday this week', $today->getTimestamp());
-        $currentWeekKey = $today->format('o.W');
-        $athleteId      = (string) $accessToken->getResourceOwnerId();
+        $firstMonday = $latestStored->getWeekStart();
 
-        $neededWeekKeys = $this->buildNeededWeekKeys($neededWeeks, $mondayThisWeek);
+        // Strava's "after" is exclusive, so start one second before that Monday.
+        $activities = $this->fetchActivities((string) ($this->toTimestamp($firstMonday) - 1), $accessToken);
 
-        $activities = [];
-        // Iterate newest-first so each cache miss pre-warms the older weeks we still need.
-        foreach (array_reverse($neededWeekKeys, true) as $weekKey => $mondayTs) {
-            $activities = array_merge(
-                $activities,
-                $this->getActivitiesForWeek($weekKey, $athleteId, $accessToken, $mondayTs, $currentWeekKey),
-            );
+        $history = array_map(
+            static fn (StravaWeeklyStat $stat): WeeklyStat => $stat->toWeeklyStat(),
+            array_reverse($this->weeklyStatRepository->findBeforeWeek($athleteId, $firstMonday, self::HISTORY_WEEKS)),
+        );
+
+        $weeklyStats = $this->calculateWeeklyStats($activities, $firstMonday, $history);
+
+        // The database is what the page shows, so a failed save must surface here.
+        $this->weeklyStatRecorder->record($athleteId, $weeklyStats);
+
+        return $weeklyStats;
+    }
+
+    /**
+     * Fetches all activities from Strava and replaces every stored week.
+     *
+     * @return array<int, WeeklyStat> all weeks, newest first
+     *
+     * @throws IdentityProviderException
+     */
+    private function reloadAllWeeks(AccessToken $accessToken): array
+    {
+        $activities = $this->sortByStartDate($this->fetchActivities('0', $accessToken));
+
+        $weeklyStats = $activities === []
+            ? []
+            : $this->calculateWeeklyStats($activities, $this->mondayOf((string) $activities[0]['start_date_local']), []);
+
+        $this->weeklyStatRecorder->replaceAll($this->athleteGuard->getAllowedAthleteId(), $weeklyStats);
+
+        return $weeklyStats;
+    }
+
+    /**
+     * Groups the activities into every week from $firstMonday up to this week (weeks without
+     * activities included) and calculates the metrics. $history holds the stored weeks right
+     * before $firstMonday (oldest first) and is only used for the 5-week averages.
+     *
+     * @param array<int, mixed> $activities
+     * @param WeeklyStat[]      $history
+     *
+     * @return array<int, WeeklyStat> the weeks from $firstMonday, newest first
+     */
+    private function calculateWeeklyStats(array $activities, DateTimeImmutable $firstMonday, array $history): array
+    {
+        $weeklyStats = [];
+        $monday      = $firstMonday;
+        $thisMonday  = $this->mondayOf('now');
+        while ($monday <= $thisMonday) {
+            $weeklyStats[$monday->format('o.W')] = new WeeklyStat($monday->format('Y-m-d'));
+            $monday                              = $monday->modify('+1 week');
         }
 
+        foreach ($activities as $item) {
+            $weekKey = (new DateTime($item['start_date_local']))->format('o.W');
+            if (! array_key_exists($weekKey, $weeklyStats)) {
+                continue;
+            }
+
+            $weeklyStats[$weekKey]->addStravaActivity($item);
+        }
+
+        $weeklyStats = array_values($weeklyStats);
+
+        static::calculateWeeklyMetrics(array_merge($history, $weeklyStats));
+
+        return array_reverse($weeklyStats);
+    }
+
+    /**
+     * @param array<int, mixed> $activities
+     *
+     * @return array<int, mixed>
+     */
+    private function sortByStartDate(array $activities): array
+    {
         usort($activities, static fn (array $a, array $b): int => strcmp(
             (string) $a['start_date_local'],
             (string) $b['start_date_local'],
         ));
 
-        $this->activitiesCache[$neededWeeks] = $activities;
-
         return $activities;
     }
 
+    private function mondayOf(string $date): DateTimeImmutable
+    {
+        return new DateTimeImmutable(date('Y-m-d', (int) strtotime('monday this week', (int) strtotime($date))));
+    }
+
+    private function toTimestamp(DateTimeImmutable $date): int
+    {
+        // Week starts are stored as dates; interpret them in the default timezone, like the weeks.
+        return (int) strtotime($date->format('Y-m-d'));
+    }
+
     /**
-     * Fetches (or returns from Symfony cache) activities for a single ISO week.
-     *
-     * Cache keys encode the actual week directly, making entries easy to filter and find:
-     *   strava_current_{athleteId}_{weekKey}  — current week (TTL 12 h, activities still being recorded)
-     *   strava_week_{athleteId}_{weekKey}     — past week    (TTL 30 d, immutable once the week ends)
-     *
-     * On a cache miss for a past week, fetches PREFETCH_WEEKS weeks in one Strava API call
-     * and pre-warms individual week caches so subsequent weeks are served from cache.
+     * Fetches all activities after the given Unix timestamp, following Strava's pagination.
      *
      * @return array<int, mixed>
      *
-     * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
-    private function getActivitiesForWeek(
-        string $weekKey,
-        string $athleteId,
-        AccessToken $accessToken,
-        int $weekMonday,
-        string $currentWeekKey,
-    ): array {
-        if ($weekKey === $currentWeekKey) {
-            return $this->cache->get(
-                'strava_current_' . $athleteId . '_' . $weekKey,
-                function (ItemInterface $item) use ($weekMonday, $accessToken): array {
-                    $item->expiresAfter(self::CURRENT_WEEK_TTL);
-
-                    return $this->fetchActivities(null, (string) $weekMonday, $accessToken);
-                },
-            );
-        }
-
-        return $this->cache->get(
-            'strava_week_' . $athleteId . '_' . $weekKey,
-            function (ItemInterface $item) use ($weekMonday, $athleteId, $accessToken): array {
-                $item->expiresAfter(self::PAST_WEEK_TTL);
-
-                // Bulk-fetch this week plus PREFETCH_WEEKS - 1 older weeks in one API call.
-                $bulkBefore = $weekMonday + 7 * 24 * 3600;
-                $bulkAfter  = strtotime(
-                    sprintf('-%d weeks', self::PREFETCH_WEEKS - 1),
-                    $weekMonday,
-                );
-
-                $allActivities = $this->fetchActivities((string) $bulkBefore, (string) $bulkAfter, $accessToken);
-
-                // Pre-warm per-week caches for the older weeks in the bulk range.
-                for ($i = 1; $i < self::PREFETCH_WEEKS; $i++) {
-                    $prewarmMonday     = strtotime(sprintf('-%d weeks', $i), $weekMonday);
-                    $prewarmNext       = $prewarmMonday + 7 * 24 * 3600;
-                    $prewarmWeekKey    = (new DateTime('@' . $prewarmMonday))->format('o.W');
-                    $prewarmActivities = $this->filterActivitiesByWindow($allActivities, $prewarmMonday, $prewarmNext);
-
-                    $this->cache->get(
-                        'strava_week_' . $athleteId . '_' . $prewarmWeekKey,
-                        static function (ItemInterface $prewarmItem) use ($prewarmActivities): array {
-                            $prewarmItem->expiresAfter(self::PAST_WEEK_TTL);
-
-                            return $prewarmActivities;
-                        },
-                    );
-                }
-
-                // Return this week's activities.
-                return $this->filterActivitiesByWindow($allActivities, $weekMonday, $bulkBefore);
-            },
-        );
-    }
-
-    /**
-     * Returns the last $neededWeeks ISO week keys (oldest first), mapped to their Monday timestamp.
-     * Keys are ISO week strings in o.W format (e.g. "2026.15"), values are Monday Unix timestamps.
-     *
-     * @return array<array-key, int>
-     */
-    private function buildNeededWeekKeys(int $neededWeeks, int $mondayThisWeek): array
-    {
-        $weekKeys = [];
-        for ($i = $neededWeeks - 1; $i >= 0; $i--) {
-            $mondayTs           = (int) strtotime(sprintf('-%d weeks', $i), $mondayThisWeek);
-            $weekKey            = (new DateTime('@' . $mondayTs))->format('o.W');
-            $weekKeys[$weekKey] = $mondayTs;
-        }
-
-        return $weekKeys;
-    }
-
-    /**
-     * Returns activities whose start_date_local falls strictly between $after and $before.
-     *
-     * @param array<int, mixed> $activities
-     *
-     * @return array<int, mixed>
-     */
-    private function filterActivitiesByWindow(array $activities, int $after, int $before): array
-    {
-        return array_values(array_filter(
-            $activities,
-            static function (array $activity) use ($after, $before): bool {
-                $ts = (int) strtotime((string) $activity['start_date_local']);
-
-                return $ts > $after && $ts < $before;
-            },
-        ));
-    }
-
-    /**
-     * All week keys in chronological order (oldest first), mapped to their Monday date.
-     *
-     * @param array<int, mixed> $activities
-     *
-     * @return array<array-key, string> weekKey => firstDayOfWeek
-     */
-    private function buildAllWeekKeys(array $activities): array
-    {
-        $weekOfActivity = new DateTime($activities[0]['start_date_local']);
-        $today          = new DateTime();
-        $weekKeys       = [];
-
-        do {
-            $weekKey        = $weekOfActivity->format('o.W');
-            $firstDayOfWeek = date('Y-m-d', strtotime('monday this week', $weekOfActivity->getTimestamp()));
-
-            $weekKeys[$weekKey] = $firstDayOfWeek;
-            $weekOfActivity     = $weekOfActivity->modify('+ 1 week');
-        } while (
-            $weekOfActivity->format('o') < $today->format('o') ||
-            ($weekOfActivity->format('o') === $today->format('o') &&
-                $weekOfActivity->format('W') <= $today->format('W'))
-        );
-
-        return $weekKeys;
-    }
-
-    /**
-     * @return array<int, mixed>
-     *
-     * @throws AccessTokenMissing
-     * @throws IdentityProviderException
-     */
-    private function fetchActivities(string|null $before, string $after, AccessToken $accessToken): array
+    private function fetchActivities(string $after, AccessToken $accessToken): array
     {
         $apiClient = $this->clientProvider->getAPIClient($accessToken->getToken());
 
-        $page        = 1;
-        $activities  = [];
-        $response    = $apiClient->getAthleteActivities($before, $after, $page);
-        $activities += $response;
-        while (count($response) === 30) {
-            $page++;
-            $response   = $apiClient->getAthleteActivities($before, $after, $page);
+        $page       = 1;
+        $activities = [];
+        do {
+            $response   = $apiClient->getAthleteActivities(null, $after, $page, self::ACTIVITIES_PER_PAGE);
             $activities = array_merge($activities, $response);
-        }
+            $page++;
+        } while (count($response) === self::ACTIVITIES_PER_PAGE);
 
         return $activities;
     }
 
     /**
+     * Checks the session belongs to the allowed, connected athlete, without calling Strava.
+     *
+     * @throws AccessTokenMissing
+     */
+    private function assertConnectedAthlete(): void
+    {
+        $session = $this->getSession();
+
+        // Only the configured athlete (STRAVA_ATHLETE_ID) may use the integration.
+        if (! $this->athleteGuard->isConnected($session)) {
+            $this->athleteGuard->disconnect($session);
+
+            throw new AccessTokenMissing();
+        }
+    }
+
+    private function getSession(): SessionInterface
+    {
+        $request = $this->requestStack->getCurrentRequest();
+        assert($request instanceof Request);
+
+        return $request->getSession();
+    }
+
+    /**
+     * Returns a valid Strava token for the connected athlete.
+     *
+     * The token only lives in the database (also used by app:strava:refresh-stats): Strava
+     * rotates refresh tokens, so a single copy is kept.
+     *
      * @throws AccessTokenMissing
      * @throws IdentityProviderException
      */
     private function getApiToken(): AccessToken
     {
-        $request = $this->requestStack->getCurrentRequest();
-        assert($request instanceof Request);
+        $this->assertConnectedAthlete();
 
-        // Load the access token from the session, and refresh if required
-        $accessToken = $request->getSession()->get('access_token');
-        if (! $accessToken) {
-            throw new AccessTokenMissing();
+        try {
+            return $this->tokenManager->getValidToken($this->athleteGuard->getAllowedAthleteId());
+        } catch (Throwable $e) {
+            // Connected, but no token is stored or Strava rejected it: disconnect so the connect
+            // page offers a new login instead of redirecting back.
+            if ($e instanceof AccessTokenMissing || $e instanceof IdentityProviderException) {
+                $this->athleteGuard->disconnect($this->getSession());
+            }
+
+            throw $e;
         }
-
-        assert($accessToken instanceof AccessToken);
-
-        if ($accessToken->hasExpired()) {
-            $accessToken = $this->clientProvider->refreshAccessToken($accessToken->getRefreshToken());
-            assert($accessToken instanceof AccessToken);
-
-            // Update the stored access token for next time
-            $request->getSession()->set('access_token', $accessToken);
-        }
-
-        return $accessToken;
     }
 }

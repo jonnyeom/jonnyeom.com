@@ -1,7 +1,7 @@
 import { startStimulusApp, registerControllers } from "vite-plugin-symfony/stimulus/helpers"
 import { registerReactControllerComponents } from "vite-plugin-symfony/stimulus/helpers/react"
 
-registerReactControllerComponents(import.meta.glob('./react/controllers/**/*.js(x)\?'));
+registerReactControllerComponents(import.meta.glob(['./react/controllers/**/*.{js,jsx}', '!**/*.test.*']));
 
 const app = startStimulusApp();
 registerControllers(

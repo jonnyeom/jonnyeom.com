@@ -5,6 +5,7 @@ jonnyeom.db
 /bin/.phpunit
 
 ### Node
+/test-results/
 /.pnp
 .pnp.js
 

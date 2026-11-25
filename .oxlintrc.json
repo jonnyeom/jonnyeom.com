@@ -1,0 +1,47 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": ["oxc", "unicorn", "import", "react", "jsx-a11y", "vitest"],
+    "env": {
+        "browser": true,
+        "es2024": true
+    },
+    "settings": {
+        "react": {
+            "version": "18.3.1"
+        }
+    },
+    "categories": {
+        "correctness": "error",
+        "suspicious": "error"
+    },
+    "rules": {
+        // The React recommended rules (incl. hooks) that the correctness category doesn't enable;
+        // jsx-key, exhaustive-deps, jsx-no-duplicate-props, jsx-no-undef, no-children-prop etc. are
+        // correctness rules already.
+        "react/rules-of-hooks": "error",
+        "react/display-name": "error",
+        "react/jsx-no-comment-textnodes": "error",
+        "react/jsx-no-target-blank": "error",
+        "react/no-unescaped-entities": "error",
+        "react/no-unknown-property": "error",
+        // Not needed with the automatic JSX runtime.
+        "react/react-in-jsx-scope": "off",
+
+        "react/button-has-type": "error",
+        "react/self-closing-comp": "error",
+
+        // Side-effect imports (styles, Stimulus bootstrap) are intended.
+        "import/no-unassigned-import": "off",
+        // Scrollable regions (a labelled <section>) are focusable so they can be scrolled with the keyboard.
+        "jsx-a11y/no-noninteractive-tabindex": ["error", { "tags": ["section"] }]
+    },
+    "overrides": [
+        {
+            "files": ["**/*.test.{js,jsx}"],
+            "env": {
+                "vitest": true
+            }
+        }
+    ],
+    "ignorePatterns": ["public/**", "vendor/**", "var/**", "node_modules/**"]
+}

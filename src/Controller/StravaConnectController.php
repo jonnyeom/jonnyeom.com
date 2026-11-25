@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\ClientProvider;
+use App\Service\Strava\StravaTokenManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -15,15 +17,18 @@ use Throwable;
 
 class StravaConnectController extends AbstractController
 {
-    public function __construct(private readonly ClientProvider $clientProvider)
-    {
+    public function __construct(
+        private readonly ClientProvider $clientProvider,
+        private readonly AthleteGuard $athleteGuard,
+        private readonly StravaTokenManager $tokenManager,
+    ) {
     }
 
     #[Route('/strava/connect/entry', name: 'strava_connect_entry')]
     public function connectEntry(Request $request): Response
     {
-        // If we already have an access token, no need to get another one.
-        if ($request->getSession()->get('access_token')) {
+        // Already connected as the allowed athlete: no need to connect again.
+        if ($this->athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_metrics');
         }
 
@@ -33,8 +38,8 @@ class StravaConnectController extends AbstractController
     #[Route('/strava/connect', name: 'strava_connect_start')]
     public function connectAction(Request $request): Response
     {
-        // If we already have an access token, no need to get another one.
-        if ($request->getSession()->get('access_token')) {
+        // Already connected as the allowed athlete: no need to connect again.
+        if ($this->athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_metrics');
         }
 
@@ -54,8 +59,8 @@ class StravaConnectController extends AbstractController
 
         // @Todo: Add state?
 
-        // If we already have an access token, no need to get another one.
-        if ($request->getSession()->get('access_token')) {
+        // Already connected as the allowed athlete: no need to connect again.
+        if ($this->athleteGuard->isConnected($request->getSession())) {
             return $this->redirectToRoute('strava_metrics');
         }
 
@@ -65,9 +70,6 @@ class StravaConnectController extends AbstractController
 
         try {
             $accessToken = $this->clientProvider->getAccessToken($code);
-
-            // Fetch and store the AccessToken.
-            $request->getSession()->set('access_token', $accessToken);
         } catch (Throwable $e) {
             // something went wrong!
             // probably you should return the reason to the user.
@@ -81,13 +83,28 @@ class StravaConnectController extends AbstractController
             return $this->redirectToRoute('strava_logout');
         }
 
+        // Only the site owner's Strava account (STRAVA_ATHLETE_ID) may connect.
+        $athleteId = AthleteGuard::resolveAthleteId($accessToken);
+        if (! $this->athleteGuard->isAllowed($athleteId)) {
+            $logger->warning('Rejected Strava connection from non-allowed athlete.', ['athlete_id' => $athleteId]);
+
+            $this->addFlash('error', 'This Strava account is not allowed to connect to this site.');
+
+            return $this->redirectToRoute('strava_connect_entry');
+        }
+
+        // The token is only stored in the database (also used by app:strava:refresh-stats);
+        // the session just remembers that the allowed athlete is connected.
+        $this->tokenManager->store($this->athleteGuard->getAllowedAthleteId(), $accessToken);
+        $this->athleteGuard->connect($request->getSession());
+
         return $this->redirectToRoute('strava_metrics');
     }
 
     #[Route('/strava/logout', name: 'strava_logout')]
     public function logoutAction(Request $request): Response
     {
-        $request->getSession()->set('access_token', null);
+        $this->athleteGuard->disconnect($request->getSession());
 
         return $this->redirectToRoute('strava_metrics');
     }

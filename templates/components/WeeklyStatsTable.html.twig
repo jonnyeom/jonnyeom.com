@@ -3,6 +3,52 @@
         <div class="notification is-danger">{{ this.error }}</div>
     {% else %}
         {% set weeklyStats = this.weeklyStats %}
+        {% set chart = this.chart %}
+        {% if chart %}
+            {% set chartWeeks = chart.data.labels|length %}
+            {# Scrolls horizontally, starting at the latest weeks (right end); about 10 weeks are visible. #}
+            <div class="strava-weekly-chart mb-5" tabindex="0" aria-label="Weekly mileage chart, scroll left for older weeks">
+                <div class="strava-weekly-chart__inner" style="--chart-weeks: {{ chartWeeks }}">
+                    {{ render_chart(chart, {
+                        role: 'img',
+                        'aria-label': 'Weekly miles and 5-week average for the last ' ~ chartWeeks ~ ' weeks. The table below lists every value.',
+                    }) }}
+                </div>
+            </div>
+        {% endif %}
+        <div class="is-flex is-align-items-center is-justify-content-flex-end mb-3">
+            {% if this.notice %}
+                <span class="has-text-success is-size-7 mr-3">{{ this.notice }}</span>
+            {% endif %}
+            <div class="buttons has-addons mb-0">
+                <button
+                    data-action="live#action"
+                    data-live-action-param="refresh"
+                    data-loading="action(refresh)|addClass(is-loading)"
+                    class="button is-small mb-0"
+                    title="Fetch the latest week from Strava"
+                >
+                    <span class="icon"><i class="fas fa-arrows-rotate"></i></span>
+                    <span>Refresh</span>
+                </button>
+                <button
+                    data-action="live#action"
+                    data-live-action-param="reset"
+                    data-loading="action(reset)|addClass(is-loading)"
+                    class="button is-small mb-0"
+                    title="Delete the stored stats and reload your whole history from Strava"
+                >
+                    <span class="icon"><i class="fas fa-clock-rotate-left"></i></span>
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+
+        {% if weeklyStats is empty %}
+            <div class="notification is-info is-light">
+                No stored data yet. Click <b>Refresh</b> or <b>Reset</b> to load your activities from Strava.
+            </div>
+        {% endif %}
         <div class="table-container">
             <table class="table is-hoverable is-striped is-narrow-mobile has-text-centered is-fullwidth">
                 <thead>
@@ -82,6 +128,11 @@
         </div>
 
         <div class="has-text-centered py-4">
+            {% if weeklyStats is not empty and this.missingWeeks %}
+                <p class="is-size-7 has-text-grey mb-2">
+                    Showing all stored weeks. Click <b>Reset</b> to reload your whole history from Strava.
+                </p>
+            {% endif %}
             <button
                 data-action="live#action"
                 data-live-action-param="loadMore"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Model\Strava;
 
+use App\Enum\SportType;
 use App\Exception\Strava\InvalidStat;
 use ArrayIterator;
 use DateTime;
@@ -13,6 +14,9 @@ use Exception;
 use IteratorAggregate;
 use Traversable;
 
+use function array_map;
+use function array_sum;
+use function count;
 use function round;
 use function sprintf;
 
@@ -69,22 +73,13 @@ class WeeklyStat implements IteratorAggregate
         $date = new DateTime($activity['start_date_local']);
         $this->stats[$date->format('D')]->addActivity($activity);
 
-        switch ($activity['sport_type']) {
-            case 'Tennis':
-                $this->totalDistance += $activity['distance'] * 2;
-                break;
-            case 'Swim':
-                $this->totalDistance += $activity['distance'] * 4;
-                break;
-            case 'Bike':
-                $this->totalDistance += $activity['distance'] / 3;
-                break;
-            case 'Run':
-                $this->totalDistance += $activity['distance'];
-                break;
-            default:
-                // Log something.
+        // Other sport types are listed but don't count towards the weekly distance.
+        $sportType = SportType::fromStrava($activity['sport_type']);
+        if ($sportType === null) {
+            return;
         }
+
+        $this->totalDistance += $sportType->relativeDistance((float) $activity['distance']);
     }
 
     public function getTotalDistance(): float
@@ -113,6 +108,47 @@ class WeeklyStat implements IteratorAggregate
     public function getDate(): string
     {
         return $this->firstDayOfWeek->format('n.d');
+    }
+
+    public function getFirstDayOfWeek(): DateTimeImmutable
+    {
+        return DateTimeImmutable::createFromInterface($this->firstDayOfWeek);
+    }
+
+    /**
+     * Relative distance per day, in meters, keyed by day (Mon..Sun).
+     *
+     * @return array<string, float>
+     */
+    public function getDailyDistances(): array
+    {
+        return array_map(static fn (DailyStat $stat): float => $stat->getDistance(), $this->stats);
+    }
+
+    /**
+     * All activities of the week, reduced to the fields needed to rebuild the stats.
+     *
+     * @return array<int, Activity>
+     */
+    public function getActivities(): array
+    {
+        $activities = [];
+        foreach ($this->stats as $dailyStat) {
+            foreach ($dailyStat->getActivities() as $activity) {
+                $activities[] = [
+                    'sport_type' => $activity['sport_type'],
+                    'distance' => (float) $activity['distance'],
+                    'start_date_local' => $activity['start_date_local'],
+                ];
+            }
+        }
+
+        return $activities;
+    }
+
+    public function getActivityCount(): int
+    {
+        return array_sum(array_map(static fn (DailyStat $stat): int => count($stat->getActivities()), $this->stats));
     }
 
     /** @return ArrayIterator<string, DailyStat> */
