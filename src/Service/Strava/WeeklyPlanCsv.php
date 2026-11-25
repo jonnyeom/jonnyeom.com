@@ -11,6 +11,8 @@ use DateTimeImmutable;
 
 use function array_filter;
 use function array_key_exists;
+use function array_slice;
+use function count;
 use function fgetcsv;
 use function fopen;
 use function fputcsv;
@@ -158,6 +160,12 @@ class WeeklyPlanCsv
                 $key       = $weekStart->format('Y-m-d');
                 if (array_key_exists($key, $plans)) {
                     throw new InvalidPlan(sprintf('Week %s is listed twice.', $key));
+                }
+
+                // Values past the last column mean the row is shifted (e.g. pasted from a file with
+                // other columns): its cells would land in the wrong columns, or be lost.
+                if (trim(implode('', array_slice($row, count($header)))) !== '') {
+                    throw new InvalidPlan('There are more cells than columns; check that they line up with the header.');
                 }
 
                 $days = [];
