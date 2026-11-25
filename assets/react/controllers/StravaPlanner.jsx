@@ -44,6 +44,10 @@ ModuleRegistry.registerModules([
 
 const LOAD_MORE_WEEKS = 8;
 
+// Weeks in the chart on desktop, also when the table has fewer: what fits on a wide screen (see
+// .strava-weekly-chart__inner--plan).
+const CHART_WEEKS = 25;
+
 const DEFAULT_COL_DEF = { sortable: false, resizable: false, suppressMovable: true };
 const getRowId = ({ data }) => data.weekStart;
 
@@ -213,6 +217,8 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
     const gridRef = useRef(null);
     const saveQueue = useRef({});
     const [weeks, setWeeks, weeksRef] = useLatestState([]);
+    // The weeks before the table's, only for the chart.
+    const [earlierWeeks, setEarlierWeeks] = useState([]);
     const [currentWeek, setCurrentWeek] = useState(null);
     const [editable, setEditable] = useState(false);
     // What was copied last: { week } or { cell, sports } (a day).
@@ -242,6 +248,33 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             .catch((e) => setError(e.message))
             .finally(() => setLoading(false));
     }, [apiUrl, setWeeks]);
+
+    // Fills the chart up to CHART_WEEKS.
+    const loadEarlierWeeks = useCallback(async () => {
+        const first = weeksRef.current[0].weekStart;
+        const missing = CHART_WEEKS - weeksRef.current.length;
+        if (missing <= 0) {
+            return;
+        }
+        try {
+            const body = await api(`${apiUrl}?from=${addWeeks(first, -missing)}&weeks=${missing}`);
+            setEarlierWeeks(body.weeks.map(normalizeWeek));
+        } catch {
+            // The chart still shows the weeks of the table.
+        }
+    }, [apiUrl, weeksRef]);
+
+    const hasWeeks = weeks.length > 0;
+    useEffect(() => {
+        if (hasWeeks && !compact) {
+            loadEarlierWeeks();
+        }
+    }, [hasWeeks, compact, loadEarlierWeeks]);
+
+    // The weeks of the table are the up-to-date ones ("Load more" adds earlier weeks to it).
+    const chartWeeks = useMemo(() => (compact
+        ? weeks
+        : [...earlierWeeks.filter((week) => week.weekStart < weeks[0]?.weekStart), ...weeks]), [compact, earlierWeeks, weeks]);
 
     const replaceWeek = (to) => setWeeks((current) => current.map((week) => (week.weekStart === to.weekStart ? to : week)));
 
@@ -365,6 +398,10 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             const body = await api(`${apiUrl}?from=${shown[0].weekStart}&weeks=${shown.length}`);
             setWeeks(() => body.weeks.map(normalizeWeek));
             setNotice(`Imported ${imported} week${imported === 1 ? '' : 's'}.`);
+            if (!compact) {
+                // They may have been imported too.
+                loadEarlierWeeks();
+            }
         } catch (e) {
             setError(`${failed}: ${e.message}`);
         } finally {
@@ -635,7 +672,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
 
     return (
         <div>
-            <PlanChart weeks={weeks} currentWeek={currentWeek} />
+            <PlanChart weeks={chartWeeks} currentWeek={currentWeek} />
             {error && <div className="notification is-danger is-light py-2">{error}</div>}
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">

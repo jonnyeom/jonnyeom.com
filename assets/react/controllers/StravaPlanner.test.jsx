@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import PlanChart from '../components/PlanChart.jsx';
 import StravaPlanner from './StravaPlanner.jsx';
 
 // Chart.js needs a real canvas, which jsdom doesn't have.
-vi.mock('../components/PlanChart.jsx', () => ({ default: () => null }));
+vi.mock('../components/PlanChart.jsx', () => ({ default: vi.fn(() => null) }));
 
 const week = (weekStart, days = [], notes = null, actual = null) => ({ weekStart, days, notes, actual });
 
@@ -80,6 +81,15 @@ const settle = () => act(() => new Promise((resolve) => {
     setTimeout(resolve, 50);
 }));
 
+// The weeks the chart shows.
+const chartWeeks = () => PlanChart.mock.lastCall[0].weeks.map((w) => w.weekStart);
+
+// Answers the requests for other weeks than the first ones.
+const mockEarlier = (response) => {
+    const respond = fetchMock.getMockImplementation();
+    fetchMock.mockImplementation((url, options) => (url.includes('?from=') ? response() : respond(url, options)));
+};
+
 const importFile = () => fireEvent.change(document.querySelector('input[type="file"]'), {
     target: { files: [{ name: 'plan.csv', text: () => Promise.resolve('csv') }] },
 });
@@ -103,6 +113,51 @@ describe('StravaPlanner', () => {
         // 30 miles of biking count as 10 relative miles.
         expect(dayCell('2026-11-16', 'Sat')).toHaveTextContent('10');
         expect(fetchMock).toHaveBeenCalledWith('/api/strava/plans', expect.anything());
+    });
+
+    describe('the chart', () => {
+        const EARLIER = [week('2026-11-02', { Mon: { Run: 1 } }), week('2026-11-09', { Mon: { Run: 2 } })];
+
+        it('shows earlier weeks than the table, up to 25', async () => {
+            mockApi();
+            mockEarlier(() => json({ weeks: EARLIER }));
+            await renderPlanner();
+
+            await waitFor(() => expect(chartWeeks())
+                .toEqual(['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23', '2026-11-30']));
+            expect(fetchMock.mock.lastCall[0]).toBe('/api/strava/plans?from=2026-06-15&weeks=22');
+            expect(weekCell('2026-11-09')).toBeNull();
+
+            // Loaded into the table, a week isn't shown twice.
+            fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+            await waitFor(() => expect(weekCell('2026-11-09')).not.toBeNull());
+            expect(chartWeeks()).toEqual(['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23', '2026-11-30']);
+        });
+
+        it('shows the weeks of the table when the earlier ones cannot be loaded', async () => {
+            mockApi();
+            mockEarlier(() => json({ error: 'offline' }, 500));
+            await renderPlanner();
+            await settle();
+
+            expect(chartWeeks()).toEqual(['2026-11-16', '2026-11-23', '2026-11-30']);
+            expect(screen.queryByText('offline')).not.toBeInTheDocument();
+        });
+
+        it('loads no earlier weeks on phones', async () => {
+            vi.spyOn(window, 'matchMedia').mockImplementation((media) => ({
+                media,
+                matches: media.includes('max-width'),
+                addEventListener: () => {},
+                removeEventListener: () => {},
+            }));
+            mockApi();
+            await renderPlanner();
+            await settle();
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(chartWeeks()).toEqual(['2026-11-16', '2026-11-23', '2026-11-30']);
+        });
     });
 
     it('plans a day in the popup and saves the week', async () => {
@@ -189,7 +244,9 @@ describe('StravaPlanner', () => {
         releaseSave();
         expect(await screen.findByText('Imported 1 week.')).toBeInTheDocument();
         expect(posts()).toHaveLength(1);
-        expect(fetchMock.mock.lastCall[0]).toBe('/api/strava/plans?from=2026-11-16&weeks=3');
+        expect(fetchMock.mock.calls.map(([url]) => url)).toContain('/api/strava/plans?from=2026-11-16&weeks=3');
+        // The chart's earlier weeks too: before and after the import.
+        expect(fetchMock.mock.calls.filter(([url]) => url === '/api/strava/plans?from=2026-06-15&weeks=22')).toHaveLength(2);
         await waitFor(() => expect(dayCell('2026-11-30', 'Sun')).toHaveTextContent('20'));
         expect(dayCell('2026-11-30', 'Mon').textContent.trim()).toBe('');
     });

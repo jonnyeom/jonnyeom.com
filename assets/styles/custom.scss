@@ -159,6 +159,13 @@ h6:hover .heading-permalink,
   }
 }
 
+// Plan page: as many weeks as fit in the visible width, 25 on a wide screen (phones: 6, as above).
+.strava-weekly-chart__inner--plan {
+  @media (min-width: 769px) {
+    width: calc(36px * var(--chart-weeks, 25));
+  }
+}
+
 // Plan page (StravaPlanner, AG Grid): highlight the current week.
 .ag-row.strava-plan-current-week {
   background-color: rgba(57, 135, 229, 0.14);
