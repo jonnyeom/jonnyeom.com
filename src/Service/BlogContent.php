@@ -76,7 +76,9 @@ class BlogContent
                 return $parsedPost;
             });
 
-            $posts[$post->getSlug()] = $post;
+            $slug = $post->getSlug();
+            assert(is_string($slug));
+            $posts[$slug] = $post;
         }
 
         return $posts;

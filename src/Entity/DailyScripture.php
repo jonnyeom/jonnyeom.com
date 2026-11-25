@@ -7,30 +7,35 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
+use ApiPlatform\OpenApi\Model\Parameter as OpenApiParameter;
 use App\State\DailyScriptureProvider;
 use DateTime;
+use Symfony\Component\TypeInfo\Type\BuiltinType;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 #[ApiResource(operations: [
     new Get(
-        openapiContext: [
-            'parameters' => [
-                [
-                    'name' => 'date',
-                    'in' => 'path',
-                    'required' => true,
-                    'schema' => ['type' => 'string'],
-                    'description' => 'Date in mm-dd-yyyy format',
-                    'example' => '01-01-2023',
-                ],
+        openapi: new OpenApiOperation(
+            parameters: [
+                new OpenApiParameter(
+                    name: 'date',
+                    in: 'path',
+                    description: 'Date in mm-dd-yyyy format',
+                    required: true,
+                    schema: ['type' => 'string'],
+                    example: '01-01-2023',
+                ),
             ],
-        ],
+        ),
         provider: DailyScriptureProvider::class,
 ),
 ])]
 class DailyScripture
 {
     public function __construct(
-        #[ApiProperty(identifier: true)]
+        // Exposed as an m-d-Y string by getDate(); keeps API Platform from parsing {date} into a DateTime.
+        #[ApiProperty(identifier: true, nativeType: new BuiltinType(TypeIdentifier::STRING))]
         private readonly DateTime $date,
         private readonly string $scripture,
         private readonly string $body,

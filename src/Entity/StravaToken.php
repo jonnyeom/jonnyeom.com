@@ -42,11 +42,15 @@ class StravaToken
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeImmutable $updatedAt;
 
+    /** An int, as DBAL reads BIGINT columns: a string would look changed on every flush. */
+    #[ORM\Column(type: Types::BIGINT)]
+    private int $athleteId;
+
     public function __construct(
-        #[ORM\Column(type: Types::BIGINT)]
-        private string $athleteId,
+        string $athleteId,
         AccessTokenInterface $token,
     ) {
+        $this->athleteId    = (int) $athleteId;
         $this->refreshToken = '';
         $this->update($token);
     }
@@ -69,7 +73,7 @@ class StravaToken
             'access_token' => $this->accessToken,
             'refresh_token' => $this->refreshToken,
             'expires' => $this->expiresAt,
-            'resource_owner_id' => $this->athleteId,
+            'resource_owner_id' => $this->getAthleteId(),
         ]);
     }
 
@@ -80,7 +84,7 @@ class StravaToken
 
     public function getAthleteId(): string
     {
-        return $this->athleteId;
+        return (string) $this->athleteId;
     }
 
     public function getRefreshToken(): string

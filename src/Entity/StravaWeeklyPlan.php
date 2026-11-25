@@ -62,10 +62,13 @@ class StravaWeeklyPlan
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private DateTimeImmutable $updatedAt;
 
+    /** An int, as DBAL reads BIGINT columns: a string would look changed on every flush. */
+    #[ORM\Column(type: Types::BIGINT)]
+    private int $athleteId;
+
     /** @throws InvalidPlan when $weekStart is not a Monday. */
     public function __construct(
-        #[ORM\Column(type: Types::BIGINT)]
-        private string $athleteId,
+        string $athleteId,
         #[ORM\Column(type: Types::DATE_IMMUTABLE)]
         private DateTimeImmutable $weekStart,
     ) {
@@ -73,6 +76,7 @@ class StravaWeeklyPlan
             throw new InvalidPlan(sprintf('A week starts on a Monday, %s was given.', $weekStart->format('l Y-m-d')));
         }
 
+        $this->athleteId = (int) $athleteId;
         $this->weekStart = $weekStart->setTime(0, 0);
         $this->updatedAt = new DateTimeImmutable();
     }
@@ -107,7 +111,7 @@ class StravaWeeklyPlan
 
     public function getAthleteId(): string
     {
-        return $this->athleteId;
+        return (string) $this->athleteId;
     }
 
     public function getWeekStart(): DateTimeImmutable
