@@ -20,6 +20,14 @@ final class DailyScriptureAPITest extends WebTestCase
         $this->assertResponseIsSuccessful(sprintf('The %s public URL loads correctly.', $url));
     }
 
+    public function testADateWithoutAScriptureIsNotFound(): void
+    {
+        $client = self::createClient();
+        $client->request('GET', '/api/daily_scriptures/01-01-1990');
+
+        self::assertResponseStatusCodeSame(404);
+    }
+
     /** @return array<array{string}> */
     public static function getPublicUrls(): array
     {

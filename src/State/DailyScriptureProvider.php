@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\State;
 
 use ApiPlatform\Metadata\Exception\InvalidIdentifierException;
-use ApiPlatform\Metadata\Exception\ItemNotFoundException;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\Entity\DailyScripture;
 use App\Service\DailyScriptureLoader;
 use DateTime;
 use DateTimeZone;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 use function array_key_exists;
 use function is_string;
@@ -56,7 +56,7 @@ class DailyScriptureProvider implements ProviderInterface
         $year = $dateObj->format('Y');
 
         if (! array_key_exists($year, $content) || ! array_key_exists($date, $content[$year])) {
-            throw new ItemNotFoundException(sprintf('Unable to find Daily Scripture for the date %s', $date));
+            throw new NotFoundHttpException(sprintf('Unable to find Daily Scripture for the date %s', $date));
         }
 
         return new DailyScripture($dateObj, $content[$year][$date]['scripture'], $content[$year][$date]['body']);

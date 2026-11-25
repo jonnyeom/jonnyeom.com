@@ -73,8 +73,8 @@
             ]
         },
         {
-            "description": "Don't upgrade symfony to 9.x until we do it ourselves",
-            "allowedVersions": "<9.0.0",
+            "description": "Don't upgrade symfony past 8.1 until we do it ourselves, with extra.symfony.require in composer.json",
+            "allowedVersions": "<8.2.0",
             "matchPackageNames": [
                 "symfony/{/,}**"
             ]
