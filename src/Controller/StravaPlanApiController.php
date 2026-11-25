@@ -88,7 +88,7 @@ class StravaPlanApiController extends AbstractController
 
     /**
      * GET /api/strava/plans/example.csv: a two-week example CSV to fill in and import, for the two
-     * weeks after the current one (so importing it as is never replaces past plans).
+     * weeks after the download. Like any import, it replaces the plans of the weeks in it.
      */
     #[Route('/example.csv', name: 'example', methods: ['GET'], format: 'csv')]
     public function example(): Response

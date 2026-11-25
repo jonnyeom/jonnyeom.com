@@ -139,8 +139,10 @@ final class StravaPlanApiControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(422);
     }
 
-    public function testExampleIsATwoWeekCsvDownload(): void
+    public function testExampleIsACsvDownloadOfTheNextTwoWeeks(): void
     {
+        $currentWeek = WeeklyPlanManager::weekStartOf(new DateTimeImmutable());
+
         $this->client->request('GET', '/api/strava/plans/example.csv');
 
         self::assertResponseIsSuccessful();
@@ -149,6 +151,8 @@ final class StravaPlanApiControllerTest extends WebTestCase
         $lines = explode("\n", trim((string) $this->client->getResponse()->getContent()));
         self::assertCount(3, $lines);
         self::assertStringStartsWith('Week,"Mon Run"', $lines[0]);
+        self::assertStringStartsWith($currentWeek->modify('+1 week')->format('Y-m-d') . ',', $lines[1]);
+        self::assertStringStartsWith($currentWeek->modify('+2 weeks')->format('Y-m-d') . ',', $lines[2]);
     }
 
     public function testExportIsACsvDownload(): void

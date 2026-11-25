@@ -29,8 +29,8 @@ use function trim;
  *
  * One row per week: Week (the Monday), then the miles of each day and sport ("Mon Run", "Mon Bike",
  * ... "Sun Tennis"), then Notes. Only the planned activities: no Strava actuals or other computed
- * values. Import ignores unknown columns (e.g. "Actual (mi)" from older exports), but needs all of
- * these: a row replaces its week's plan, so a missing column would silently clear data.
+ * values. Import ignores unknown columns, but needs all of these: a row replaces its week's plan, so
+ * a missing column would silently clear data.
  *
  * @phpstan-import-type WeekPlanView from WeeklyPlanManager
  * @phpstan-type ImportedPlan array{days: array<string, array<string, float>>, notes: string|null}
