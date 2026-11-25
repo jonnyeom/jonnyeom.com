@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// End-to-end tests of the real app (production build, PHP and Postgres), on a phone screen.
+// End-to-end tests of the real app (production build, PHP and Postgres), on a phone screen by default.
 // Needs `pnpm build` and DATABASE_URL set to a throwaway database: the tests migrate and write to it.
 // Required explicitly, so they never run against the database in .env.local.
 if (!process.env.DATABASE_URL) {
@@ -22,6 +22,8 @@ export default defineConfig({
     testDir: './e2e',
     globalSetup: './e2e/setup.js',
     forbidOnly: !!process.env.CI,
+    // The specs share the database, and saving replaces a whole week: one at a time.
+    workers: 1,
     use: { ...devices['iPhone 13'], browserName: 'chromium', baseURL: url },
     webServer: {
         // variables_order: without E, PHP's server ignores DATABASE_URL and uses the one in the .env files.

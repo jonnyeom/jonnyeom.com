@@ -35,6 +35,32 @@ export const weekTotal = (days) => DAYS.reduce((total, day) => total + relativeM
 
 export const hasPlan = (week) => DAYS.some((day) => relativeMiles(week.days?.[day]) > 0);
 
+// Whether two days plan the same miles (the order of the sports doesn't matter).
+export const sameSports = (a, b) => SPORTS.every(({ type }) => (Number(a?.[type]) || 0) === (Number(b?.[type]) || 0));
+
+export const isSameCell = (a, b) => a.weekStart === b.weekStart && a.day === b.day;
+
+/** The week's days with one day replaced; a day without sports is removed. */
+export const withDay = (days, day, sports) => {
+    const { [day]: _replaced, ...others } = days;
+    return Object.keys(sports ?? {}).length === 0 ? others : { ...others, [day]: sports };
+};
+
+// The items from a to b (in either order), both included.
+const between = (list, a, b) => {
+    const [start, end] = [list.indexOf(a), list.indexOf(b)].toSorted((x, y) => x - y);
+    return start < 0 ? [] : list.slice(start, end + 1);
+};
+
+/** The cells of the rectangle between two cells ({ weekStart, day }), in the order of the rows. */
+export const cellsBetween = (rows, from, to) => {
+    const days = between(DAYS, from.day, to.day);
+    return between(rows.map((week) => week.weekStart), from.weekStart, to.weekStart)
+        .flatMap((weekStart) => days.map((day) => ({ weekStart, day })));
+};
+
+export const cellLabel = ({ weekStart, day }) => `${day} ${weekLabel(weekStart)}`;
+
 // The API returns [] for a week without plan; the grid always works with an object.
 export const normalizeWeek = (week) => ({ ...week, days: Array.isArray(week.days) ? {} : { ...week.days } });
 

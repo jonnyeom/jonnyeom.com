@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import StravaPlanner from './StravaPlanner.jsx';
@@ -40,10 +40,10 @@ const dayCell = (weekStart, day) => document.querySelector(`.ag-center-cols-cont
 
 // A click as a browser sends it: AG Grid only starts single-click editing for a click count
 // (`detail`) of 1.
-const tap = (element) => {
-    fireEvent.mouseDown(element, { detail: 1 });
-    fireEvent.mouseUp(element, { detail: 1 });
-    fireEvent.click(element, { detail: 1 });
+const tap = (element, keys = {}) => {
+    fireEvent.mouseDown(element, { detail: 1, ...keys });
+    fireEvent.mouseUp(element, { detail: 1, ...keys });
+    fireEvent.click(element, { detail: 1, ...keys });
 };
 
 const planDay = async (weekStart, name, miles) => {
@@ -51,6 +51,34 @@ const planDay = async (weekStart, name, miles) => {
     fireEvent.change(await screen.findByLabelText('Run'), { target: { value: miles } });
     fireEvent.click(screen.getByRole('button', { name: 'Done' }));
 };
+
+const fillHandle = (weekStart, day) => dayCell(weekStart, day).querySelector('.strava-plan-fill');
+
+// Starts dragging the corner of a day to a day cell. jsdom has no layout: the element under the pointer is given.
+const startDrag = (weekStart, day, to, button = 0) => {
+    const handle = fillHandle(weekStart, day);
+    handle.setPointerCapture = vi.fn();
+    document.elementFromPoint = () => to;
+    fireEvent.pointerDown(handle, { button, buttons: 1 });
+    fireEvent.pointerMove(handle, { buttons: 1 });
+    return handle;
+};
+
+// A drag as a browser sends it: with the pointer captured, the corner is also what gets clicked.
+const drag = (weekStart, day, to) => {
+    const handle = startDrag(weekStart, day, to);
+    fireEvent.pointerUp(handle, { button: 0 });
+    tap(handle);
+};
+
+const isHighlighted = (element) => window.getComputedStyle(element).backgroundColor === 'rgba(57, 135, 229, 0.28)';
+
+const press = (element, key, keys = { metaKey: true }) => fireEvent.keyDown(element, { key, ...keys });
+
+// The grid's events and saves are sent a moment later.
+const settle = () => act(() => new Promise((resolve) => {
+    setTimeout(resolve, 50);
+}));
 
 const importFile = () => fireEvent.change(document.querySelector('input[type="file"]'), {
     target: { files: [{ name: 'plan.csv', text: () => Promise.resolve('csv') }] },
@@ -155,9 +183,7 @@ describe('StravaPlanner', () => {
         await planDay('2026-11-30', 'Mon', '3');
         await waitFor(() => expect(puts()).toHaveLength(1));
         importFile();
-        await new Promise((resolve) => {
-            setTimeout(resolve, 50);
-        });
+        await settle();
         expect(posts()).toHaveLength(0);
 
         releaseSave();
@@ -185,6 +211,8 @@ describe('StravaPlanner', () => {
         fetchMock.mockImplementation(() => json({ weeks: [] }));
 
         fireEvent.click(screen.getByRole('button', { name: 'Later weeks' }));
+        // An import would reload the weeks while others are being loaded.
+        expect(screen.getByRole('button', { name: 'Import' })).toBeDisabled();
         await waitFor(() => expect(fetchMock.mock.lastCall[0]).toBe('/api/strava/plans?from=2026-12-07&weeks=8'));
         await waitFor(() => expect(screen.getByRole('button', { name: 'Load more' })).toBeEnabled());
         fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
@@ -296,12 +324,321 @@ describe('StravaPlanner', () => {
         tap(weekCell('2026-11-23'));
         fireEvent.click(await screen.findByRole('button', { name: 'Paste' }));
 
-        // Saves are sent a moment later.
-        await new Promise((resolve) => {
-            setTimeout(resolve, 50);
-        });
+        await settle();
         expect(window.confirm).toHaveBeenCalled();
         expect(puts()).toEqual([]);
+    });
+
+    it('copies a day to the weeks its corner is dragged over', async () => {
+        mockApi();
+        await renderPlanner();
+
+        drag('2026-11-16', 'Sat', dayCell('2026-11-30', 'Sat'));
+
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        // The other days of the weeks stay; nothing planned was replaced.
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Sat: { Bike: 30 } }, notes: null }],
+            ['/api/strava/plans/2026-11-30', { days: { Sat: { Bike: 30 } }, notes: null }],
+        ]));
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(await screen.findByText('Copied Sat 11.16 to Sat 11.30, Sat 11.23.')).toBeInTheDocument();
+        // No popup opened.
+        expect(screen.queryByLabelText('Run')).not.toBeInTheDocument();
+    });
+
+    it('drags down too, and asks before replacing a planned day', async () => {
+        mockApi();
+        await renderPlanner();
+        await planDay('2026-11-30', 'Mon', '3');
+        await waitFor(() => expect(puts()).toHaveLength(1));
+        await waitFor(() => expect(fillHandle('2026-11-30', 'Mon')).not.toBeNull());
+        window.confirm.mockReturnValueOnce(false);
+
+        drag('2026-11-30', 'Mon', dayCell('2026-11-16', 'Mon'));
+        expect(window.confirm).toHaveBeenCalledWith('Replace Mon 11.16 with Mon 11.30?');
+        await settle();
+        expect(puts()).toHaveLength(1);
+
+        drag('2026-11-30', 'Mon', dayCell('2026-11-16', 'Mon'));
+        await waitFor(() => expect(puts()).toHaveLength(3));
+        expect(puts().slice(1)).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Mon: { Run: 3 } }, notes: null }],
+            ['/api/strava/plans/2026-11-16', { days: { Mon: { Run: 3 }, Sat: { Bike: 30 } }, notes: null }],
+        ]));
+    });
+
+    it('copies a day and pastes it into the days selected with Ctrl/⌘+click', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        await screen.findByText(/^Copied Sat 11.16/);
+
+        tap(dayCell('2026-11-30', 'Sat'), { metaKey: true });
+        tap(dayCell('2026-11-30', 'Sun'), { ctrlKey: true });
+        // Unselected again: it keeps the focus, but isn't pasted into.
+        tap(dayCell('2026-11-23', 'Wed'), { metaKey: true });
+        tap(dayCell('2026-11-23', 'Wed'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-23', 'Wed'), { key: 'v', metaKey: true });
+
+        // Both days of the week in one save.
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: { Sat: { Bike: 30 }, Sun: { Bike: 30 } }, notes: null }],
+        ]));
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(screen.queryByLabelText('Run')).not.toBeInTheDocument();
+        expect(document.querySelector('.strava-plan-actions')).toBeNull();
+    });
+
+    it('selects a range of days with Shift+click, from the copied day', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', ctrlKey: true });
+        tap(dayCell('2026-11-30', 'Sat'), { shiftKey: true });
+        fireEvent.keyDown(dayCell('2026-11-30', 'Sat'), { key: 'v', ctrlKey: true });
+
+        // The copied day is in the range, but doesn't change.
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Sat: { Bike: 30 } }, notes: null }],
+            ['/api/strava/plans/2026-11-30', { days: { Sat: { Bike: 30 } }, notes: null }],
+        ]));
+    });
+
+    it('pastes a day into the focused day when none are selected', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-23', 'Wed'), { key: 'v', metaKey: true });
+
+        await waitFor(() => expect(window.confirm).toHaveBeenCalledWith('Replace Wed 11.23 with Sat 11.16?'));
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Bike: 30 } }, notes: null }],
+        ]));
+    });
+
+    it('pastes what was copied last, a day or a week', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        fireEvent.keyDown(dayCell('2026-11-16', 'Sat'), { key: 'c', metaKey: true });
+        fireEvent.keyDown(weekCell('2026-11-16'), { key: 'c', metaKey: true });
+        await screen.findByText(/^Copied 11.16/);
+        fireEvent.keyDown(dayCell('2026-11-30', 'Tue'), { key: 'v', metaKey: true });
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: WEEKS[0].days, notes: null }],
+        ]));
+    });
+
+    it('saves an open popup when days are selected', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-30', 'Mon'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '3' } });
+        tap(dayCell('2026-11-23', 'Mon'), { metaKey: true });
+
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: { Mon: { Run: 3 } }, notes: null }],
+        ]));
+        await waitFor(() => expect(screen.queryByLabelText('Run')).not.toBeInTheDocument());
+    });
+
+    it('Escape unselects the days and forgets what was copied', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Sat'), { metaKey: true });
+        press(dayCell('2026-11-16', 'Sat'), 'c');
+        tap(dayCell('2026-11-30', 'Sat'), { metaKey: true });
+        await settle();
+        expect(isHighlighted(dayCell('2026-11-30', 'Sat'))).toBe(true);
+
+        press(dayCell('2026-11-30', 'Sat'), 'Escape', {});
+        press(dayCell('2026-11-30', 'Sat'), 'v');
+        await settle();
+        expect(isHighlighted(dayCell('2026-11-30', 'Sat'))).toBe(false);
+        expect(screen.queryByText(/^Copied/)).not.toBeInTheDocument();
+
+        // A copied week too.
+        press(weekCell('2026-11-16'), 'c');
+        press(weekCell('2026-11-16'), 'Escape', {});
+        press(weekCell('2026-11-30'), 'v');
+        await settle();
+        expect(puts()).toEqual([]);
+    });
+
+    it('a plain click on a day unselects the days', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-30', 'Sat'), { metaKey: true });
+        await settle();
+        // Not the corner of a day.
+        tap(fillHandle('2026-11-16', 'Sat'));
+        await settle();
+        expect(isHighlighted(dayCell('2026-11-30', 'Sat'))).toBe(true);
+        expect(screen.queryByLabelText('Run')).not.toBeInTheDocument();
+
+        tap(dayCell('2026-11-23', 'Mon'));
+        await screen.findByLabelText('Run');
+        expect(isHighlighted(dayCell('2026-11-30', 'Sat'))).toBe(false);
+    });
+
+    it("doesn't copy an empty day", async () => {
+        mockApi();
+        await renderPlanner();
+
+        press(weekCell('2026-11-16'), 'c');
+        press(dayCell('2026-11-30', 'Sat'), 'c');
+        expect(await screen.findByText('Nothing is planned on Sat 11.30 to copy.')).toBeInTheDocument();
+
+        // The copied week is kept.
+        press(weekCell('2026-11-30'), 'v');
+        await waitFor(() => expect(puts()).toEqual([
+            ['/api/strava/plans/2026-11-30', { days: WEEKS[0].days, notes: null }],
+        ]));
+    });
+
+    it('copies and pastes only with Ctrl/⌘ alone, and once while held down', async () => {
+        mockApi();
+        await renderPlanner();
+
+        press(weekCell('2026-11-16'), 'C', { ctrlKey: true, shiftKey: true });
+        press(weekCell('2026-11-16'), 'c', { metaKey: true, altKey: true });
+        press(weekCell('2026-11-30'), 'v');
+        await settle();
+        expect(puts()).toEqual([]);
+
+        press(weekCell('2026-11-16'), 'c');
+        press(weekCell('2026-11-30'), 'v', { metaKey: true, repeat: true });
+        await settle();
+        expect(puts()).toEqual([]);
+    });
+
+    it('leaves the keys alone while a popup is open', async () => {
+        mockApi();
+        await renderPlanner();
+
+        press(weekCell('2026-11-16'), 'c');
+        await screen.findByText(/^Copied 11.16/);
+        tap(dayCell('2026-11-30', 'Mon'));
+        await screen.findByLabelText('Run');
+        press(dayCell('2026-11-30', 'Mon'), 'v');
+        await settle();
+        expect(puts()).toEqual([]);
+    });
+
+    it('pastes the week that was just copied into the weeks that were just selected', async () => {
+        mockApi();
+        await renderPlanner();
+        press(weekCell('2026-11-23'), 'c');
+        await screen.findByText(/^Copied 11.23/);
+
+        // All at once: the grid still has the handlers of the render before.
+        press(weekCell('2026-11-16'), 'c');
+        tap(weekCell('2026-11-23'));
+        tap(weekCell('2026-11-30'));
+        press(weekCell('2026-11-30'), 'v');
+
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: WEEKS[0].days, notes: null }],
+            ['/api/strava/plans/2026-11-30', { days: WEEKS[0].days, notes: null }],
+        ]));
+    });
+
+    it('pastes a copied week into the weeks of the selected days', async () => {
+        mockApi();
+        await renderPlanner();
+
+        press(weekCell('2026-11-16'), 'c');
+        tap(dayCell('2026-11-30', 'Sat'), { metaKey: true });
+        tap(dayCell('2026-11-30', 'Sun'), { metaKey: true });
+        tap(dayCell('2026-11-23', 'Mon'), { metaKey: true });
+        press(dayCell('2026-11-23', 'Mon'), 'v');
+
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        expect(window.confirm).toHaveBeenCalledWith('Replace the plan of 11.23 with 11.16?');
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-23', { days: WEEKS[0].days, notes: null }],
+            ['/api/strava/plans/2026-11-30', { days: WEEKS[0].days, notes: null }],
+        ]));
+    });
+
+    it.each([
+        ['Escape', () => fireEvent.keyDown(document.body, { key: 'Escape' })],
+        ['pointercancel', (handle) => fireEvent.pointerCancel(handle)],
+        // When the corner is removed, the document gets it.
+        ['the corner disappearing', () => fireEvent.lostPointerCapture(document)],
+        ['the button not being down anymore', (handle) => fireEvent.pointerMove(handle, { buttons: 0 })],
+    ])('%s cancels the drag', async (name, cancel) => {
+        mockApi();
+        await renderPlanner();
+
+        const handle = startDrag('2026-11-16', 'Sat', dayCell('2026-11-30', 'Sat'));
+        expect(isHighlighted(dayCell('2026-11-23', 'Sat'))).toBe(true);
+        cancel(handle);
+        expect(isHighlighted(dayCell('2026-11-23', 'Sat'))).toBe(false);
+        fireEvent.pointerMove(handle, { buttons: 1 });
+        fireEvent.pointerUp(handle, { button: 0 });
+        await settle();
+        expect(puts()).toEqual([]);
+    });
+
+    it('drags only with the main button', async () => {
+        mockApi();
+        await renderPlanner();
+
+        const handle = startDrag('2026-11-16', 'Sat', dayCell('2026-11-30', 'Sat'), 2);
+        fireEvent.pointerUp(handle, { button: 2 });
+        await settle();
+        expect(puts()).toEqual([]);
+    });
+
+    it('saves an open popup when a drag starts, and drags what was typed', async () => {
+        mockApi();
+        await renderPlanner();
+
+        tap(dayCell('2026-11-16', 'Mon'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '8' } });
+        const handle = startDrag('2026-11-16', 'Mon', dayCell('2026-11-23', 'Mon'));
+        // The popup is saved a moment later, during the drag.
+        await settle();
+        fireEvent.pointerUp(handle, { button: 0 });
+
+        await waitFor(() => expect(puts()).toHaveLength(2));
+        expect(puts()).toEqual(expect.arrayContaining([
+            ['/api/strava/plans/2026-11-16', { days: { Mon: { Run: 8 }, Sat: { Bike: 30 } }, notes: null }],
+            ['/api/strava/plans/2026-11-23', { days: { Wed: { Run: 4 }, Mon: { Run: 8 } }, notes: null }],
+        ]));
+        await waitFor(() => expect(screen.queryByLabelText('Run')).not.toBeInTheDocument());
+    });
+
+    it("doesn't clear days with a day that was just cleared", async () => {
+        mockApi();
+        await renderPlanner();
+
+        // 11.23 Wed is planned, 11.16 Wed as well after this.
+        await planDay('2026-11-16', 'Wed', '2');
+        await waitFor(() => expect(fillHandle('2026-11-16', 'Wed')).not.toBeNull());
+        tap(dayCell('2026-11-16', 'Wed'));
+        fireEvent.change(await screen.findByLabelText('Run'), { target: { value: '' } });
+        startDrag('2026-11-16', 'Wed', dayCell('2026-11-23', 'Wed'));
+        // The popup is saved a moment later, during the drag. The corner is gone then.
+        await settle();
+        fireEvent.pointerUp(dayCell('2026-11-23', 'Wed'), { button: 0 });
+        await settle();
+
+        expect(window.confirm).not.toHaveBeenCalled();
+        expect(puts().filter(([url]) => url.endsWith('2026-11-23'))).toEqual([]);
     });
 
     it('is read-only without a Strava connection', async () => {
@@ -311,6 +648,7 @@ describe('StravaPlanner', () => {
         expect(screen.getByRole('link', { name: 'Connect to edit' })).toHaveAttribute('href', '/strava/connect/entry');
         expect(screen.queryByRole('button', { name: 'Import' })).not.toBeInTheDocument();
 
+        expect(fillHandle('2026-11-16', 'Mon')).toBeNull();
         tap(weekCell('2026-11-16'));
         tap(dayCell('2026-11-16', 'Mon'));
         expect(screen.queryByRole('button', { name: 'Copy' })).not.toBeInTheDocument();

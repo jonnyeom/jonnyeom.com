@@ -174,3 +174,23 @@ h6:hover .heading-permalink,
   margin: 0 auto;
   z-index: 30;
 }
+
+// Plan page: the corner of a planned day, dragged up or down to copy the day. Only with a mouse: on touch
+// screens it would be in the way of tapping and scrolling.
+.strava-plan-fill {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #3987e5;
+  cursor: crosshair;
+
+  @media (hover: hover) and (pointer: fine) {
+    .ag-cell:hover &,
+    &:active {
+      display: block;
+    }
+  }
+}
