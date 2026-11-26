@@ -17,7 +17,7 @@
         "symfony/polyfill-php85": "*"
     },
     "require": {
-        "php": "^8.5",
+        "php": "^8.6.0",
         "ext-intl": "*",
         "api-platform/core": "^4.4",
         "basvandorst/stravaphp": "^2.0.0",
