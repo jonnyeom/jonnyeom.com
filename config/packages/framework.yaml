@@ -11,6 +11,9 @@ framework:
         handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\PdoSessionHandler
         cookie_secure: auto
         cookie_samesite: lax
+        # Keep the cookie as long as PdoSessionHandler keeps the session (its ttl in services.yaml).
+        # Without this, the cookie ends with the browser session and the Strava login is lost.
+        cookie_lifetime: 604800
 
     #esi: true
     #fragments: true
