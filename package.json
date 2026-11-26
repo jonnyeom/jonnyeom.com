@@ -25,7 +25,7 @@
     "devDependencies": {
         "@hotwired/stimulus": "3.2.2",
         "@playwright/test": "1.65.1",
-        "@symfony/stimulus-bridge": "4.0.1",
+        "@symfony/stimulus-bridge": "4.0.2",
         "@symfony/ux-live-component": "file:vendor/symfony/ux-live-component/assets",
         "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
         "@testing-library/dom": "10.4.2",
