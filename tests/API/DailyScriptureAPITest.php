@@ -28,6 +28,25 @@ final class DailyScriptureAPITest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    #[DataProvider('getMalformedDates')]
+    public function testAMalformedDateIsABadRequest(string $date): void
+    {
+        $client = self::createClient();
+        $client->request('GET', '/api/daily_scriptures/' . $date);
+
+        self::assertResponseStatusCodeSame(400);
+    }
+
+    /** @return array<array{string}> */
+    public static function getMalformedDates(): array
+    {
+        return [
+            ['garbage'],
+            ['2023-01-01'],
+            ['01-01-2023-extra'],
+        ];
+    }
+
     /** @return array<array{string}> */
     public static function getPublicUrls(): array
     {
