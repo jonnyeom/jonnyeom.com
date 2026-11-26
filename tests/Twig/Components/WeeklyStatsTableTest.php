@@ -9,6 +9,7 @@ use App\Model\Strava\WeeklyStat;
 use App\Service\Strava\StravaDataProvider;
 use App\Twig\Components\WeeklyStatsTable;
 use DateTime;
+use DateTimeImmutable;
 use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -16,14 +17,12 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
-use Symfony\UX\Chartjs\Builder\ChartBuilder;
-use Symfony\UX\Chartjs\Model\Chart;
+use Symfony\Component\DomCrawler\Crawler;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
 use Symfony\UX\LiveComponent\Test\TestLiveComponent;
 use Throwable;
 
-use function array_fill;
-use function range;
+use function array_unique;
 use function sprintf;
 
 final class WeeklyStatsTableTest extends KernelTestCase
@@ -93,65 +92,71 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringContainsString('Showing all stored weeks', $rendered);
     }
 
-    public function testInitialRenderIncludesTheChart(): void
+    public function testADayHasAMenuOfItsActivities(): void
     {
+        $week = $this->weekWithActivities('monday this week', ['Mon' => ['Run']]);
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn([$week]);
+
+        $rendered = $this->createLiveComponent('WeeklyStatsTable')->render();
+        $day      = $rendered->crawler()->filter('.dropdown[data-controller="dropdown"]');
+
+        $this->assertCount(1, $day);
+        $button = $day->filter('button.dropdown-trigger');
+        $this->assertSame('false', $button->attr('aria-expanded'));
+        $menu = $day->filter('.dropdown-menu');
+        $this->assertSame($button->attr('aria-controls'), $menu->attr('id'));
+        $this->assertStringContainsString('5 mi', $menu->text());
+        // The icons on phones, under the miles.
+        $this->assertCount(1, $day->filter('.strava-day-icons .fa-person-running'));
+        $this->assertStringNotContainsString('symfony--ux-chartjs', (string) $rendered);
+    }
+
+    public function testTheMenusOpenTowardsTheTable(): void
+    {
+        // Newest first, like the provider.
+        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn([
+            $this->weekWithActivities('monday this week', ['Mon' => ['Run'], 'Sun' => ['Run', 'Ride']]),
+            $this->weekWithActivities('monday this week -1 week', ['Mon' => ['Run']]),
+            $this->weekWithActivities('monday this week -2 weeks', ['Mon' => ['Run']]),
+        ]);
+
+        $crawler = $this->createLiveComponent('WeeklyStatsTable')->render()->crawler();
+        $classes = $crawler->filter('tbody tr')->each(
+            static fn (Crawler $row): array => $row->filter('.dropdown')->each(
+                static fn (Crawler $day): string => (string) $day->attr('class'),
+            ),
+        );
+
+        // First row: Mon opens to the right and down; Sun (several activities, hover too) to the left.
+        $this->assertStringNotContainsString('is-right', $classes[0][0]);
+        $this->assertStringNotContainsString('is-up', $classes[0][0]);
+        $this->assertStringNotContainsString('strava-day--several', $classes[0][0]);
+        $this->assertStringContainsString('is-right', $classes[0][1]);
+        $this->assertStringContainsString('strava-day--several', $classes[0][1]);
+        // The last 2 rows open upwards.
+        $this->assertStringContainsString('is-up', $classes[1][0]);
+        $this->assertStringContainsString('is-up', $classes[2][0]);
+        // Unique menus.
+        $ids = $crawler->filter('.dropdown-menu')
+            ->each(static fn (Crawler $menu): string => (string) $menu->attr('id'));
+        $this->assertSame($ids, array_unique($ids));
+    }
+
+    public function testRefreshAndResetTellTheChartToReload(): void
+    {
+        $this->stravaDataProvider->method('refresh')->willReturn([]);
+        $this->stravaDataProvider->method('reset')->willReturn([]);
         $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn($this->buildWeeklyStats(3));
 
-        $rendered = (string) $this->createLiveComponent('WeeklyStatsTable')->render();
-
-        $this->assertStringContainsString('data-controller="symfony--ux-chartjs--chart"', $rendered);
-    }
-
-    public function testChartShowsTheLatestTwentyWeeksOldestFirst(): void
-    {
-        // Provider order: newest first. Week i (0 = this week) runs i + 1 miles.
-        $weeks = [];
-        for ($i = 0; $i < 25; $i++) {
-            $monday = new DateTime('monday this week');
-            $monday->modify(sprintf('-%d weeks', $i));
-
-            $week = new WeeklyStat($monday->format('Y-m-d'));
-            $week->addStravaActivity([
-                'sport_type' => 'Run',
-                'distance' => ($i + 1) * 1609.34,
-                'start_date_local' => $monday->format('Y-m-d') . 'T08:00:00Z',
-            ]);
-            $week->setFiveWeekAverage(2 * 1609.34);
-            $weeks[] = $week;
+        foreach (['refresh', 'reset'] as $action) {
+            $component = $this->createComponentWithMockedProvider()->call($action);
+            $this->assertComponentDispatchBrowserEvent($component, WeeklyStatsTable::REFRESHED_EVENT);
         }
-
-        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn($weeks);
-
-        $chart = (new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class), new ChartBuilder()))->getChart();
-
-        $this->assertInstanceOf(Chart::class, $chart);
-        $this->assertSame(Chart::TYPE_BAR, $chart->getType());
-
-        $data = $chart->getData();
-        $this->assertCount(20, $data['labels']);
-        $this->assertSame($weeks[19]->getDate(), $data['labels'][0]);
-        $this->assertSame($weeks[0]->getDate(), $data['labels'][19]);
-
-        [$average, $miles] = $data['datasets'];
-        $this->assertSame('line', $average['type']);
-        $this->assertSame('5-week average', $average['label']);
-        $this->assertSame(array_fill(0, 20, 2.0), $average['data']);
-        $this->assertSame('Weekly miles', $miles['label']);
-        $this->assertSame(range(20.0, 1.0), $miles['data']);
-    }
-
-    public function testNoChartWithoutStoredWeeks(): void
-    {
-        $this->stravaDataProvider->method('getStoredWeeklyStats')->willReturn([]);
-
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class), new ChartBuilder());
-
-        $this->assertNull($component->getChart());
     }
 
     public function testLoadMoreIncreasesLimit(): void
     {
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class), new ChartBuilder());
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $this->createMock(LoggerInterface::class));
 
         $this->assertSame(20, $component->visibleWeeks);
 
@@ -247,6 +252,15 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $this->assertStringNotContainsString('Updated the latest week', $rendered);
     }
 
+    public function testAFailedRefreshDoesNotReloadTheChart(): void
+    {
+        $this->stravaDataProvider->method('refresh')->willThrowException(new RuntimeException('database is down'));
+
+        $component = $this->createComponentWithMockedProvider()->call('refresh');
+
+        $this->assertComponentNotDispatchBrowserEvent($component, WeeklyStatsTable::REFRESHED_EVENT);
+    }
+
     public function testUnexpectedErrorIsLogged(): void
     {
         $this->stravaDataProvider
@@ -259,7 +273,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             ->method('error')
             ->with($this->stringContains('database is down'));
 
-        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger, new ChartBuilder());
+        $component = new WeeklyStatsTable($this->stravaDataProvider, $logger);
 
         $this->assertSame('Application error: database is down', $component->getError());
     }
@@ -273,7 +287,7 @@ final class WeeklyStatsTableTest extends KernelTestCase
             $stravaDataProvider = $this->createMock(StravaDataProvider::class);
             $stravaDataProvider->method('getStoredWeeklyStats')->willThrowException($error);
 
-            $component = new WeeklyStatsTable($stravaDataProvider, $logger, new ChartBuilder());
+            $component = new WeeklyStatsTable($stravaDataProvider, $logger);
             $this->assertNotNull($component->getError());
         }
     }
@@ -330,6 +344,29 @@ final class WeeklyStatsTableTest extends KernelTestCase
         $client->disableReboot();
 
         return $this->createLiveComponent('WeeklyStatsTable', [], $client);
+    }
+
+    /**
+     * A week of 5-mile activities, e.g. ['Mon' => ['Run'], 'Sun' => ['Run', 'Ride']].
+     *
+     * @param array<string, list<string>> $days
+     */
+    private function weekWithActivities(string $monday, array $days): WeeklyStat
+    {
+        $start = new DateTimeImmutable($monday);
+        $week  = new WeeklyStat($start->format('Y-m-d'));
+        foreach ($days as $day => $sports) {
+            $date = $start->modify($day === 'Mon' ? '+0 days' : 'next ' . $day);
+            foreach ($sports as $sport) {
+                $week->addStravaActivity([
+                    'sport_type' => $sport,
+                    'distance' => 5 * 1609.34,
+                    'start_date_local' => $date->format('Y-m-d') . 'T08:00:00Z',
+                ]);
+            }
+        }
+
+        return $week;
     }
 
     /**

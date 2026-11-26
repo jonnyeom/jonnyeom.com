@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
     addWeeks,
     cellsBetween,
+    chartRange,
+    chartWeeks,
     hasPlan,
     normalizeWeek,
     relativeMiles,
@@ -102,5 +104,73 @@ describe('cellsBetween', () => {
 
     it('is empty when a week is not shown', () => {
         expect(cellsBetween(rows, { weekStart: '2020-01-06', day: 'Mon' }, { weekStart: '2026-11-16', day: 'Mon' })).toEqual([]);
+    });
+});
+
+describe('chartRange', () => {
+    it('loads 18 weeks before the current one, 26 after, and 4 more before for the average', () => {
+        expect(chartRange('2026-11-23')).toEqual({ from: '2026-06-22', weeks: 49 });
+    });
+});
+
+const run = (miles) => ({ Mon: { Run: miles } });
+
+// Every week of chartRange('2026-11-23'), as the API returns them; `plans` by week.
+const loaded = (plans = {}) => Array.from({ length: 49 }, (_, i) => addWeeks('2026-06-22', i))
+    .map((weekStart) => ({ weekStart, days: plans[weekStart] ?? {} }));
+
+const byStart = (weeks) => Object.fromEntries(weeks.map((week) => [week.weekStart, week]));
+
+describe('chartWeeks', () => {
+    const CURRENT = '2026-11-23';
+
+    it('keeps the 45 weeks of the chart, oldest first', () => {
+        const weeks = chartWeeks(loaded(), [], CURRENT).map((week) => week.weekStart);
+
+        expect(weeks).toHaveLength(45);
+        expect(weeks[0]).toBe('2026-07-20');
+        expect(weeks[18]).toBe(CURRENT);
+        expect(weeks[44]).toBe('2027-05-24');
+    });
+
+    it('averages the plans of the week and the 4 before it, a week without plan counting as 0', () => {
+        const weeks = byStart(chartWeeks(loaded({
+            '2026-06-22': run(10), // Before the chart: only counts for the average.
+            '2026-07-20': run(5),
+            '2026-11-02': run(4),
+            '2026-11-16': run(6),
+        }), [], CURRENT));
+
+        expect(weeks['2026-07-20'].plannedAverage).toBe(3); // (10 + 0 + 0 + 0 + 5) / 5
+        expect(weeks['2026-11-16'].plannedAverage).toBe(2); // (0 + 0 + 4 + 0 + 6) / 5
+    });
+
+    it('has no planned average for a week without plan', () => {
+        const weeks = byStart(chartWeeks(loaded({ '2026-11-16': run(6) }), [], CURRENT));
+
+        expect(weeks['2026-11-23'].plannedAverage).toBeNull();
+    });
+
+    it('has no planned average without the 5 weeks', () => {
+        // E.g. the weeks of the chart could not be loaded, only the table's.
+        const table = [
+            { weekStart: '2026-11-09', days: run(4) },
+            { weekStart: '2026-11-16', days: run(6) },
+        ];
+
+        expect(chartWeeks([], table, CURRENT).map((week) => week.plannedAverage)).toEqual([null, null]);
+    });
+
+    it('uses the latest weeks over the loaded ones', () => {
+        const weeks = byStart(chartWeeks(loaded({ '2026-11-16': run(6) }), [{ weekStart: '2026-11-16', days: run(16) }], CURRENT));
+
+        expect(weeks['2026-11-16'].days).toEqual(run(16));
+        expect(weeks['2026-11-16'].plannedAverage).toBe(3.2);
+    });
+
+    it('leaves out the latest weeks outside the chart', () => {
+        const weeks = chartWeeks(loaded(), [{ weekStart: '2026-01-05', days: run(3) }], CURRENT);
+
+        expect(weeks.some((week) => week.weekStart === '2026-01-05')).toBe(false);
     });
 });

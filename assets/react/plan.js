@@ -67,3 +67,46 @@ export const normalizeWeek = (week) => ({ ...week, days: Array.isArray(week.days
 // Inputs of at least 16px, so phones don't zoom in when one is focused.
 export const inputSize = (compact) => (compact ? '' : ' is-small');
 
+// The chart (Plan and Progress pages): 25 weeks fit in its view (12 on phones; see .strava-weekly-chart__inner),
+// opening with the current week a third in, so 8 weeks before it. 10 more weeks can be scrolled to on
+// either side.
+export const CHART_WEEKS_BEFORE = 18;
+export const CHART_WEEKS = 45;
+
+// The 5-week averages: of the week and the 4 before it.
+const AVERAGE_WEEKS = 5;
+
+/** The weeks to load for the chart: its weeks and the 4 before them, for the planned average. */
+export const chartRange = (currentWeek) => ({
+    from: addWeeks(currentWeek, -(CHART_WEEKS_BEFORE + AVERAGE_WEEKS - 1)),
+    weeks: CHART_WEEKS + AVERAGE_WEEKS - 1,
+});
+
+/**
+ * The weeks of the chart, oldest first, each with its planned 5-week average (`plannedAverage`, null for a
+ * week without plan). `loaded` are the weeks of chartRange(); `latest` overrides them (e.g. the weeks
+ * being edited).
+ */
+export const chartWeeks = (loaded, latest, currentWeek) => {
+    const byStart = new Map([...loaded, ...latest].map((week) => [week.weekStart, week]));
+    const all = [...byStart.values()].toSorted((a, b) => a.weekStart.localeCompare(b.weekStart));
+    const first = addWeeks(currentWeek, -CHART_WEEKS_BEFORE);
+    const last = addWeeks(first, CHART_WEEKS - 1);
+
+    return all
+        .map((week) => {
+            const plan = weekTotal(week.days);
+            if (plan <= 0) {
+                return { ...week, plannedAverage: null };
+            }
+            // A week without plan counts as 0; without all 5 weeks loaded (the chart's weeks could not be),
+            // there is no average.
+            const since = addWeeks(week.weekStart, -(AVERAGE_WEEKS - 1));
+            const plans = all
+                .filter((other) => other.weekStart >= since && other.weekStart <= week.weekStart)
+                .map((other) => weekTotal(other.days));
+            const average = plans.length < AVERAGE_WEEKS ? null : round1(plans.reduce((sum, miles) => sum + miles, 0) / AVERAGE_WEEKS);
+            return { ...week, plannedAverage: average };
+        })
+        .filter((week) => week.weekStart >= first && week.weekStart <= last);
+};

@@ -4,6 +4,8 @@
     <section class="section pt-0">
         <div class="container is-max-desktop">
             <div class="content">
+                {# The chart of the Plan page; outside the live component, it reloads itself after Refresh / Reset. #}
+                <div {{ react_component('StravaChart', {apiUrl: path('strava_plan_api_list'), currentWeek: currentWeek}) }}></div>
                 {{ component('WeeklyStatsTable') }}
 
                 <div class=" is-flex is-align-items-center is-justify-content-center mt-5">
