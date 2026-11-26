@@ -135,34 +135,27 @@ h6:hover .heading-permalink,
   }
 }
 
-// Weekly mileage chart (Symfony UX Chart.js) in the WeeklyStatsTable live component.
-// The outer box scrolls horizontally. `direction: rtl` makes it start scrolled to the right end
-// (the latest weeks) without any JavaScript; the inner box switches back to left-to-right.
+// Weekly mileage chart (PlanChart) of the Plan and Progress pages. The outer box scrolls horizontally;
+// PlanChart opens it at the current week. `direction: rtl` keeps the view in place when the chart gets
+// wider; the inner box switches back to left-to-right.
 .strava-weekly-chart {
   direction: rtl;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
-// Chart.js fills this box (maintainAspectRatio: false): about 10 weeks fit in the visible width.
+// Chart.js fills this box (maintainAspectRatio: false): 25 weeks fit in the visible width.
 .strava-weekly-chart__inner {
   direction: ltr;
   position: relative;
   height: 260px;
-  width: calc(100% * var(--chart-weeks, 10) / 10);
+  width: calc(100% * var(--chart-weeks, 25) / 25);
   min-width: 100%;
 
-  // Phones: about 6 weeks visible, so the week labels don't need to rotate.
+  // Phones: 12 weeks.
   @media (max-width: 768px) {
     height: 220px;
-    width: calc(100% * var(--chart-weeks, 6) / 6);
-  }
-}
-
-// Plan page: as many weeks as fit in the visible width, 25 on a wide screen (phones: 6, as above).
-.strava-weekly-chart__inner--plan {
-  @media (min-width: 769px) {
-    width: calc(36px * var(--chart-weeks, 25));
+    width: calc(100% * var(--chart-weeks, 12) / 12);
   }
 }
 
@@ -199,5 +192,40 @@ h6:hover .heading-permalink,
     &:active {
       display: block;
     }
+  }
+}
+
+// Progress page, phones: the icons of a day's sports under its miles.
+.strava-day-icons {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  color: #898781;
+}
+
+// Plan page, phones: less side padding, so the days, Plan and Actual fit.
+.strava-plan-section {
+  @media (max-width: 768px) {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+}
+
+// Progress page: a day's miles, a button opening the menu of its activities (dropdown controller).
+.strava-day__trigger {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+// With a mouse, hovering a day of several activities also shows them (not on touch screens, where a
+// hover sticks after a tap and the menu couldn't be closed by tapping again).
+@media (hover: hover) and (pointer: fine) {
+  .strava-day--several:hover .dropdown-menu {
+    display: block;
   }
 }

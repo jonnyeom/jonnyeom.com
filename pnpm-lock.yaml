@@ -33,9 +33,6 @@ importers:
       '@symfony/stimulus-bridge':
         specifier: 4.0.1
         version: 4.0.1(@hotwired/stimulus@3.2.2)
-      '@symfony/ux-chartjs':
-        specifier: file:vendor/symfony/ux-chartjs/assets
-        version: file:vendor/symfony/ux-chartjs/assets(@hotwired/stimulus@3.2.2)(chart.js@4.6.1)
       '@symfony/ux-live-component':
         specifier: file:vendor/symfony/ux-live-component/assets
         version: file:vendor/symfony/ux-live-component/assets(@hotwired/stimulus@3.2.2)
@@ -745,12 +742,6 @@ packages:
     engines: {node: ^18.12.0 || ^20.0.0 || >=22.0}
     peerDependencies:
       '@hotwired/stimulus': ^3.0
-
-  '@symfony/ux-chartjs@file:vendor/symfony/ux-chartjs/assets':
-    resolution: {directory: vendor/symfony/ux-chartjs/assets, type: directory}
-    peerDependencies:
-      '@hotwired/stimulus': ^3.0.0
-      chart.js: ^3.4.1 || ^4.0
 
   '@symfony/ux-live-component@file:vendor/symfony/ux-live-component/assets':
     resolution: {directory: vendor/symfony/ux-live-component/assets, type: directory}
@@ -3365,11 +3356,6 @@ snapshots:
       '@types/webpack-env': 1.18.8
       loader-utils: 3.3.1
       schema-utils: 4.3.3
-
-  '@symfony/ux-chartjs@file:vendor/symfony/ux-chartjs/assets(@hotwired/stimulus@3.2.2)(chart.js@4.6.1)':
-    dependencies:
-      '@hotwired/stimulus': 3.2.2
-      chart.js: 4.6.1
 
   '@symfony/ux-live-component@file:vendor/symfony/ux-live-component/assets(@hotwired/stimulus@3.2.2)':
     dependencies:

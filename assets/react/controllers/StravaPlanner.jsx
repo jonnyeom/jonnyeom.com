@@ -12,11 +12,13 @@ import {
 import { AgGridReact, useGridCellEditor } from 'ag-grid-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import PlanChart from '../components/PlanChart.jsx';
+import useChartWeeks from '../components/useChartWeeks.js';
 import WeekActionBar from '../components/WeekActionBar.jsx';
 import {
     addWeeks,
     cellLabel,
     cellsBetween,
+    chartWeeks,
     DAYS,
     hasPlan,
     inputSize,
@@ -43,10 +45,6 @@ ModuleRegistry.registerModules([
 ]);
 
 const LOAD_MORE_WEEKS = 8;
-
-// Weeks in the chart on desktop, also when the table has fewer: what fits on a wide screen (see
-// .strava-weekly-chart__inner--plan).
-const CHART_WEEKS = 25;
 
 const DEFAULT_COL_DEF = { sortable: false, resizable: false, suppressMovable: true };
 const getRowId = ({ data }) => data.weekStart;
@@ -132,22 +130,10 @@ const dayTooltip = ({ value }) => {
     return planned.length ? planned.map((sport) => `${sport.type}: ${value[sport.type]} mi`).join('\n') : undefined;
 };
 
-/** Week cell: the week; on phones also "planned/actual" miles (their columns are hidden). */
-const WeekCellRenderer = ({ data, compact }) => {
-    if (!compact) {
-        return <span>{weekLabel(data.weekStart)}{data.notes && <span className="icon is-small ml-1 has-text-grey"><i className="fas fa-note-sticky" /></span>}</span>;
-    }
-    const plan = round1(weekTotal(data.days));
-
-    return (
-        <div className="is-flex is-flex-direction-column is-justify-content-center" style={{ height: '100%', lineHeight: 1.2 }}>
-            <span>{weekLabel(data.weekStart)}{data.notes && <span className="has-text-grey"> •</span>}</span>
-            <span className="is-size-7 has-text-weight-normal has-text-grey">
-                {plan > 0 ? plan : '–'}{data.actual ? `/${data.actual.totalMiles}` : ''}
-            </span>
-        </div>
-    );
-};
+/** Week cell: the week; on phones a dot for its notes (their column is hidden). */
+const WeekCellRenderer = ({ data, compact }) => (
+    <span>{weekLabel(data.weekStart)}{compact && data.notes && <span className="has-text-grey"> •</span>}</span>
+);
 
 /** Popup editor of one day: miles per sport. Enter saves, Escape cancels. */
 const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact }) => {
@@ -212,14 +198,15 @@ const DayEditor = ({ value, onValueChange, stopEditing, colDef, data, compact })
     );
 };
 
-export default function StravaPlanner({ apiUrl, connectUrl }) {
+export default function StravaPlanner({ apiUrl, connectUrl, currentWeek: initialCurrentWeek = null }) {
     const importInput = useRef(null);
     const gridRef = useRef(null);
     const saveQueue = useRef({});
     const [weeks, setWeeks, weeksRef] = useLatestState([]);
-    // The weeks before the table's, only for the chart.
-    const [earlierWeeks, setEarlierWeeks] = useState([]);
-    const [currentWeek, setCurrentWeek] = useState(null);
+    // Given by the page, so the chart loads at once; the API's is the same.
+    const [currentWeek, setCurrentWeek] = useState(initialCurrentWeek);
+    // Changed to reload the weeks of the chart.
+    const [chartVersion, setChartVersion] = useState(0);
     const [editable, setEditable] = useState(false);
     // What was copied last: { week } or { cell, sports } (a day).
     const [copied, setCopied, copiedRef] = useLatestState(null);
@@ -249,32 +236,13 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             .finally(() => setLoading(false));
     }, [apiUrl, setWeeks]);
 
-    // Fills the chart up to CHART_WEEKS.
-    const loadEarlierWeeks = useCallback(async () => {
-        const first = weeksRef.current[0].weekStart;
-        const missing = CHART_WEEKS - weeksRef.current.length;
-        if (missing <= 0) {
-            return;
-        }
-        try {
-            const body = await api(`${apiUrl}?from=${addWeeks(first, -missing)}&weeks=${missing}`);
-            setEarlierWeeks(body.weeks.map(normalizeWeek));
-        } catch {
-            // The chart still shows the weeks of the table.
-        }
-    }, [apiUrl, weeksRef]);
-
-    const hasWeeks = weeks.length > 0;
-    useEffect(() => {
-        if (hasWeeks && !compact) {
-            loadEarlierWeeks();
-        }
-    }, [hasWeeks, compact, loadEarlierWeeks]);
-
-    // The weeks of the table are the up-to-date ones ("Load more" adds earlier weeks to it).
-    const chartWeeks = useMemo(() => (compact
-        ? weeks
-        : [...earlierWeeks.filter((week) => week.weekStart < weeks[0]?.weekStart), ...weeks]), [compact, earlierWeeks, weeks]);
+    // The weeks of the table are the up-to-date ones (edited here). Shown once the chart's are loaded, so
+    // the chart opens at the current week with all its weeks.
+    const loadedChartWeeks = useChartWeeks(apiUrl, currentWeek, chartVersion);
+    const shownChartWeeks = useMemo(
+        () => (loadedChartWeeks === null ? [] : chartWeeks(loadedChartWeeks, weeks, currentWeek)),
+        [loadedChartWeeks, weeks, currentWeek],
+    );
 
     const replaceWeek = (to) => setWeeks((current) => current.map((week) => (week.weekStart === to.weekStart ? to : week)));
 
@@ -398,10 +366,8 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             const body = await api(`${apiUrl}?from=${shown[0].weekStart}&weeks=${shown.length}`);
             setWeeks(() => body.weeks.map(normalizeWeek));
             setNotice(`Imported ${imported} week${imported === 1 ? '' : 's'}.`);
-            if (!compact) {
-                // They may have been imported too.
-                loadEarlierWeeks();
-            }
+            // They may have been imported too.
+            setChartVersion((version) => version + 1);
         } catch (e) {
             setError(`${failed}: ${e.message}`);
         } finally {
@@ -431,9 +397,9 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             headerName: compact ? 'Wk' : 'Week',
             field: 'weekStart',
             pinned: 'left',
-            width: compact ? 80 : 100,
-            cellClass: compact ? 'has-text-weight-bold px-2' : 'has-text-weight-bold',
-            headerClass: compact ? 'px-2' : undefined,
+            width: compact ? 52 : 100,
+            cellClass: compact ? 'has-text-weight-bold px-1' : 'has-text-weight-bold',
+            headerClass: compact ? 'px-1' : undefined,
             cellRenderer: WeekCellRenderer,
             cellRendererParams: { compact },
             cellStyle: editable ? { cursor: 'pointer' } : undefined,
@@ -441,7 +407,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         ...DAYS.map((day) => ({
             headerName: day,
             colId: day,
-            minWidth: compact ? 38 : 70,
+            minWidth: compact ? 28 : 70,
             flex: 1,
             editable,
             cellClass: compact ? 'is-flex is-align-items-center px-1' : 'is-flex is-align-items-center',
@@ -463,22 +429,25 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
             // Tab moves between the inputs of the popup, not to the next cell.
             suppressKeyboardEvent: ({ editing, event }) => editing && event.key === 'Tab',
         })),
-        ...(compact ? [] : [{
+        {
             headerName: 'Plan',
             colId: 'plan',
-            width: 75,
+            width: compact ? 40 : 75,
             valueGetter: ({ data }) => round1(weekTotal(data.days)),
             valueFormatter: ({ value }) => (value > 0 ? `${value}` : ''),
-            cellClass: 'has-text-weight-bold',
+            cellClass: compact ? 'has-text-weight-bold px-1' : 'has-text-weight-bold',
+            headerClass: compact ? 'px-1' : undefined,
         },
         {
-            headerName: 'Actual',
+            headerName: compact ? 'Act' : 'Actual',
             colId: 'actual',
-            width: 75,
+            width: compact ? 40 : 75,
             valueGetter: ({ data }) => data.actual?.totalMiles ?? null,
             valueFormatter: ({ value }) => (value === null ? '' : `${value}`),
+            cellClass: compact ? 'px-1' : undefined,
+            headerClass: compact ? 'px-1' : undefined,
         },
-        {
+        ...(compact ? [] : [{
             headerName: '±',
             colId: 'diff',
             width: 65,
@@ -660,19 +629,23 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
         };
     }, [dragging]);
 
-    if (loading && weeks.length === 0) {
-        return <div className="has-text-centered py-5"><i className="fas fa-cog fa-spin fa-2x" /></div>;
-    }
+    const chart = <PlanChart weeks={shownChartWeeks} currentWeek={currentWeek} />;
 
-    if (error && weeks.length === 0) {
-        return <div className="notification is-danger">{error}</div>;
+    // Until the weeks are loaded: the chart (the same element as below, so it stays), no spinner.
+    if (weeks.length === 0) {
+        return (
+            <div>
+                {chart}
+                {error && <div className="notification is-danger">{error}</div>}
+            </div>
+        );
     }
 
     const highlightedCells = fill ? cellsBetween(rows, fill.from, fill.to) : selectedCells;
 
     return (
         <div>
-            <PlanChart weeks={chartWeeks} currentWeek={currentWeek} />
+            {chart}
             {error && <div className="notification is-danger is-light py-2">{error}</div>}
             <div className="is-flex is-align-items-center is-justify-content-space-between mb-3">
                 <span className="is-size-7 has-text-grey">
@@ -732,7 +705,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     columnDefs={columnDefs}
                     defaultColDef={DEFAULT_COL_DEF}
                     getRowId={getRowId}
-                    rowHeight={compact ? 48 : undefined}
+                    rowHeight={compact ? 44 : undefined}
                     rowClassRules={rowClassRules}
                     domLayout="autoHeight"
                     singleClickEdit
@@ -764,7 +737,7 @@ export default function StravaPlanner({ apiUrl, connectUrl }) {
                     <>
                         <button
                             type="button"
-                            className={`button is-small mb-0${loading ? ' is-loading' : ''}`}
+                            className="button is-small mb-0"
                             title="Upload a CSV (e.g. the export, edited in a spreadsheet)"
                             onClick={() => importInput.current.click()}
                             disabled={loading}

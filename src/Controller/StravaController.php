@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Strava\WeeklyPlanManager;
+use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -17,7 +19,7 @@ class StravaController extends BaseController
         $this->setSeoDescription('Running metrics based on weekly mileage sourced from Strava');
         $this->setSeoKeywords('strava,running,metrics,mileage');
 
-        return $this->render('strava/metrics.html.twig');
+        return $this->render('strava/metrics.html.twig', ['currentWeek' => $this->currentWeek()]);
     }
 
     #[Route('/strava/plan', name: 'strava_plan')]
@@ -27,6 +29,12 @@ class StravaController extends BaseController
         $this->setSeoDescription('Planned weekly mileage for running, biking, swimming and tennis');
         $this->setSeoKeywords('strava,running,plan,mileage');
 
-        return $this->render('strava/plan.html.twig');
+        return $this->render('strava/plan.html.twig', ['currentWeek' => $this->currentWeek()]);
+    }
+
+    /** The Monday of the current week, for the chart of both pages (the plan API's currentWeek). */
+    private function currentWeek(): string
+    {
+        return WeeklyPlanManager::weekStartOf(new DateTimeImmutable())->format('Y-m-d');
     }
 }

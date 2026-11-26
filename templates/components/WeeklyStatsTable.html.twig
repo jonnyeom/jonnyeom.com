@@ -3,19 +3,6 @@
         <div class="notification is-danger">{{ this.error }}</div>
     {% else %}
         {% set weeklyStats = this.weeklyStats %}
-        {% set chart = this.chart %}
-        {% if chart %}
-            {% set chartWeeks = chart.data.labels|length %}
-            {# Scrolls horizontally, starting at the latest weeks (right end); about 10 weeks are visible. #}
-            <div class="strava-weekly-chart mb-5" tabindex="0" aria-label="Weekly mileage chart, scroll left for older weeks">
-                <div class="strava-weekly-chart__inner" style="--chart-weeks: {{ chartWeeks }}">
-                    {{ render_chart(chart, {
-                        role: 'img',
-                        'aria-label': 'Weekly miles and 5-week average for the last ' ~ chartWeeks ~ ' weeks. The table below lists every value.',
-                    }) }}
-                </div>
-            </div>
-        {% endif %}
         <div class="is-flex is-align-items-center is-justify-content-flex-end mb-3">
             {% if this.notice %}
                 <span class="has-text-success is-size-7 mr-3">{{ this.notice }}</span>
@@ -63,49 +50,54 @@
                     <th>Sun</th>
                     <th>total</th>
                     <th>5 wk avg</th>
-                    <th></th>
+                    <th title="Change of the 5-week average from the week before">5 wk Δ</th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for weeklyStat in weeklyStats %}
+                    {# The menus of the last rows open upwards: below, the table box would cut them off. #}
+                    {% set lastRows = loop.revindex <= 2 and loop.length > 2 %}
+                    {% set row = loop.index %}
                     <tr>
                         <th>{{ weeklyStat.date }}</th>
                         {% for day, dailyStat in weeklyStat %}
                             <td>
                                 {% if dailyStat.miles > 0 %}
-                                    <div class="dropdown is-hoverable">
-                                        <div class="dropdown-trigger">
-                                            <p class="" aria-haspopup="true" aria-controls="dropdown-menu-4">
-                                                <span class="icon-text">
-                                                  <span class="is-inline-flex">{{ dailyStat.miles }}
-                                                      {% if dailyStat.activitiesIcons|length > 1 %}
-                                                          <span class="is-hidden-tablet">*</span>
-                                                      {% endif %}
-                                                  </span>
-                                                    {% for sport_icon in dailyStat.activitiesIcons %}
-                                                        <span class="icon is-hidden-mobile">
-                                                            <i class="fas fa-{{ sport_icon }}"></i>
+                                    {# Tap (or hover, several activities): the activities of the day. On phones the icons go under the miles. #}
+                                    {% set menuId = 'strava-day-' ~ row ~ '-' ~ day %}
+                                    <div
+                                        class="dropdown strava-day{{ dailyStat.activities|length > 1 ? ' strava-day--several' }}{{ loop.index > 4 ? ' is-right' }}{{ lastRows ? ' is-up' }}"
+                                        data-controller="dropdown"
+                                        data-action="click->dropdown#toggle click@window->dropdown#closeOutside keydown.esc@window->dropdown#close"
+                                    >
+                                        <button type="button" class="dropdown-trigger strava-day__trigger" aria-expanded="false" aria-controls="{{ menuId }}" data-dropdown-target="button">
+                                            <span class="icon-text is-flex-wrap-nowrap">
+                                                <span>{{ dailyStat.miles }}</span>
+                                                {% for sport_icon in dailyStat.activitiesIcons %}
+                                                    <span class="icon is-hidden-mobile">
+                                                        <i class="fas fa-{{ sport_icon }}"></i>
+                                                    </span>
+                                                {% endfor %}
+                                            </span>
+                                            <span class="strava-day-icons is-hidden-tablet">
+                                                {% for sport_icon in dailyStat.activitiesIcons %}
+                                                    <i class="fas fa-{{ sport_icon }}"></i>
+                                                {% endfor %}
+                                            </span>
+                                        </button>
+                                        <div class="dropdown-menu" id="{{ menuId }}">
+                                            <div class="dropdown-content has-text-left">
+                                                {% for activity in dailyStat.activities %}
+                                                    <div class="dropdown-item is-flex is-align-items-center is-flex-wrap-nowrap">
+                                                        <span class="icon">
+                                                            <i class="fas fa-{{ dailyStat.getSportIcon(activity.sport_type) ?? 'circle-question' }}"></i>
                                                         </span>
-                                                    {% endfor %}
-                                                </span>
-                                            </p>
-                                        </div>
-                                        {% if dailyStat.activities|length > 1 %}
-                                            <div class="dropdown-menu" id="dropdown-menu4" role="menu">
-                                                <div class="dropdown-content has-text-left">
-                                                    {% for activity in dailyStat.activities %}
-                                                        <div class="dropdown-item">
-                                                            <span class="icon-text">
-                                                              <span>{{ (activity.distance/1609.34)|round(1) }}</span>
-                                                              <span class="icon">
-                                                                <i class="fas fa-{{ dailyStat.getSportIcon(activity.sport_type) }}"></i>
-                                                              </span>
-                                                            </span>
-                                                        </div>
-                                                    {% endfor %}
-                                                </div>
+                                                        <span class="ml-1">{{ (activity.distance/1609.34)|round(1) }} mi</span>
+                                                        <span class="ml-2 has-text-grey is-size-7">{{ activity.sport_type }}</span>
+                                                    </div>
+                                                {% endfor %}
                                             </div>
-                                        {% endif %}
+                                        </div>
                                     </div>
                                 {% endif %}
                             </td>
