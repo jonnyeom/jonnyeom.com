@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\State;
 
-use ApiPlatform\Metadata\Exception\InvalidIdentifierException;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\Entity\DailyScripture;
 use App\Service\DailyScriptureLoader;
 use DateTime;
 use DateTimeZone;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 use function array_key_exists;
@@ -37,17 +37,17 @@ class DailyScriptureProvider implements ProviderInterface
         $dateParam = $uriVariables['date'] ?? null;
 
         if (! is_string($dateParam) || trim($dateParam) === '') {
-            throw new InvalidIdentifierException('The identifier is either an empty string or null. Pass a date in the format "m-d-Y" or "n-j-Y".');
+            throw new BadRequestHttpException('The identifier is either an empty string or null. Pass a date in the format "m-d-Y" or "n-j-Y".');
         }
 
         if (strlen($dateParam) > 10) {
-            throw new InvalidIdentifierException('Invalid Date format. Pass a date in the format "m-d-Y" or "n-j-Y".');
+            throw new BadRequestHttpException('Invalid Date format. Pass a date in the format "m-d-Y" or "n-j-Y".');
         }
 
         $dateObj = $this->getDateTime($dateParam);
 
         if (! $dateObj) {
-            throw new InvalidIdentifierException('Invalid Date format. Pass a date in the format "m-d-Y" or "n-j-Y".');
+            throw new BadRequestHttpException('Invalid Date format. Pass a date in the format "m-d-Y" or "n-j-Y".');
         }
 
         $content = $this->dsLoader->getAllScriptures();
