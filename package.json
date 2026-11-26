@@ -20,7 +20,7 @@
         "ag-grid-react": "^35.3.1",
         "bulma": "^1.0.4",
         "chart.js": "^4.6.1",
-        "highlight.js": "^11.11.1"
+        "highlight.js": "^11.11.2"
     },
     "devDependencies": {
         "@hotwired/stimulus": "3.2.2",
