@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Service\Strava\AthleteGuard;
 use App\Service\Strava\ClientProvider;
+use App\Service\Strava\StravaDataProvider;
 use App\Service\Strava\StravaTokenManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,6 +22,7 @@ class StravaConnectController extends AbstractController
         private readonly ClientProvider $clientProvider,
         private readonly AthleteGuard $athleteGuard,
         private readonly StravaTokenManager $tokenManager,
+        private readonly StravaDataProvider $stravaDataProvider,
     ) {
     }
 
@@ -97,6 +99,13 @@ class StravaConnectController extends AbstractController
         // the session just remembers that the allowed athlete is connected.
         $this->tokenManager->store($athleteId, $accessToken);
         $this->athleteGuard->connect($request->getSession());
+
+        // Pull the latest week(s) right away; a failure here shouldn't undo the connection.
+        try {
+            $this->stravaDataProvider->refresh();
+        } catch (Throwable $e) {
+            $logger->error('Strava refresh after connect failed: ' . $e->getMessage(), ['exception' => $e]);
+        }
 
         return $this->redirectToRoute('strava_metrics');
     }

@@ -438,15 +438,6 @@ export default function StravaPlanner({ apiUrl, connectUrl, currentWeek: initial
             cellClass: compact ? 'has-text-weight-bold px-1' : 'has-text-weight-bold',
             headerClass: compact ? 'px-1' : undefined,
         },
-        {
-            headerName: compact ? 'Act' : 'Actual',
-            colId: 'actual',
-            width: compact ? 40 : 75,
-            valueGetter: ({ data }) => data.actual?.totalMiles ?? null,
-            valueFormatter: ({ value }) => (value === null ? '' : `${value}`),
-            cellClass: compact ? 'px-1' : undefined,
-            headerClass: compact ? 'px-1' : undefined,
-        },
         ...(compact ? [] : [{
             headerName: '±',
             colId: 'diff',
